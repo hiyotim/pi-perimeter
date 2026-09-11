@@ -34,6 +34,42 @@ export interface CanonicalPathResult {
   insideWorkspace: boolean;
 }
 
+const resolvedPathBrand = Symbol("pi-warden.resolvedPathBrand");
+
+/**
+ * Module-owned identity registry for successful Phase 1A path-resolution
+ * results. Only objects registered here are accepted by the classifier.
+ */
+const issuedResults = new WeakSet<object>();
+
+/**
+ * Nominal successful Phase 1A path-resolution result. Only values produced by
+ * {@link resolveWorkspacePath} carry the runtime brand; callers must not forge
+ * this identity from plain strings or structural objects. All resolver result
+ * fields are readonly at the type level and frozen at runtime.
+ */
+export interface ResolvedPath extends Readonly<CanonicalPathResult> {
+  readonly [resolvedPathBrand]: true;
+}
+
+function markResolvedPath(result: CanonicalPathResult): ResolvedPath {
+  const branded = { ...result, [resolvedPathBrand]: true } as ResolvedPath;
+  Object.freeze(branded);
+  issuedResults.add(branded);
+  return branded;
+}
+
+/**
+ * Runtime guard for the nominal Phase 1A result. Membership in the module-owned
+ * identity registry is required; the brand symbol alone is not sufficient. This
+ * does not authenticate arbitrary hostile same-process JavaScript, but it does
+ * prevent ordinary typed copying, spreading, assignment, and structural aliasing
+ * from transferring a successful resolver identity to replacement paths.
+ */
+export function isResolvedPath(value: unknown): value is ResolvedPath {
+  return typeof value === "object" && value !== null && issuedResults.has(value);
+}
+
 function assertValidPath(input: string, label: string): void {
   if (typeof input !== "string" || input.length === 0 || input.includes("\0")) {
     throw new PathCanonicalizationError(
@@ -219,7 +255,7 @@ async function canonicalizeTarget(absolutePath: string): Promise<{
 export async function resolveWorkspacePath(
   workspace: string,
   requestedPath: string,
-): Promise<CanonicalPathResult> {
+): Promise<ResolvedPath> {
   assertValidPath(requestedPath, "Requested path");
   const workspaceRoot = await canonicalizeWorkspace(workspace);
   const absolutePath = path.resolve(workspaceRoot, requestedPath);
@@ -231,12 +267,12 @@ export async function resolveWorkspacePath(
     : `${workspaceRoot}${path.sep}${requestedPath}`;
   const resolved = await canonicalizeTarget(filesystemPath);
 
-  return {
+  return markResolvedPath({
     requestedPath,
     absolutePath,
     canonicalPath: resolved.canonicalPath,
     workspaceRoot,
     targetExists: resolved.targetExists,
     insideWorkspace: containsPath(workspaceRoot, resolved.canonicalPath),
-  };
+  });
 }

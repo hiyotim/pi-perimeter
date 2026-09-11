@@ -4,7 +4,7 @@
 
 Build `pi-warden`: a small, auditable Pi extension/package that is intended to provide workspace-first authorization, explicit user approvals, and OS-level containment for model-facing operations. The target experience is convenient for normal work inside a project while treating external paths, secrets, dangerous operations, and unknown network access conservatively.
 
-The repository currently includes the Phase 1A path policy primitive, but no functional enforcement. Do not represent planned protections as implemented.
+The repository currently includes the Phase 1A path policy primitive and Phase 1B path-only resource classifier, but no functional enforcement. See [STATE.md](STATE.md) for the current acceptance checkpoint. Do not represent planned protections as implemented.
 
 ## Non-goals
 

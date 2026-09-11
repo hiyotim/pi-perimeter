@@ -6,8 +6,10 @@ import test from "node:test";
 
 import {
   canonicalizeWorkspace,
+  isResolvedPath,
   PathCanonicalizationError,
   resolveWorkspacePath,
+  type ResolvedPath,
 } from "../src/policy/paths.ts";
 
 interface Fixture {
@@ -363,3 +365,127 @@ test("rejects a workspace root that is not a directory", async () => {
     await assertPathError(canonicalizeWorkspace(file), "WORKSPACE_NOT_DIRECTORY");
   });
 });
+
+test("isResolvedPath recognizes a genuine resolver result", async () => {
+  await withFixture(async ({ workspace }) => {
+    const resolved = await resolveWorkspacePath(workspace, "file.txt");
+    assert.equal(isResolvedPath(resolved), true);
+  });
+});
+
+test("isResolvedPath rejects non-object inputs", () => {
+  for (const input of [null, undefined, "string", 123, true, Symbol("test")]) {
+    assert.equal(isResolvedPath(input), false);
+  }
+});
+
+test("isResolvedPath rejects a plain object", async () => {
+  await withFixture(async ({ workspace }) => {
+    assert.equal(
+      isResolvedPath({
+        requestedPath: "file.txt",
+        absolutePath: path.join(workspace, "file.txt"),
+        canonicalPath: path.join(workspace, "file.txt"),
+        workspaceRoot: workspace,
+        targetExists: true,
+        insideWorkspace: true,
+      }),
+      false,
+    );
+  });
+});
+
+test("isResolvedPath rejects a spread copy of a genuine result", async () => {
+  await withFixture(async ({ workspace }) => {
+    const resolved = await resolveWorkspacePath(workspace, "file.txt");
+    assert.equal(isResolvedPath({ ...resolved }), false);
+  });
+});
+
+test("isResolvedPath rejects an Object.assign copy of a genuine result", async () => {
+  await withFixture(async ({ workspace }) => {
+    const resolved = await resolveWorkspacePath(workspace, "file.txt");
+    assert.equal(isResolvedPath(Object.assign({}, resolved)), false);
+  });
+});
+
+test("isResolvedPath rejects an object inheriting from a genuine result", async () => {
+  await withFixture(async ({ workspace }) => {
+    const resolved = await resolveWorkspacePath(workspace, "file.txt");
+    assert.equal(isResolvedPath(Object.create(resolved)), false);
+  });
+});
+
+test("isResolvedPath rejects a descriptor copy of a genuine result", async () => {
+  await withFixture(async ({ workspace }) => {
+    const resolved = await resolveWorkspacePath(workspace, "file.txt");
+    const descriptors = Object.getOwnPropertyDescriptors(resolved);
+    const copy = Object.create(Object.getPrototypeOf(resolved), descriptors);
+    assert.equal(isResolvedPath(copy), false);
+  });
+});
+
+test("a genuine resolver result is immutable", async () => {
+  await withFixture(async ({ workspace }) => {
+    const resolved = await resolveWorkspacePath(workspace, "file.txt");
+    const original = resolved.canonicalPath;
+    const replacement = path.join(workspace, "other.txt");
+
+    assert.throws(
+      () => {
+        (resolved as unknown as Record<string, string>).canonicalPath = replacement;
+      },
+      (error: unknown) => error instanceof TypeError,
+    );
+
+    assert.throws(
+      () => Object.assign(resolved, { canonicalPath: replacement }),
+      (error: unknown) => error instanceof TypeError,
+    );
+
+    assert.throws(
+      () =>
+        Object.defineProperty(resolved, "canonicalPath", {
+          value: replacement,
+        }),
+      (error: unknown) => error instanceof TypeError,
+    );
+
+    assert.equal(resolved.canonicalPath, original);
+    assert.equal(isResolvedPath(resolved), true);
+  });
+});
+
+test("compile-time nominal typing rejects a complete structural resolver result", async () => {
+  await withFixture(async ({ workspace }) => {
+    // @ts-expect-error ResolvedPath requires the module-owned nominal brand.
+    const structural: ResolvedPath = {
+      requestedPath: "file.txt",
+      absolutePath: path.join(workspace, "file.txt"),
+      canonicalPath: path.join(workspace, "file.txt"),
+      workspaceRoot: workspace,
+      targetExists: true,
+      insideWorkspace: true,
+    };
+
+    assert.equal(isResolvedPath(structural), false);
+  });
+});
+
+// Type-only negative checks: direct assignment to every resolver result field
+// must be rejected at compile time. This function is intentionally never called
+// so the assignments do not execute during node tests.
+function _assertResolvedPathReadonly(result: ResolvedPath): void {
+  // @ts-expect-error requestedPath is readonly on ResolvedPath.
+  result.requestedPath = "other";
+  // @ts-expect-error absolutePath is readonly on ResolvedPath.
+  result.absolutePath = "/other";
+  // @ts-expect-error canonicalPath is readonly on ResolvedPath.
+  result.canonicalPath = "/other";
+  // @ts-expect-error workspaceRoot is readonly on ResolvedPath.
+  result.workspaceRoot = "/other";
+  // @ts-expect-error targetExists is readonly on ResolvedPath.
+  result.targetExists = false;
+  // @ts-expect-error insideWorkspace is readonly on ResolvedPath.
+  result.insideWorkspace = false;
+}

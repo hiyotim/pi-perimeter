@@ -1,10 +1,10 @@
 # Test Strategy
 
-**Status: Phase 1A path tests are implemented; later security suites remain planned.**
+**Status: Phase 1A path tests and Phase 1B resource-classification tests are implemented; later security suites remain planned.**
 
 Future tests will provide evidence for individual security invariants. The suite will separate pure policy tests, Pi integration coverage, and platform-specific sandbox tests.
 
-Run `npm run test:paths` for the path suite or `npm test` for all currently implemented tests. Tests run directly with the Node test runner; TypeScript remains a development-only dependency for `npm run typecheck`.
+Run `npm run test:paths` for the path suite, `node --test test/resources.test.ts` for the resource-classification suite, or `npm test` for all currently implemented tests. Tests run directly with the Node test runner; TypeScript remains a development-only dependency for `npm run typecheck`.
 
 ## Fixture isolation
 

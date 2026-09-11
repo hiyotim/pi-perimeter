@@ -26,7 +26,7 @@
 9. Update documentation to match demonstrated behavior.
 10. Commit only after the adversarial review is complete.
 
-Phase 1A uses the Node test runner for TypeScript tests and a local TypeScript compiler for static checking. Run `npm run test:paths` for the focused path suite and `npm run check` for the complete currently applicable checks.
+Phase 1A and Phase 1B use the Node test runner for TypeScript tests and a local TypeScript compiler for static checking. Run `npm run test:paths` for the focused path suite, `node --test test/resources.test.ts` for the focused resource-classification suite, and `npm run check` for the complete currently applicable checks.
 
 ## Code placement
 
@@ -49,7 +49,7 @@ Tests are evidence for narrowly worded guarantees. Each invariant needs:
 
 Filesystem tests create a new temporary root containing fake workspaces, fake home directories, fake `.env` files, fake SSH/AWS/Pi credentials, and symlink graphs. They must not inspect or depend on the real `$HOME`.
 
-The Phase 1A path suite currently creates only the fake workspace, external paths, files, and symlink graphs needed for path canonicalization. Later suites will add fake credential structures when their corresponding classifiers are implemented.
+The Phase 1A path suite creates the fake workspace, external paths, files, and symlink graphs needed for path canonicalization. Phase 1B classification tests obtain genuine resolver results from isolated temporary fixtures, including fabricated existing and missing resources; the classifier itself performs no filesystem reads. Provenance-rejection tests also supply forged or malformed inputs and require rejection. Neither suite reads real credentials or the real home directory.
 
 Policy tests should be pure and fast. Pi integration tests verify event/tool coverage separately. Sandbox tests are platform-tagged and must prove initialization and containment rather than infer them from a success message.
 

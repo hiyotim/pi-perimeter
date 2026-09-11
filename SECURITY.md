@@ -2,9 +2,9 @@
 
 ## Current status
 
-`pi-warden` is in **Pre-alpha**. Phase 1A provides a tested path canonicalization and workspace-containment primitive plus a non-enforcing extension skeleton.
+`pi-warden` is in **Pre-alpha**. Phase 1A provides tested path canonicalization and workspace containment, and Phase 1B provides tested path-only resource classification. The extension skeleton remains non-enforcing.
 
-The path primitive is not connected to Pi tools, so it does not currently protect filesystem access. The package does not intercept Pi tools, protect credentials, show approval prompts, sanitize environments, restrict networks, or establish an OS sandbox. Do not rely on it as a security boundary.
+Neither primitive is connected to Pi tools, so they do not currently protect filesystem access or credentials. Classification is content-blind, and an `ordinary` result does not prove that a file contains no secret. The package does not intercept Pi tools, show approval prompts, sanitize environments, restrict networks, or establish an OS sandbox. Do not rely on it as a security boundary.
 
 ## What to trust
 

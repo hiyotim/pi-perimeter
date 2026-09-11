@@ -4,7 +4,7 @@
 
 > **Project status: Phase 1 / Pre-alpha**
 
-This repository contains design documents, a minimal extension skeleton, and the tested Phase 1A path policy primitive. It does not enforce a security policy in Pi.
+This repository contains design documents, a minimal extension skeleton, and the tested Phase 1A path and Phase 1B resource-classification primitives. It does not enforce a security policy in Pi.
 
 ## Problem
 
@@ -38,12 +38,12 @@ All model-facing tools must use one security model even though in-process file t
 
 ## Implementation status
 
-Phase 1A implements and tests path canonicalization and component-aware workspace membership, including existing symlinks and non-existent creation targets. No Pi tool currently uses that result.
+Phase 1A implements path canonicalization and component-aware workspace membership, including existing symlinks and non-existent creation targets. Phase 1B classifies a deliberately small set of secret and sensitive paths using Phase 1A's canonical and normalized lexical results. The classifier is content-blind: ordinary filenames may contain secrets, and `sensitive` is not equivalent to `secret`. No Pi tool currently uses either result, and Phase 1A's documented filesystem limitations still apply.
 
 The project does **not** yet provide:
 
 - workspace boundary enforcement in Pi;
-- secret detection or credential protection;
+- credential protection or secret-content detection;
 - tool interception or approval prompts;
 - shell parsing or dangerous-command classification;
 - filesystem, process, or network containment;

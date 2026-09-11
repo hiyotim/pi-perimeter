@@ -19,11 +19,13 @@ This roadmap uses release gates, not dates. A phase is complete only when its li
 - [x] Component-aware workspace containment.
 - [x] Existing-target and creation-target handling.
 - [x] Symlink resolution and documented race limitation.
-- [ ] Secret path and resource classification.
+- [x] Secret path and resource classification (Phase 1B accepted after final independent audit; path-only, unenforced primitive).
 - [ ] Structured `ALLOW`, `ASK`, and `DENY` decisions with reason codes.
 - [ ] Monotonic configuration authority rules.
 
 **Release gate:** a platform-independent policy core passes table-driven and adversarial tests using temporary fixtures, with no Pi or sandbox side effects.
+
+Current acceptance checkpoint and bounded-Goal history: [STATE.md](STATE.md). An accepted remediation Goal does not complete Phase 1B or authorize phase advancement.
 
 ## Phase 2 — Pi Tool Gates
 

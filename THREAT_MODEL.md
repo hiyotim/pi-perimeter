@@ -2,7 +2,7 @@
 
 ## Status
 
-This is the incremental threat model for `pi-warden`. All responses in this document are **planned** unless explicitly marked otherwise. Phase 1A implements and tests a path canonicalization and workspace-containment primitive, but no Pi tool currently enforces its result.
+This is the incremental threat model for `pi-warden`. All responses in this document are **planned** unless explicitly marked otherwise. Phase 1A implements path canonicalization and workspace containment, and Phase 1B implements path-only resource classification, but no Pi tool currently enforces either result.
 
 The decision vocabulary is:
 
@@ -107,7 +107,8 @@ Out of scope does not mean safe; it means no guarantee is planned without expand
 | GitHub credentials | access `gh` hosts/config or tokens | DENY | Hard-denied credential material. |
 | Git credential stores | read configured credential files/helpers | DENY | Prevent token/password extraction. |
 | Pi credentials | access Pi auth or agent credential data | DENY | Host authentication remains outside child operations. |
-| Private key material | read `*.pem`, `*.key`, key blocks | DENY | High-confidence secret class; content checks are defense in depth. |
+| Private key material | read conventional private-key names, `*.p12`, or `*.pfx` | DENY | Selected high-confidence path indicators; classification does not inspect contents. |
+| Ambiguous key filename | read generic `*.key` or `*.pem` | DENY by default | The classifier treats these as sensitive indicators, not proof of private-key contents; stronger evidence still wins. This does not authorize access. See [STATE.md](STATE.md). |
 | Environment secret | print or forward `*_TOKEN`, `*_KEY`, provider keys | DENY + SANDBOX | Sanitize environment before spawn; policy blocks explicit access. |
 | Shell indirection | variables, aliases, `eval`, sourced files | ASK + SANDBOX or DENY | Classification is insufficient; contain execution and deny dangerous ambiguity. |
 | Nested `sh -c` | `sh -c '...'` | ASK + SANDBOX | Parse recursively where possible and require containment. |
@@ -142,7 +143,7 @@ Canonicalization does not keep a file descriptor open, so filesystem state can c
 
 ### Symlinks
 
-Every relevant path component may be a symlink. Phase 1A resolves existing symlink components, including the parent of a non-existent creation target; broken links fail with an explicit error. Future operation policy must evaluate every source and destination path, including rename and create operations. A link located inside the workspace does not make its external target internal. Secret classification remains planned and must occur on the resolved target as well as relevant lexical indicators.
+Every relevant path component may be a symlink. Phase 1A resolves existing symlink components, including the parent of a non-existent creation target; broken links fail with an explicit error. Future operation policy must evaluate every source and destination path, including rename and create operations. A link located inside the workspace does not make its external target internal. Phase 1B classifies both the resolved target and Phase 1A's normalized lexical path, but does not enforce the result.
 
 Canonicalization alone may not prevent a symlink from changing after a decision. Future implementation must investigate descriptor-relative operations, no-follow flags, sandbox restrictions, and post-open verification.
 
@@ -168,7 +169,7 @@ Network access can exfiltrate files, environment variables, prompts, source code
 
 ## Credential threats
 
-Known credential paths and environment-variable names are normally hard-denied. The sandbox environment should exclude provider keys and Pi state by default. Credentials must not be copied into temporary fixtures or audit logs. A narrow future capability that genuinely requires a credential needs a separate design, minimum privilege, explicit user intent, and evidence that child processes cannot reuse it beyond scope.
+Known credential paths and environment-variable names are intended to be normally hard-denied by future policy. Phase 1B only classifies a small path-based subset; it does not classify environment variables or deny access. The sandbox environment should exclude provider keys and Pi state by default. Credentials must not be copied into temporary fixtures or audit logs. A narrow future capability that genuinely requires a credential needs a separate design, minimum privilege, explicit user intent, and evidence that child processes cannot reuse it beyond scope.
 
 Secret classification cannot guarantee discovery of arbitrary secrets embedded in ordinary files. Documentation and UI must state this limitation.
 

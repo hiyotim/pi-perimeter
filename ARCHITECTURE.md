@@ -2,7 +2,9 @@
 
 ## Status and scope
 
-This document describes the architecture as it is implemented incrementally. The Phase 1A path policy primitive is implemented and tested, but no Pi tool currently enforces it. Other components below remain design boundaries, not current guarantees, unless explicitly marked as implemented.
+This document describes the architecture as it is implemented incrementally. The Phase 1A path policy primitive and Phase 1B resource classifier are implemented and tested, but no Pi tool currently enforces them. Other components below remain design boundaries, not current guarantees, unless explicitly marked as implemented.
+
+Phase 1B is accepted as a path-only, unenforced primitive. [STATE.md](STATE.md) records accepted Goals, review evidence, and remaining gates; Phase 1 as a whole remains incomplete.
 
 ## Trust zones and data flow
 
@@ -53,9 +55,9 @@ Workspace membership never overrides a secret classification or a stronger globa
 
 ## 4. Secret classification
 
-**Planned.** Resource classification will recognize sensitive basenames, path families, key material, credential stores, and selected environment-variable names. Secret rules have higher priority than workspace allow rules and normally produce `DENY` without a routine approval bypass.
+**Implemented as a classification primitive; not integrated or enforced.** `src/policy/resources.ts` classifies selected high-confidence secret paths and potentially sensitive resource paths from Phase 1A's canonical target and normalized lexical path. It returns stable categories, reasons, sensitivities, and evidence without reading file contents or making an authorization decision. `sensitive` identifies security-relevant ambiguity and is not equivalent to `secret`.
 
-Classification is defense in depth, not proof that all secrets can be identified. macOS Keychain protection must not be claimed until a specific design is implemented and tested.
+Ordinary filenames can still contain secrets, and Phase 1A's filesystem limitations still apply. Environment-variable classification and macOS Keychain protection remain unimplemented. Classification is defense in depth, not proof that all secrets can be identified.
 
 ## 5. Policy engine
 
