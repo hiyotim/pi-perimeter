@@ -1,72 +1,72 @@
 # Implementation Handoff
 
-Task ID: 20260911-read-path-default-decisions
-Baseline: e9b2f16cafe79421c8cf59f1d3fc028379888386
-
-Baseline status: accepted Phase 1B commit on `main`; working branch `codex/read-path-default-decisions`. The Git transition described in `docs/BRANCH-TRANSITION.md` is complete and the baseline was refreshed to the actual commit. Implementation has not started and is not begun by the transition itself.
+Task ID: 20260911-write-path-default-decisions
+Baseline: d5b4a189fc49183416dd3d0f62be1a09c5ab8eda
 
 ## Goal
 
-Implement the selected fixed default read-path decision primitive: genuine resolver input plus the explicit read operation produces one structured ALLOW, ASK, or DENY result, using the ordered contract in `docs/READ-PATH-DECISIONS.md`. Do not implement the broader policy engine.
+Add the fixed default decision primitive for one `write` path while preserving the accepted read-path primitive. A genuine resolver result plus the exact write operation must produce one structured `ALLOW`, `ASK`, or `DENY` result. Do not implement edit, delete, multi-path, configuration, approval, or Pi integration behavior.
 
 ## Context
 
-Phase 1B is accepted after final independent PASS and is committed as `e9b2f16cafe79421c8cf59f1d3fc028379888386`. The source/test baseline passed 69/69 resource tests, typecheck and 111/111 total tests, and 92/92 independent synthetic probes. These are previous-review results, not new implementation verification. No Pi enforcement exists.
+Phase 1A path resolution, Phase 1B path classification, and `20260911-read-path-default-decisions` are accepted and committed. Local `main` was fast-forwarded to the baseline, and work continues on `codex/write-path-default-decisions`. The roadmap decision checkbox remains open because only read-path behavior is complete.
 
-`STATE.md` is the acceptance authority and `docs/READ-PATH-DECISIONS.md` fixes this Goal's architectural contract. `docs/PHASE-1B-COMMIT.md` records the prepared snapshot and its completed commit; do not reapply the patch or make a commit during implementation. The preceding assertion handoff is preserved in `docs/handoffs/20260911-resource-full-result-assertions.md` and must not be re-executed.
+The accepted read function checks genuine resolver issuance, the exact operation, internal resource classification, target existence, and canonical workspace membership in that order. Write has a deliberately different missing-target contract: creating a missing ordinary path inside the workspace is allowed by this default path rule, while an ordinary external path asks whether or not it already exists. Secret and sensitive evidence still denies everywhere.
 
-Work on `codex/read-path-default-decisions`; the accepted Phase 1B implementation and tests are part of the baseline commit. The next-Goal planning documents (`STATE.md`, `ARCHITECTURE.md`, this handoff, and `docs/READ-PATH-DECISIONS.md`) remain uncommitted working changes. Existing `.gitignore`, `.opencode-permission-canary.txt`, and `.qwen/` changes are unrelated; preserve them without loading local configuration. The Git index was empty after the transition commit.
+Known unrelated working changes are `.gitignore`, `STATE.md`, `.opencode-permission-canary.txt`, and `.qwen/`. `STATE.md` contains the post-read-Goal checkpoint but its branch field predates this handoff-only branch transition. Preserve these files without inspecting local configuration. The Git index is empty. Stop on any other baseline change rather than resetting or cleaning it.
 
-### Starting SHA-256 anchors
+Starting SHA-256 anchors:
 
 | File | SHA-256 |
 | --- | --- |
 | `src/policy/paths.ts` | `f8367abe4d381b90f132ffe651aa8e8de26fc629a42a0dcc69c6cd2cce941e02` |
 | `src/policy/resources.ts` | `e2c5045bc14fcb3ecfdf935814d48040f63dfb73bea5b71255a973482b75e749` |
+| `src/policy/decisions.ts` | `a8750065fcd40f653cb127aca3d32580529c83cb277d167621bc0d6be29db9f1` |
 | `test/paths.test.ts` | `676e00aaef9f26e70dfad5ea9513a702352d2d707fd5cc0f04f62c0ed3b21398` |
 | `test/resources.test.ts` | `f9a03c98a6ee9c01ae9103ede6f87fc37ee656966a14730ffe6e35df31478436` |
-| `docs/READ-PATH-DECISIONS.md` | `a0eb69fd323daf69a6606a24b2ede5c4cbcd3f89e0c8a76ba06975e4cb6fde92` |
-
-Record starting status and hashes before implementation. The baseline was refreshed to the committed Phase 1B SHA by the transition executor under its separate contract, preserving this Goal, criteria, scope, and anchors; the pre-transition baseline is historical. Treat any subsequent material divergence as a new baseline ambiguity.
+| `test/decisions.test.ts` | `a7a25d710e9818ffe85abcaf5b207d6e1481472b2ef7934e51da24fd888b9911` |
 
 ## Scope
 
-Create only `src/policy/decisions.ts` and `test/decisions.test.ts`. Public exports for the selected function and its result/reason types belong in the new decisions module. Existing production files, tests, dependencies, configuration, canonical documentation, and this handoff remain unchanged during execution.
+Modify only `src/policy/decisions.ts` and create only `test/write-decisions.test.ts`. Add the write-specific public function and its exact readonly result/reason types to the existing decisions module. Do not refactor or rewrite the accepted read function or its tests.
 
 ## Acceptance Criteria
 
-1. Export `evaluateReadPath(operation: "read", resource: ResolvedPath): ReadPathDecision`. It is synchronous and performs no filesystem/content reads, process starts, UI, network access, or Pi interaction. Obtain classification internally through the existing classifier; do not accept caller-supplied classification, sensitivity, membership, approval, policy configuration, or bypass flags.
-2. Return exactly `{ decision, reason }` using a readonly discriminated union. The only allowed pairs, in precedence order, are: `DENY/INVALID_RESOURCE` for non-issued resources; `DENY/UNSUPPORTED_OPERATION` for an operation other than exact `read`; `DENY/SECRET_RESOURCE`; `DENY/SENSITIVE_RESOURCE`; `DENY/READ_TARGET_MISSING` for an ordinary missing target; `ALLOW/WORKSPACE_READ` for an ordinary existing canonical in-workspace target; `ASK/EXTERNAL_READ` for an ordinary existing external target. No extra fields or SANDBOX outcome.
-3. Check genuine issuance before resource property access, including on forged throwing getters and proxies. No spread, assignment copy, inheritance, descriptor copy, serialization, structural input, or copied symbol can establish issuance. Preserve the existing trusted-workspace and frozen-input boundary; do not add a public issuer or weaken the resolver/classifier.
-4. Preserve ordering for overlaps: secret wins over sensitive evidence; both deny inside/outside and even when missing; missing ordinary resources deny before workspace/external decisions. Unsupported operations cannot ALLOW or ASK, including write/edit/delete/bash strings, case variants, absent values, and non-string runtime inputs. Invalid resource wins when both inputs are invalid.
-5. Use both path identities via Phase 1B and canonical membership via the issued result. Cover ordinary aliases out of and into the workspace, secret-target aliases, sensitive lexical aliases to ordinary targets, compound templates, generic keys, and mixed key/p12 aliases. Do not recreate path normalization, matcher logic, or workspace-prefix checks.
-6. Classifier failures propagate as errors without an ALLOW/ASK fallback. Resolver errors stop the preceding chain and are not converted to ordinary input. Exercise isolated broken-link and ENOTDIR failures to demonstrate that the test calling chain does not invoke a decision after failed resolution. No production fault-injection hook or dependency-injection surface is permitted.
-7. Tests compare complete literal expected objects for every table row and required overlap, using fabricated temporary workspaces/resources and genuine resolver results for valid inputs. Add the provenance attacks above and TypeScript assertions rejecting non-read operations, structural resources, result-field assignment, and invalid decision/reason combinations. Test-case expectations must not be computed from production output or mirrored decision logic.
-8. Keep all four existing source/test anchors byte-identical. No integration, new resource rules, configuration merging, approval handling, write/delete semantics, recursive directory permissions, operation execution, or claim of complete policy enforcement. An ALLOW is only a default path-rule result; all limits of the design contract remain.
+1. Export `evaluateWritePath(operation: "write", resource: ResolvedPath): WritePathDecision`, plus narrowly named readonly result and deny-reason types. The function is synchronous and performs no filesystem/content reads, process starts, UI, network access, or Pi interaction.
+2. Return exactly `{ decision, reason }`. The only valid pairs, in precedence order, are `DENY/INVALID_RESOURCE`, `DENY/UNSUPPORTED_OPERATION`, `DENY/SECRET_RESOURCE`, `DENY/SENSITIVE_RESOURCE`, `ALLOW/WORKSPACE_WRITE`, and `ASK/EXTERNAL_WRITE`. Do not add `SANDBOX`, approval state, capability data, resource details, or extra fields.
+3. Check resolver issuance before reading resource properties. Invalid resource wins when both inputs are invalid. Unsupported operations include read, edit, delete, bash, case/whitespace variants, absent and non-string runtime values; comparison must not coerce attacker-controlled values.
+4. Obtain classification internally through `classifyPathResource`. Secret wins over sensitive; both deny for inside, outside, existing, and missing targets. A classifier error propagates and cannot become `ALLOW` or `ASK`. Do not accept caller-supplied classification, sensitivity, membership, approval, configuration, or bypass flags.
+5. After ordinary classification, use the issued canonical `insideWorkspace` relation. Ordinary inside paths return `ALLOW/WORKSPACE_WRITE` whether existing or missing. Ordinary external paths return `ASK/EXTERNAL_WRITE` whether existing or missing. `targetExists` must not turn a valid missing write target into a denial.
+6. Cover canonical and lexical evidence through the existing classifier: ordinary aliases across both workspace-boundary directions, aliases to secret targets, sensitive-looking lexical aliases, compound templates, `.key`/`.p12` mixed aliases, and overlapping secret/sensitive rules. Do not recreate matcher logic or compare workspace paths textually.
+7. Provenance regression cases include structural input, spread, `Object.assign`, inheritance, descriptor and JSON copies, copied symbols, throwing getters, proxies, null/primitives, and claimed inside/missing flags. A throwing proxy/getter must demonstrate zero property access before invalid-resource denial.
+8. Tests use genuine resolver results and fabricated temporary resources. Compare complete literal results for every decision row and precedence overlap; do not compute expectations from production output or mirror the decision implementation. Include broken-link and `ENOTDIR` calling-chain tests proving the decision is not invoked after resolver failure.
+9. Type checks reject non-write operations, structural resources, result mutation, invalid decision/reason pairs, `SANDBOX`, and extra fields. Runtime results remain synchronous. Existing 119 tests and the accepted read behavior continue to pass unchanged.
+10. Preserve all six starting anchors except the intentionally modified `src/policy/decisions.ts`; after implementation, the other five must be byte-identical. No existing test or documentation changes are in scope.
 
 ## Verification
 
-Run targeted new tests first:
+Run in order:
 
 ```sh
+node --test test/write-decisions.test.ts
 node --test test/decisions.test.ts
 npm run check
 git diff --check
 git status --short --branch
 ```
 
-`npm run check` runs typecheck and all test files, including the new suite. Independently compare all complete expected results and overlap ordering to the contract. Check that no test uses real home paths/credentials. Inspect new files explicitly because ordinary git diff omits untracked files; compare the four original source/test hashes and all pre-existing tracked/untracked files with the recorded baseline. Do not install dependencies or change tooling to bypass a failure.
+Inspect the complete new file explicitly because it is untracked. Review the incremental `decisions.ts` diff to confirm the read function is unchanged. Recheck the five unchanged anchors, exact working-tree scope, empty index, literal expected results, and absence of real home paths or credentials.
 
 ## Constraints
 
-The caller must resolve against a trusted active workspace; this Goal does not authenticate workspace configuration. Results are not capabilities or approvals. Read-path ALLOW cannot override later global/project restrictions, authorize recursive traversal, or validate object kind. Content-blind, TOCTOU, hard-link, mount, and same-process limitations remain.
+`ALLOW` is only a fixed default write-path result. It is not execution, authorization enforcement, an approval, a capability, or permission to bypass future global/project restrictions. This Goal does not validate object type, overwrite semantics, atomicity, parent permissions, or the complete set of resources touched by an operation. Future integration must handle TOCTOU, symlink replacement, hard links, mounts, directories, and each actual source/destination.
 
-No existing-file edits, source/test refactoring, new dependencies, Pi integration, installation, real credentials, staging, commit, push, branch changes, cleanup, next Goal, or roadmap/state updates during execution.
+No edit/delete/rename semantics, multi-path operations, recursive behavior, configuration merging, approval consumption, shell/network policy, containment, Pi integration, dependencies, installation, real credentials, existing-test changes, state/roadmap updates, staging, commit, push, branch changes, cleanup, or next Goal.
 
 ## Execution Notes
 
-Stop after implementation and verification for independent security review. Report exact new files, full-result coverage by table row, precedence and provenance evidence, check results, unchanged anchors, and remaining limitations. A passing implementation is not acceptance of this Goal or completion of Phase 1. Configuration authority and other operation contracts remain separate work.
+Stop after implementation and verification for independent security review. Report the exact diff, complete write decision coverage, missing-target behavior, provenance and precedence evidence, checks, hashes, and limitations. A passing implementation does not accept this Goal or close the roadmap decision item.
 
 ## Escalate If
 
-Stop and report if the selected Goal or acceptance criteria need to change, an architectural invariant must change, scope must materially expand, an unapproved public/external contract is needed, canonical documents conflict, the baseline differs materially, or a security-sensitive/destructive change or data migration would be required. Also stop if existing production/tests need changes or a failing check requires an out-of-scope fix. Preserve accumulated work; do not reset, broaden permissions, invent a fallback, or silently change the contract.
+Stop and report before proceeding if the Goal or acceptance criteria must change, an architectural invariant must change, scope must expand, an unapproved public/external contract is needed, canonical documents conflict, the baseline differs materially, or a security-sensitive/destructive change or data migration would be required. Also stop if the accepted read implementation/tests need modification or an existing check fails. Preserve the accumulated work; do not reset, clean, weaken failure behavior, or invent a fallback.

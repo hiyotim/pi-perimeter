@@ -1,12 +1,12 @@
 # Project State
 
 Updated: 2026-09-11
-Branch: `codex/read-path-default-decisions`
-HEAD: `e9b2f16cafe79421c8cf59f1d3fc028379888386`
+Branch: `codex/write-path-default-decisions`
+HEAD: `d5b4a189fc49183416dd3d0f62be1a09c5ab8eda`
 
 ## Current checkpoint
 
-**READ-PATH DEFAULT DECISION GOAL ACCEPTED; COMMIT PREPARATION AUTHORIZED.** Phase 1A path resolution, Phase 1B path-only classification, and the first fixed read-path decision primitive exist without Pi enforcement. The owner accepted `20260911-read-path-default-decisions` after an independent security review PASS and authorized its separate local commit. No Pi tool gates, approval flow, configurable policy, other operation decisions, shell/network policy, or OS containment are implemented.
+**WRITE-PATH DEFAULT DECISION GOAL ACCEPTED; COMMIT BEING PREPARED.** Phase 1A path resolution, Phase 1B path-only classification, and the first fixed read-path and write-path decision primitives exist without Pi enforcement. The owner accepted `20260911-read-path-default-decisions` after an independent security review PASS; its local commit is `d5b4a189fc49183416dd3d0f62be1a09c5ab8eda` (`feat: add default read-path decisions`) on `codex/read-path-default-decisions`. The owner then accepted `20260911-write-path-default-decisions` after a separate independent read-only security review returned PASS with no findings; its documentation, source, and tests are being committed as one separate local commit on `codex/write-path-default-decisions` from the read-path baseline. The audit record is [docs/WRITE-PATH-DECISIONS-AUDIT.md](docs/WRITE-PATH-DECISIONS-AUDIT.md). The roadmap decision checkbox remains open. No Pi tool gates, approval flow, configurable policy, edit/delete decisions, shell/network policy, or OS containment are implemented.
 
 This file is the canonical acceptance/checkpoint record. `ROADMAP.md` defines phase gates; `ARCHITECTURE.md` defines component and trust boundaries. `IMPLEMENTATION_HANDOFF.md` is the replaceable execution contract for the selected Goal. The older untracked `QWEN_TASK.md` is absent at this checkpoint; its removal was observed during review, not attributed to the implementation. Do not recreate it or treat it as the active instruction.
 
@@ -54,7 +54,7 @@ Final owner acceptance was recorded on 2026-09-11 in response to the proposed ne
 
 A separate 15-file Phase 1B commit candidate was prepared before next-Goal planning edits; see [docs/PHASE-1B-COMMIT.md](docs/PHASE-1B-COMMIT.md). It excludes local artifacts and next-Goal planning. It is preserved as the historical description of the snapshot that was committed.
 
-## Selected next Goal
+## Accepted read-path Goal
 
 `20260911-read-path-default-decisions`: **GOAL ACCEPTED.** The first decision primitive is limited to a single read path: sensitive/secret deny, ordinary missing target denies, ordinary existing canonical in-workspace target allows, ordinary existing external target asks. Invalid provenance and unsupported operations deny before those rules. It uses existing resolver/classifier contracts and introduces no enforcement or configurable exceptions.
 
@@ -63,3 +63,15 @@ Before implementation, the separately prepared [Git transition prompt](docs/BRAN
 The fixed design is [docs/READ-PATH-DECISIONS.md](docs/READ-PATH-DECISIONS.md), the executed contract is [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md), and the independent verdict is recorded in [docs/READ-PATH-DECISIONS-AUDIT.md](docs/READ-PATH-DECISIONS-AUDIT.md). The review found no defects. It passed 8/8 focused tests, typecheck and 119/119 complete tests, whitespace checks, and 16/16 independently designed assertions. Source and test scope remained exactly `src/policy/decisions.ts` and `test/decisions.test.ts`; all five baseline anchors were unchanged.
 
 The roadmap decision checkbox remains open because this Goal covers only one read path and does not complete the structured decision engine. Broader operation policies and monotonic configuration authority remain Phase 1 work. No Pi integration, installation, push, or Phase 2 work is authorized by this checkpoint.
+
+The accepted Goal commit contains exactly ten reviewed files: the decision source and tests, its fixed design and independent audit record, the executed handoff, the architecture/state updates, and preserved transition/handoff history. The commit excluded `.gitignore`, `.qwen/`, and `.opencode-permission-canary.txt`. The index was empty after commit. Local `main` was fast-forwarded to this commit without a merge commit. No push was performed.
+
+## Accepted write-path Goal
+
+`20260911-write-path-default-decisions`: **GOAL ACCEPTED after independent security review PASS with no findings.** The second decision primitive adds one fixed write path while preserving the accepted read function byte-for-byte: sensitive/secret deny everywhere, ordinary inside targets allow whether existing or missing, ordinary external targets ask whether existing or missing, and invalid provenance or unsupported operations deny first. Resolver issuance is checked before any property access, invalid resource takes precedence over invalid operation, the operation comparison is exact and non-coercing, classification is internal with no fallback, and membership uses the issued canonical relation. Independent evidence: focused write tests 9/9, accepted read tests 8/8, `npm run check` typecheck and 128/128 tests, whitespace checks, and 11/11 independent probes. The review verified the additive 59-line write hunk and confirmed the accepted read source and the other five baseline anchors were unchanged. The independent verdict and hashes are recorded in [docs/WRITE-PATH-DECISIONS-AUDIT.md](docs/WRITE-PATH-DECISIONS-AUDIT.md). This acceptance is being followed by exactly one local commit of the six reviewed files; the commit excludes `.gitignore`, `.qwen/`, `.opencode-permission-canary.txt`, and the transition prompt, and no push is performed. The roadmap decision checkbox remains open because write covers only one of several operation paths.
+
+## Selected next Goal
+
+`20260911-write-path-default-decisions`: **HANDOFF PREPARED; NOT IMPLEMENTED.** Work continues on `codex/write-path-default-decisions` from baseline `d5b4a189fc49183416dd3d0f62be1a09c5ab8eda`. The bounded Goal adds only the fixed default decision for one write path while preserving the accepted read behavior. Ordinary inside paths allow whether existing or missing; ordinary external paths ask; sensitive and secret paths deny everywhere. Invalid provenance and unsupported operations deny first.
+
+The active executor contract is [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md). Only `src/policy/decisions.ts` and a new `test/write-decisions.test.ts` are in implementation scope. This checkpoint prepares the Goal but does not authorize automatic implementation, acceptance, staging, commit, push, Pi integration, or the next Goal.

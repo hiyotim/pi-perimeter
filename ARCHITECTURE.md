@@ -67,6 +67,8 @@ Global/default policy is authoritative. User-controlled overrides may grant expl
 
 The accepted first decision primitive is the [read-path default decision contract](docs/READ-PATH-DECISIONS.md): a fixed default rule over one genuine resolver result, with internal classification and no configuration or approval inputs. Its `ALLOW` is only a default path-rule result and cannot bypass later stronger restrictions. It is not integrated with Pi tools. Other operations and configuration authority remain separate Phase 1 work.
 
+The accepted [write-path default decision contract](IMPLEMENTATION_HANDOFF.md) adds the same fixed-rule approach for one write path: an ordinary missing target inside the workspace is an acceptable creation target, an ordinary external target asks, and secret/sensitive targets deny. Its `ALLOW` is likewise only a default path-rule result and cannot bypass later stronger restrictions. Read and write default path primitives are implemented and accepted but not integrated with Pi tools; edit, delete, and other operation policies remain future Phase 1 work.
+
 ## 6. Approvals
 
 **Planned.** The approval layer will present the exact operation, canonical target, reason, duration, and scope. Approvals must be narrow, visible, and non-transferable between materially different resources or operations. Timeout, unavailable UI, and malformed responses do not grant access.
