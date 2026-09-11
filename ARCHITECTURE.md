@@ -65,6 +65,8 @@ Ordinary filenames can still contain secrets, and Phase 1A's filesystem limitati
 
 Global/default policy is authoritative. User-controlled overrides may grant explicitly scoped approvals. Project-local policy may only narrow permissions. Invalid or ambiguous security configuration fails closed where it affects protected access.
 
+The accepted first decision primitive is the [read-path default decision contract](docs/READ-PATH-DECISIONS.md): a fixed default rule over one genuine resolver result, with internal classification and no configuration or approval inputs. Its `ALLOW` is only a default path-rule result and cannot bypass later stronger restrictions. It is not integrated with Pi tools. Other operations and configuration authority remain separate Phase 1 work.
+
 ## 6. Approvals
 
 **Planned.** The approval layer will present the exact operation, canonical target, reason, duration, and scope. Approvals must be narrow, visible, and non-transferable between materially different resources or operations. Timeout, unavailable UI, and malformed responses do not grant access.

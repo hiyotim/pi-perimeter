@@ -1,12 +1,12 @@
 # Project State
 
 Updated: 2026-09-11
-Branch: `phase-1b-resource-classification`
-HEAD: `548032665b57fdbaa4399ad2c0aaaa9ea001a2f6`
+Branch: `codex/read-path-default-decisions`
+HEAD: `e9b2f16cafe79421c8cf59f1d3fc028379888386`
 
 ## Current checkpoint
 
-**PHASE 1B ACCEPTED.** On 2026-09-11, following the final independent audit PASS, the owner authorized the proposed acceptance update and preparation of the next bounded Goal. Phase 1A path resolution and Phase 1B path-only classification exist as unenforced primitives. No Pi tool gates, authorization decisions, approvals, shell/network policy, or OS containment are implemented. The accumulated working tree remains uncommitted; HEAD alone does not contain the current classifier.
+**READ-PATH DEFAULT DECISION GOAL ACCEPTED; COMMIT PREPARATION AUTHORIZED.** Phase 1A path resolution, Phase 1B path-only classification, and the first fixed read-path decision primitive exist without Pi enforcement. The owner accepted `20260911-read-path-default-decisions` after an independent security review PASS and authorized its separate local commit. No Pi tool gates, approval flow, configurable policy, other operation decisions, shell/network policy, or OS containment are implemented.
 
 This file is the canonical acceptance/checkpoint record. `ROADMAP.md` defines phase gates; `ARCHITECTURE.md` defines component and trust boundaries. `IMPLEMENTATION_HANDOFF.md` is the replaceable execution contract for the selected Goal. The older untracked `QWEN_TASK.md` is absent at this checkpoint; its removal was observed during review, not attributed to the implementation. Do not recreate it or treat it as the active instruction.
 
@@ -50,6 +50,16 @@ Fresh independent evidence: 69/69 resource tests; typecheck and 111/111 full tes
 
 ## Phase 1B acceptance and commit boundary
 
-Final owner acceptance was recorded on 2026-09-11 in response to the proposed next steps. Only the Phase 1B classification checkbox is closed. A separate Phase 1B commit is being prepared for review; actual staging, commit, and push are not part of this preparation. Local artifacts and unrelated changes must not be included implicitly.
+Final owner acceptance was recorded on 2026-09-11 in response to the proposed next steps. Only the Phase 1B classification checkbox is closed. The separately authorized Git transition created the Phase 1B commit `feat: add audited path-only resource classification` (`e9b2f16cafe79421c8cf59f1d3fc028379888386`): exactly the 15 candidate files were staged from the verified patch, all committed blob hashes matched the manifest, `npm run check` passed (typecheck and 111/111 tests), `git diff --cached --check` passed, and the index was empty afterward. Local `main` was fast-forwarded to that commit without a merge commit. No push was performed.
 
-At this acceptance checkpoint, `IMPLEMENTATION_HANDOFF.md` describes the accepted assertion Goal and must not be executed again. Next-Goal preparation is authorized separately; no new production implementation, Pi integration, installation, staging, commit, or push is authorized by this record.
+A separate 15-file Phase 1B commit candidate was prepared before next-Goal planning edits; see [docs/PHASE-1B-COMMIT.md](docs/PHASE-1B-COMMIT.md). It excludes local artifacts and next-Goal planning. It is preserved as the historical description of the snapshot that was committed.
+
+## Selected next Goal
+
+`20260911-read-path-default-decisions`: **GOAL ACCEPTED.** The first decision primitive is limited to a single read path: sensitive/secret deny, ordinary missing target denies, ordinary existing canonical in-workspace target allows, ordinary existing external target asks. Invalid provenance and unsupported operations deny before those rules. It uses existing resolver/classifier contracts and introduces no enforcement or configurable exceptions.
+
+Before implementation, the separately prepared [Git transition prompt](docs/BRANCH-TRANSITION.md) was completed: the exact accepted Phase 1B snapshot was committed, local `main` was fast-forwarded, `codex/read-path-default-decisions` was created, and the handoff baseline was refreshed to the actual commit. The transition task did not begin implementation and this checkpoint does not authorize an automatic transition into it; implementation starts only under a separate explicit instruction. The implementation Goal itself is unchanged.
+
+The fixed design is [docs/READ-PATH-DECISIONS.md](docs/READ-PATH-DECISIONS.md), the executed contract is [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md), and the independent verdict is recorded in [docs/READ-PATH-DECISIONS-AUDIT.md](docs/READ-PATH-DECISIONS-AUDIT.md). The review found no defects. It passed 8/8 focused tests, typecheck and 119/119 complete tests, whitespace checks, and 16/16 independently designed assertions. Source and test scope remained exactly `src/policy/decisions.ts` and `test/decisions.test.ts`; all five baseline anchors were unchanged.
+
+The roadmap decision checkbox remains open because this Goal covers only one read path and does not complete the structured decision engine. Broader operation policies and monotonic configuration authority remain Phase 1 work. No Pi integration, installation, push, or Phase 2 work is authorized by this checkpoint.
