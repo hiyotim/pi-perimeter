@@ -122,3 +122,67 @@ export function evaluateWritePath(
 
   return { decision: "ASK", reason: "EXTERNAL_WRITE" };
 }
+
+export type EditPathDenyReason =
+  | "INVALID_RESOURCE"
+  | "UNSUPPORTED_OPERATION"
+  | "SECRET_RESOURCE"
+  | "SENSITIVE_RESOURCE"
+  | "EDIT_TARGET_MISSING";
+
+export type EditPathDecision =
+  | {
+      readonly decision: "ALLOW";
+      readonly reason: "WORKSPACE_EDIT";
+    }
+  | {
+      readonly decision: "ASK";
+      readonly reason: "EXTERNAL_EDIT";
+    }
+  | {
+      readonly decision: "DENY";
+      readonly reason: EditPathDenyReason;
+    };
+
+/**
+ * Applies the fixed default edit-path decision table to a genuine Phase 1A
+ * result. Classification is obtained internally and cannot be supplied or
+ * bypassed by the caller. Unlike write, an edit requires an existing target:
+ * every ordinary missing target denies regardless of workspace membership.
+ *
+ * This function is synchronous and content-blind: it performs no filesystem
+ * access and returns a default path-rule result, not an execution grant,
+ * approval, capability, or sandbox outcome.
+ */
+export function evaluateEditPath(
+  operation: "edit",
+  resource: ResolvedPath,
+): EditPathDecision {
+  if (!isResolvedPath(resource)) {
+    return { decision: "DENY", reason: "INVALID_RESOURCE" };
+  }
+
+  if (operation !== "edit") {
+    return { decision: "DENY", reason: "UNSUPPORTED_OPERATION" };
+  }
+
+  const { sensitivity } = classifyPathResource(resource);
+
+  if (sensitivity === "secret") {
+    return { decision: "DENY", reason: "SECRET_RESOURCE" };
+  }
+
+  if (sensitivity === "sensitive") {
+    return { decision: "DENY", reason: "SENSITIVE_RESOURCE" };
+  }
+
+  if (!resource.targetExists) {
+    return { decision: "DENY", reason: "EDIT_TARGET_MISSING" };
+  }
+
+  if (resource.insideWorkspace) {
+    return { decision: "ALLOW", reason: "WORKSPACE_EDIT" };
+  }
+
+  return { decision: "ASK", reason: "EXTERNAL_EDIT" };
+}

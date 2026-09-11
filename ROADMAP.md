@@ -20,7 +20,7 @@ This roadmap uses release gates, not dates. A phase is complete only when its li
 - [x] Existing-target and creation-target handling.
 - [x] Symlink resolution and documented race limitation.
 - [x] Secret path and resource classification (Phase 1B accepted after final independent audit; path-only, unenforced primitive).
-- [ ] Structured `ALLOW`, `ASK`, and `DENY` decisions with reason codes.
+- [x] Structured `ALLOW`, `ASK`, and `DENY` decisions with reason codes (fixed default decisions for `read`, `write`, and `edit` accepted; unenforced primitives).
 - [ ] Monotonic configuration authority rules.
 
 **Release gate:** a platform-independent policy core passes table-driven and adversarial tests using temporary fixtures, with no Pi or sandbox side effects.
