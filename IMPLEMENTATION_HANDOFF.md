@@ -1,51 +1,81 @@
 # Implementation Handoff
 
-Task ID: 20260911-monotonic-policy-authority-contract
-Baseline: 139fa4abdff13a1240aa6488cb23e70bd7f80d15
+Task ID: 20260912-monotonic-authorization-join
+Baseline: 6a63f09d5845c4e2d044fe46441384db0e0d96a5
 
 ## Goal
 
-Create one documentation-only contract for the monotonic configuration and authority hierarchy before any parser, schema, merge function, approval flow, or runtime integration is written. The document must state unambiguously which configuration sources have authority, how their restrictions combine, and why repository-controlled configuration can never weaken built-in or trusted user/global policy. Do not implement any configuration behavior.
+Implement the smallest pure-policy primitive required by the accepted monotonic authority contract: a fail-closed pairwise join for authorization outcomes in which `ALLOW < ASK < DENY` and the stricter outcome wins. Do not implement configuration loading, schemas, source precedence, approvals, containment, enforcement, or Pi integration.
 
 ## Context
 
-Phase 1A path resolution, Phase 1B path-only classification, and the fixed read-path, write-path, and edit-path default decision primitives are accepted and committed at the baseline. Their `ALLOW` results are default path-rule outcomes only; they are not enforcement, approval, capability, configuration, or containment. Monotonic configuration authority rules remain the last open Phase 1 roadmap item. The architecture already states the intended boundary: global/default policy is authoritative, user-controlled overrides may grant explicitly scoped approvals, project-local policy may only narrow permissions, and invalid or ambiguous security configuration fails closed where it affects protected access.
+The documentation-only authority contract in `docs/MONOTONIC-POLICY-AUTHORITY.md` is accepted and committed. It defines authorization outcomes as one strictness lattice and keeps `SANDBOX` on a separate containment axis. The accepted read/write/edit functions return structured path-rule decisions, but this Goal does not integrate or refactor them. It adds one independently testable join primitive that future policy composition can call.
 
-The accepted read, write, and edit path decisions are one future input default outcome. The contract must describe their place in the composition without changing them, mutating genuine `ResolvedPath` results, substituting classification, or treating `ALLOW` as a capability token.
-
-Relevant documents to keep consistent: `AGENTS.md`, `ARCHITECTURE.md`, `ROADMAP.md`, `STATE.md`, `THREAT_MODEL.md`, `SECURITY.md`, `docs/DEVELOPMENT.md`, `docs/SECURITY-CHECKLIST.md`, `docs/READ-PATH-DECISIONS.md`, `docs/WRITE-PATH-DECISIONS-AUDIT.md`, and `docs/EDIT-PATH-DECISIONS-AUDIT.md`.
-
-Known unrelated working changes on the new branch are `.gitignore`, `.opencode-permission-canary.txt`, `.qwen/`, and the two completed transition prompts. The Git index is empty. Preserve these files without inspecting local configuration; stop on any other baseline change rather than resetting or cleaning it.
+The implementation baseline contains no `src/policy/authority.ts` or `test/authority.test.ts`. The Git index and working tree are clean apart from ignored local tooling files. Stop if the baseline or scope differs rather than resetting or reconstructing it.
 
 ## Scope
 
-Create only `docs/MONOTONIC-POLICY-AUTHORITY.md`. Do not modify source, tests, package files, dependencies, `STATE.md`, `ARCHITECTURE.md`, `ROADMAP.md`, or any other document. Do not implement or specify a parser, configuration schema, merge function, approval storage/UI, Pi integration, or enforcement. Do not stage, commit, push, or start the next Goal.
+Create only:
+
+- `src/policy/authority.ts`
+- `test/authority.test.ts`
+
+Expose exactly this public surface from the new module:
+
+```ts
+export type AuthorizationOutcome = "ALLOW" | "ASK" | "DENY";
+
+export function joinAuthorizationOutcomes(
+  left: AuthorizationOutcome,
+  right: AuthorizationOutcome,
+): AuthorizationOutcome;
+```
+
+Do not modify existing source, tests, package files, exports, dependencies, or documentation. Do not connect the primitive to `decisions.ts` or `src/index.ts`.
 
 ## Acceptance Criteria
 
-1. Enumerate and separate built-in defaults, trusted user/global configuration, project-controlled configuration, and future scoped user approvals. For each source state its owner, trust boundary, and permissible effect.
-2. Define the strictness order of baseline authorization outcomes `ALLOW < ASK < DENY` and the monotonic join operation in which the stricter outcome wins. Describe `SANDBOX` as a separate containment axis, not a way to weaken `DENY` or replace an authorization outcome.
-3. Project-controlled configuration may only preserve or strengthen the effective restriction. Replacing `DENY` with `ASK` or `ALLOW`, replacing `ASK` with `ALLOW`, disabling classification, provenance, or canonicalization, or expanding trusted workspace authority is not permitted.
-4. Trusted user/global configuration does not receive an unrestricted bypass. Explicitly separate future, explicitly supported owner choices from hard security invariants, and list the questions that must remain unresolved until a separate Goal.
-5. A future approval can satisfy only a specific `ASK` inside explicitly defined scope, resource, operation, and time boundaries. An approval does not convert a hard `DENY` into permission and does not cancel containment.
-6. Define fail-closed behavior for missing, unknown, malformed, ambiguous, or unsupported security-relevant configuration. Do not invent a file format, path, parser API, or migration semantics.
-7. Provide a complete combination table for `ALLOW`/`ASK`/`DENY`, including global/default plus project restriction, with the resulting outcome and a stable explanation. Include adversarial cases: project allow over global deny, project allow over global ask, unknown values/keys, partial configuration, duplicate/conflicting rules, and attempts to disable secret, provenance, or path protections.
-8. Describe how the accepted read, write, and edit path decisions enter future composition: they are one input default outcome. No configuration may mutate a genuine `ResolvedPath`, substitute classification, or use `ALLOW` as a capability token.
-9. List deferred decisions explicitly: schema/API, configuration loading, precedence between multiple trusted global sources, approval storage/UI, Pi integration, sandbox/network, and delete/rename/multi-resource policy. Do not present them as implemented.
-10. Keep wording consistent with `AGENTS.md`, `ARCHITECTURE.md`, `ROADMAP.md`, `STATE.md`, `THREAT_MODEL.md`, `SECURITY.md`, `docs/DEVELOPMENT.md`, and `docs/SECURITY-CHECKLIST.md`, and add no guarantee beyond the current implementation.
+1. `joinAuthorizationOutcomes` is synchronous, deterministic, side-effect-free, and performs no filesystem, process, UI, network, configuration, or Pi operation.
+2. For all nine valid ordered pairs it returns the stricter outcome according to `ALLOW < ASK < DENY`. Expectations must be explicit and complete:
+
+   | left | right | result |
+   | --- | --- | --- |
+   | `ALLOW` | `ALLOW` | `ALLOW` |
+   | `ALLOW` | `ASK` | `ASK` |
+   | `ALLOW` | `DENY` | `DENY` |
+   | `ASK` | `ALLOW` | `ASK` |
+   | `ASK` | `ASK` | `ASK` |
+   | `ASK` | `DENY` | `DENY` |
+   | `DENY` | `ALLOW` | `DENY` |
+   | `DENY` | `ASK` | `DENY` |
+   | `DENY` | `DENY` | `DENY` |
+
+3. Runtime input is validated by exact, non-coercing value checks even though TypeScript callers see the literal union. If either argument is not one of the three primitive strings, the result is `DENY`. Invalid values must not throw or produce `ALLOW`/`ASK`.
+4. Invalid-input coverage includes `undefined`, `null`, booleans, numbers, bigint, symbols, empty/case/whitespace variants, arrays, `new String(...)`, plain and null-prototype objects, functions, objects with throwing `toString`/`valueOf`/`Symbol.toPrimitive`, and proxies. Validation must not invoke coercion, getters, proxy traps, iteration, or attacker-controlled callbacks.
+5. Tests explicitly establish idempotence, commutativity, and associativity. Associativity covers every one of the 27 valid triples. They also establish that no argument object is mutated and that the function returns only a primitive valid outcome.
+6. Compile-time checks accept the three literals and reject unsupported strings, decision objects, `SANDBOX`, and invalid assignments to `AuthorizationOutcome`. Runtime casts of those values still fail closed.
+7. The primitive represents only authorization strictness. It must not introduce reason codes, configuration-source identifiers, approval state, scope, resource data, containment flags, `SANDBOX`, exceptions, logging, fallback callbacks, or extra return structure.
+8. Existing `paths.ts`, `resources.ts`, `decisions.ts`, all existing tests, documentation, configuration, and package metadata remain byte-identical. All 137 accepted tests continue to pass.
 
 ## Verification
 
-- Inspect only the new document diff and run `git diff --check`.
-- Check references and terminology with targeted `rg` queries.
-- Confirm no source, test, configuration, dependency, or other document changed, and that the Git index is empty.
-- Report remaining ambiguities as review questions; do not select hidden implementation semantics.
-- Stop with the document ready for independent review.
+Run in order:
+
+```sh
+node --test test/authority.test.ts
+npm run check
+git diff --check
+git status --short --branch
+```
+
+Inspect the complete two-file diff. Confirm the index is empty, only the two scoped files changed, no existing file changed, no dependency was added, and no real credential or user path appears. Record SHA-256 for both new files.
 
 ## Constraints
 
-The document is a contract only. It must not claim implemented configuration loading, parser behavior, merge code, approval flow, Pi integration, or containment. It must not weaken any existing security invariant, must not authorize project-controlled configuration to loosen policy, and must not treat `SANDBOX` as an authorization outcome. Keep runtime dependencies and code untouched. Use no real credentials or local configuration content.
+Follow `AGENTS.md` and the accepted authority contract. Invalid runtime inputs fail closed to `DENY`; do not throw them into a caller-controlled fallback. Keep authorization and containment separate. This primitive does not decide whether trusted configuration may ever lower `ASK`, does not determine an affected decision set, and does not complete the roadmap authority item by itself.
+
+Do not stage, commit, push, open a PR, change branches, or start another Goal. Stop after implementation and verification for independent security review.
 
 ## Escalate If
 
-Stop and report before proceeding if the Goal or acceptance criteria must change, an architectural invariant must change, scope must expand, an unapproved public/external contract is required, canonical documents conflict, the baseline differs materially, or an implementation or migration decision would be required. Do not silently choose schema, file-format, path, or precedence semantics. Preserve the accumulated work; do not reset, clean, or invent a fallback.
+Stop and report before proceeding if the exact API or decision table must change, an existing file must change, runtime validation would require a broader parser/schema contract, a new dependency is needed, the accepted authority contract is internally insufficient, the baseline differs materially, or an existing check fails. Preserve accumulated work; do not reset, clean, weaken fail-closed behavior, or invent configuration semantics.

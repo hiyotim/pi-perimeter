@@ -1,8 +1,8 @@
 # Project State
 
 Updated: 2026-09-12
-Branch: `main`
-Accepted baseline: `03a427e5b9aa3b34d22dc7bda4b1aba10e318c64`
+Branch: `codex/monotonic-authorization-join`
+Implementation baseline: `6a63f09d5845c4e2d044fe46441384db0e0d96a5`
 
 ## Current checkpoint
 
@@ -85,3 +85,9 @@ Independent evidence: focused edit tests 9/9, accepted read tests 8/8, accepted 
 Independent evidence: all ten handoff criteria passed; all nine outcome combinations and the requested adversarial cases were inspected; document hash and baseline matched; internal links resolved; CR, trailing whitespace, tabs, BOM, and placeholder scans were clean; `git diff --check` passed; source/tests matched accepted anchors; and the index was empty. Informational observations about a non-exhaustive cross-reference, intentionally stale pre-acceptance checkpoint text, and `git diff --check` not covering untracked files were not defects. See [docs/MONOTONIC-POLICY-AUTHORITY-AUDIT.md](docs/MONOTONIC-POLICY-AUTHORITY-AUDIT.md). This acceptance does not complete the roadmap authority item or authorize a runtime guarantee.
 
 The acceptance commit contains nine project files: the reviewed contract and audit, architecture/state/roadmap updates, the executed handoff, both preserved transition prompts, and local-artifact ignore rules. The `.qwen/` directory and permission canary remain local and untracked. The accepted contract is the baseline for the next bounded pure-policy Goal.
+
+## Selected next Goal
+
+`20260912-monotonic-authorization-join`: **HANDOFF PREPARED; NOT IMPLEMENTED.** The branch `codex/monotonic-authorization-join` starts from the post-acceptance checkpoint `6a63f09d5845c4e2d044fe46441384db0e0d96a5`. The bounded Goal creates only `src/policy/authority.ts` and `test/authority.test.ts` with a fail-closed pairwise join over `ALLOW < ASK < DENY`. It does not load or parse configuration, identify policy sources, integrate existing decisions, implement approvals or containment, or close the monotonic-authority roadmap item.
+
+The active executor contract is [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md). Implementation, acceptance, staging, further commits, Pi integration, and the next Goal require their own execution and review steps.
