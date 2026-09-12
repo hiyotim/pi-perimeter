@@ -7,3 +7,6 @@ coverage/
 .env
 .env.*
 !.env.example
+.conductor/
+.qwen/
+.opencode-permission-canary.txt
