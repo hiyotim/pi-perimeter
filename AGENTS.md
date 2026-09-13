@@ -4,7 +4,7 @@
 
 Build `pi-warden`: a small, auditable Pi extension/package that is intended to provide workspace-first authorization, explicit user approvals, and OS-level containment for model-facing operations. The target experience is convenient for normal work inside a project while treating external paths, secrets, dangerous operations, and unknown network access conservatively.
 
-The repository currently includes the Phase 1A path policy primitive and Phase 1B path-only resource classifier, but no functional enforcement. See [STATE.md](STATE.md) for the current acceptance checkpoint. Do not represent planned protections as implemented.
+See [STATE.md](STATE.md) for the current acceptance checkpoint and implemented primitives. There is no functional enforcement. Do not represent planned protections as implemented.
 
 ## Non-goals
 
@@ -59,13 +59,15 @@ For every substantial task:
 1. Inspect only the relevant code and documentation.
 2. Identify the affected security invariant and trust boundary.
 3. Research the current upstream Pi API when integration behavior is involved.
-4. Propose the smallest coherent change.
+4. State the smallest coherent change; continue within the authorized scope without an extra approval checkpoint.
 5. Implement that change without unrelated refactoring.
-6. Add or update regression tests using isolated fixtures.
-7. Run targeted tests first.
-8. Run the complete relevant checks.
+6. Add or update isolated regression tests for changed behavior and security invariants.
+7. Use targeted tests when useful for diagnosis.
+8. Run the complete relevant checks for code, test, or dependency changes; for documentation-only edits, check affected claims, links, and the diff.
 9. Perform an adversarial review for bypasses and unsafe failure modes.
 10. Summarize security implications, limitations, and any changed guarantees.
+
+Finish the selected task and its required verification, fixing failures caused by the change within scope. Respect explicit independent-review and acceptance gates, including any requirement for fresh evidence. Otherwise, repeat checks or review only after relevant changes, failures, or new evidence. Stop and report a blocker when proceeding requires new authority, a scope change, or unavailable evidence; do not start the next Goal.
 
 ## Forbidden shortcuts
 
@@ -86,4 +88,4 @@ Never:
 
 Keep pure authorization logic in `src/policy/`, OS containment adapters in `src/sandbox/`, and approval flow in `src/approvals/`. The Pi integration entry point should remain thin. Test fixtures must be created under temporary directories and removed without touching real user data.
 
-During Phase 1A, do not add functional enforcement or advance into later policy phases. Follow [ROADMAP.md](ROADMAP.md) before advancing phases.
+Keep work within the selected Goal and the current gates in [STATE.md](STATE.md) and [ROADMAP.md](ROADMAP.md). Do not add functional enforcement or advance phases without explicit authorization and satisfying the applicable gates.

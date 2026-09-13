@@ -15,18 +15,9 @@
 
 ## Daily workflow
 
-1. Select one roadmap item or security invariant.
-2. Inspect the smallest relevant code and test surface.
-3. State the intended decision and failure behavior before coding.
-4. Verify current upstream Pi behavior if the change touches integration.
-5. Implement the smallest coherent change.
-6. Add positive, negative, and bypass-oriented tests.
-7. Run targeted tests, then the complete relevant checks.
-8. Review the diff for widened authority, unsafe fallback, secrets, and unrelated edits.
-9. Update documentation to match demonstrated behavior.
-10. Commit only after the adversarial review is complete.
+Follow the required workflow in [AGENTS.md](../AGENTS.md) for the selected task. Review the diff for widened authority, unsafe fallback, secrets, and unrelated edits; update documentation when demonstrated behavior changes. Commit only when explicitly authorized and the adversarial review is complete.
 
-Phase 1A and Phase 1B use the Node test runner for TypeScript tests and a local TypeScript compiler for static checking. Run `npm run test:paths` for the focused path suite, `node --test test/resources.test.ts` for the focused resource-classification suite, and `npm run check` for the complete currently applicable checks.
+The project uses the Node test runner for TypeScript tests and a local TypeScript compiler. For code, test, or dependency changes, run `npm run check` (typecheck and all tests). Focused checks such as `npm run test:paths` or `node --test test/resources.test.ts` are useful during diagnosis; the full check already includes them. For documentation-only edits, verify affected claims, links, and the diff. Additional checks explicitly required by the task or handoff still apply.
 
 ## Code placement
 

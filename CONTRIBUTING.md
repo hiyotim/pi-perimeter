@@ -4,7 +4,7 @@
 
 ## Before making a change
 
-1. Read [AGENTS.md](AGENTS.md), [ARCHITECTURE.md](ARCHITECTURE.md), and [THREAT_MODEL.md](THREAT_MODEL.md).
+1. Follow [AGENTS.md](AGENTS.md). Use relevant sections of [ARCHITECTURE.md](ARCHITECTURE.md) for component boundaries and [THREAT_MODEL.md](THREAT_MODEL.md) for affected threats; reuse current context.
 2. Identify the single invariant or release gate affected.
 3. Re-check current Pi documentation before changing integration behavior.
 4. Open a design discussion before adding a runtime dependency or widening authority.
