@@ -2,9 +2,20 @@
 
 ## Status and scope
 
-This document describes the architecture as it is implemented incrementally. The Phase 1A path policy primitive and Phase 1B resource classifier are implemented and tested, but no Pi tool currently enforces them. Other components below remain design boundaries, not current guarantees, unless explicitly marked as implemented.
+This document describes the architecture as it is implemented incrementally. Phase 1A path handling, Phase 1B resource classification, fixed read/write/edit decisions, pairwise/N-ary authorization composition, and bounded configuration authorization are accepted unenforced primitives. Goal 1 owner acceptance was recorded on 2026-09-15. No accepted Pi enforcement exists; the Goal 2 gate is present only as an unaccepted working-tree implementation and is not a security guarantee. Other components below remain design boundaries, not current guarantees, unless explicitly marked as implemented.
 
-Phase 1B is accepted as a path-only, unenforced primitive. [STATE.md](STATE.md) records accepted Goals, review evidence, and remaining gates; Phase 1 as a whole remains incomplete.
+Phase 1 is accepted as an unenforced policy core. [STATE.md](STATE.md) records the evidence and the open corrective pass for Goal 2 (Pi file gates and scoped approvals): the implementation is present in the working tree but NOT accepted after an owner-reproduced ancestor-directory symlink swap wrote outside the workspace between authorization and execution.
+
+## Remaining implementation boundaries
+
+The four-Goal plan in [ROADMAP.md](ROADMAP.md) assigns related implementation, tests, documentation, and review to one cycle per boundary:
+
+1. **Configuration authorization:** untrusted configuration data becomes validated restrictions through a trusted loading context, then combines with accepted baseline decisions. Keep filesystem loading separate from deterministic interpretation/composition; project data never supplies its own authority. The bounded initial model has one user/global source, one project source, and exact read/write/edit operation scopes. No Pi enforcement is part of this Goal.
+2. **Pi file gates and scoped approvals:** the trusted host binds a complete file operation to central policy, matching approval, and execution-time resource identity. Recursive tools must mediate their actual resources, and host control-plane state must remain protected. An approved directory is not blanket authority over descendants. Unsupported tools and shell routes fail closed.
+3. **Sandboxed shell with network closed:** establish the separate OS boundary around untrusted subprocesses, including environment construction, shell policy and inherited restrictions. Validate the backend and claimed platform guarantees before dependent implementation. No network permission is granted at this checkpoint.
+4. **Restricted networking and end-to-end security evidence:** extend accepted containment with narrow actual-destination permissions and approvals; demonstrate that egress cannot weaken the other boundaries.
+
+Each Goal requires independent review and acceptance before the next dependent boundary is enabled. Phase 5 hardening work belongs to its affected boundary; public-beta and v1 gates remain separate release decisions. These assignments replace future micro-Goal scheduling, not accepted security contracts. Delete/rename APIs and general path-selector frameworks are not extra Phase 1 prerequisites; complete effects/resources of supported tools must be handled in their owning Goal, while unsupported operations remain denied/unavailable.
 
 ## Trust zones and data flow
 
@@ -17,7 +28,8 @@ Phase 1B is accepted as a path-only, unenforced primitive. [STATE.md](STATE.md) 
 │                    v                                                  │
 │ Path normalization -> Resource classification -> Policy engine       │
 │                                                  │                    │
-│                                  ALLOW / ASK / DENY / SANDBOX         │
+│                                  ALLOW / ASK / DENY                   │
+│                                  + containment requirement            │
 │                                      │           │                    │
 │                                      │           └-> Approval UI      │
 │                                      v                                │
@@ -49,7 +61,7 @@ Normalization surfaces ambiguity and errors rather than guessing. It intentional
 
 ## 3. Workspace boundary
 
-**Containment primitive implemented; authorization remains planned.** A canonical workspace root defines the default allow zone. The path layer reports membership using a path-component relationship, not a text prefix. No current Pi tool consumes this result, and external read/write behavior has not yet been implemented.
+**Path-membership and default decisions implemented; enforcement remains planned.** A canonical workspace root defines the default allow zone. The path layer reports membership using a path-component relationship, not a text prefix. Fixed default decisions for ordinary external read/write/edit paths return `ASK` where the operation's existence requirements hold; no Pi tool consumes these decisions.
 
 Workspace membership never overrides a secret classification or a stronger global restriction.
 
@@ -61,15 +73,15 @@ Ordinary filenames can still contain secrets, and Phase 1A's filesystem limitati
 
 ## 5. Policy engine
 
-**Planned.** The policy engine will be pure and deterministic. Inputs will include the operation, canonical resource, workspace relation, secret classification, command risk, network intent, effective configuration, and containment availability. Its output will be a structured `ALLOW`, `ASK`, `DENY`, or `SANDBOX` decision with a stable reason code.
+**Fixed path decisions, outcome composition, and bounded configuration-aware evaluation implemented; enforcement planned.** The implemented engine is pure and deterministic after loading. It accepts an exact operation, genuine canonical resource, internally derived classification, and a privately issued two-source configuration snapshot. Authorization produces structured `ALLOW`, `ASK`, or `DENY` decisions with baseline and source explanations. Future Goals add command risk, network intent, approvals, and containment availability. `SANDBOX` represents an orthogonal containment requirement, never a fourth authorization outcome.
 
-Global/default policy is authoritative. User-controlled overrides may grant explicitly scoped approvals. Project-local policy may only narrow permissions. Invalid or ambiguous security configuration fails closed where it affects protected access.
+Global/default policy is authoritative. Both trusted user/global and project configuration may only preserve or strengthen the baseline. User decisions through the separate approval layer may satisfy a specific matching `ASK`; configuration cannot grant approval. Invalid or ambiguous security configuration fails closed where it affects protected access.
 
-The accepted [monotonic policy authority contract](docs/MONOTONIC-POLICY-AUTHORITY.md) fixes the current composition model before configuration code exists: authorization restrictions are ordered `ALLOW < ASK < DENY`, the strictest applicable result wins, and both trusted user/global and project-controlled contributions may currently only preserve or strengthen the baseline. `SANDBOX` remains a separate containment axis. The contract does not implement configuration loading, parsing, merging, approval, enforcement, or Pi integration; any future mechanism that relaxes `ASK` requires an explicit contract change and separate review.
+The accepted [monotonic policy authority contract](docs/MONOTONIC-POLICY-AUTHORITY.md) fixes the composition model: authorization restrictions are ordered `ALLOW < ASK < DENY`, the strictest applicable result wins, and both trusted user/global and project-controlled contributions may only preserve or strengthen the baseline. Goal 1 implements the bounded configuration chain without changing those limits: [the configuration contract](docs/CONFIGURATION-AUTHORIZATION.md) defines the strict v1 schema, fixed locations, trusted source association, whole-source failure domains, and structured result. Approval, enforcement, and Pi integration remain absent. Any future mechanism that relaxes `ASK` requires an explicit contract change and separate review.
 
-The accepted first decision primitive is the [read-path default decision contract](docs/READ-PATH-DECISIONS.md): a fixed default rule over one genuine resolver result, with internal classification and no configuration or approval inputs. Its `ALLOW` is only a default path-rule result and cannot bypass later stronger restrictions. It is not integrated with Pi tools. Other operations and configuration authority remain separate Phase 1 work.
+The accepted first decision primitive is the [read-path default decision contract](docs/READ-PATH-DECISIONS.md): a fixed default rule over one genuine resolver result, with internal classification and no configuration or approval inputs. Its `ALLOW` is only a default path-rule result and cannot bypass later stronger restrictions. It is not integrated with Pi tools. Goal 1 composes these baseline outcomes with validated configuration; Goal 2 adds enforcement.
 
-The accepted write-path and edit-path default decision contracts add the same fixed-rule approach for one write path and one edit path. For write, an ordinary missing target inside the workspace is an acceptable creation target and an ordinary external target asks. For edit, every ordinary missing target denies because an edit requires an existing target; ordinary existing inside targets allow and ordinary existing external targets ask. Secret and sensitive targets deny for both. The write-path independent verdict is recorded in [docs/WRITE-PATH-DECISIONS-AUDIT.md](docs/WRITE-PATH-DECISIONS-AUDIT.md) and the edit-path verdict in [docs/EDIT-PATH-DECISIONS-AUDIT.md](docs/EDIT-PATH-DECISIONS-AUDIT.md). Their `ALLOW` is only a default path-rule result and cannot bypass later stronger restrictions. Read, write, and edit default path primitives are implemented and accepted but not integrated with Pi tools; delete, rename, multi-resource, and other operation policies remain future Phase 1 work.
+The accepted write-path and edit-path default decision contracts add the same fixed-rule approach for one write path and one edit path. For write, an ordinary missing target inside the workspace is an acceptable creation target and an ordinary external target asks. For edit, every ordinary missing target denies because an edit requires an existing target; ordinary existing inside targets allow and ordinary existing external targets ask. Secret and sensitive targets deny for both. The write-path independent verdict is recorded in [docs/WRITE-PATH-DECISIONS-AUDIT.md](docs/WRITE-PATH-DECISIONS-AUDIT.md) and the edit-path verdict in [docs/EDIT-PATH-DECISIONS-AUDIT.md](docs/EDIT-PATH-DECISIONS-AUDIT.md). Their `ALLOW` is only a default path-rule result and cannot bypass later stronger restrictions. Read, write, and edit default path primitives are implemented and accepted but not integrated with Pi tools. Multi-resource effects needed by supported file tools belong to Goal 2; shell effects belong to Goal 3. No generic delete/rename API is selected by the four-Goal plan.
 
 ## 6. Approvals
 
@@ -92,6 +104,8 @@ Initialization is an explicit prerequisite. If the requested policy requires con
 ## 9. Network policy
 
 **Planned.** Network access will be restricted by default for sandboxed processes. Known development endpoints may be allowlisted; unknown destinations require a scoped approval. The design must consider DNS, redirects, proxies, local services, alternate protocols, and common exfiltration paths.
+
+Goal 3 proves closed networking before Goal 4 adds destination permissions. A network approval cannot widen filesystem policy, expose host credentials, or replace containment. Failure to establish destination identity or network enforcement blocks the connection.
 
 ## 10. Environment sanitization
 

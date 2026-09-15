@@ -4,7 +4,7 @@
 
 > **Project status: Phase 1 / Pre-alpha**
 
-This repository contains design documents, a minimal extension skeleton, and the tested Phase 1A path and Phase 1B resource-classification primitives. It does not enforce a security policy in Pi.
+This repository contains design documents, a minimal extension skeleton, and tested unenforced policy primitives through bounded configuration authorization. It does not enforce an accepted security policy in Pi; the Goal 2 file gate is present only as an unaccepted working-tree implementation with an open corrective pass.
 
 ## Problem
 
@@ -38,19 +38,17 @@ All model-facing tools must use one security model even though in-process file t
 
 ## Implementation status
 
-Phase 1A implements path canonicalization and component-aware workspace membership, including existing symlinks and non-existent creation targets. Phase 1B classifies a deliberately small set of secret and sensitive paths using Phase 1A's canonical and normalized lexical results. The classifier is content-blind: ordinary filenames may contain secrets, and `sensitive` is not equivalent to `secret`. No Pi tool currently uses either result, and Phase 1A's documented filesystem limitations still apply.
+Phase 1A implements path canonicalization and component-aware workspace membership, including existing symlinks and non-existent creation targets. Phase 1B classifies a deliberately small set of secret and sensitive paths using Phase 1A's canonical and normalized lexical results. Fixed read/write/edit baselines and monotonic authorization composition are implemented. The accepted Goal 1 implements a strict v1 operation-policy parser, one fixed user/global source, one fixed project source, and explainable composition with those baselines.
 
-The project does **not** yet provide:
+The Goal 2 working-tree implementation (NOT accepted; corrective pass open) adds central enforcement: pi-warden mediates every supported model-facing file tool (`read`, `write`, `edit`, `grep`, `find`, `ls`) through one gate (`src/gate/`), requests exact single-use scoped approvals for effective `ASK` outcomes (`src/approvals/`), protects the Pi agent directory and its policy location structurally (`src/policy/control-plane.ts`), replaces `grep`/`find`/`ls` with controlled same-name tools that classify every entry before reading and exclude denied resources from results, blocks model `bash`/`powershell` and user `!`/`!!` shell execution without spawning a shell, and fails closed for unknown or dynamically registered model-facing tools. See [docs/FILE-GATE.md](docs/FILE-GATE.md) for the exact operation mapping and limits. Important limitations remain: TOCTOU-style filesystem replacement races between authorization and execution are narrowed to the Pi tool-call boundary but not eliminated, and the owner reproduced an ancestor-directory symlink swap that writes outside the workspace between the ancestor verification and the final open; Goal 2 is therefore on an open corrective pass and is not a security control; shell execution and network access are blocked, not sandboxed; there is no OS containment, environment sanitization, or audit log.
 
-- workspace boundary enforcement in Pi;
-- credential protection or secret-content detection;
-- tool interception or approval prompts;
-- shell parsing or dangerous-command classification;
-- filesystem, process, or network containment;
+The project still does **not** provide:
+
+- shell execution capability (Shell enablement is deliberately blocked until Goal 3);
+- process, filesystem, or network containment;
 - environment sanitization;
+- secret-content detection beyond path classification;
 - audit logging or established security guarantees.
-
-The entry point deliberately registers no hooks or tools. Its existence does not mean the extension is installed or active.
 
 ## Platform
 

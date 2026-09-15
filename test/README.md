@@ -1,10 +1,9 @@
 # Test Strategy
 
-**Status: Phase 1A path tests and Phase 1B resource-classification tests are implemented; later security suites remain planned.**
+**Status: pure path, classification, read/write/edit decision, authorization composition, and configuration-authorization tests are implemented; Pi integration suites for the file gate, scoped approvals, and controlled traversal are implemented; platform-specific containment suites remain planned (Goal 3+).**
 
-Future tests will provide evidence for individual security invariants. The suite will separate pure policy tests, Pi integration coverage, and platform-specific sandbox tests.
+Run `npm run test:paths` for the path suite, `npm run test:configuration` for the complete configuration chain, `npm run test:gate` for gate/controlled-execution runtime integration (including the P1 final-target symlink-swap regression), `npm run test:approvals` for the approval contract, `npm run test:controlled` for controlled traversal effects, `npm run test:package` for the real isolated npm pack/install/rollback cycle, `npm run test:manifest` for the enforced sha256 artifact manifest, or `npm test` for all implemented tests. Tests run directly with the Node test runner using built-in type stripping; TypeScript remains a development-only dependency for `npm run typecheck`.
 
-Run `npm run test:paths` for the path suite, `node --test test/resources.test.ts` for the resource-classification suite, or `npm test` for all currently implemented tests. Tests run directly with the Node test runner; TypeScript remains a development-only dependency for `npm run typecheck`.
 
 ## Fixture isolation
 
@@ -38,3 +37,5 @@ Tests must never inspect, copy, mutate, or depend on real `$HOME` credentials. T
 - every supported Pi tool plus a future/unknown-tool fail-closed case.
 
 Every fixed bypass must remain as a regression test. Sandbox tests must verify actual containment effects, not only return values or UI status.
+
+The `test:gate` suite drives the supported Pi extension surfaces (the documented `tool_call`/`user_bash` event protocol and the genuine controlled executors that replace the builtins) rather than only measuring hook-return values; the P1 regression reproduces the owner's final-target symlink swap through the controlled surface and proves fake secret content is never read. `test:package` performs an actual `npm pack` with content inspection, an isolated install with temporary `HOME`/userconfig/npm cache, and a verified uninstall rollback — no real home, Pi profile, credentials, or repository install is touched. Full installed-Pi interactive runs and macOS evidence are not available in this environment and remain unverified, with residuals documented in [docs/FILE-GATE.md](../docs/FILE-GATE.md) and [docs/FILE-GATE-AUDIT.md](../docs/FILE-GATE-AUDIT.md).

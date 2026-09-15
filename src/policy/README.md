@@ -1,6 +1,6 @@
 # Policy Module
 
-**Status: Phase 1A path handling and Phase 1B resource classification are implemented as unenforced primitives.**
+**Status: path handling, resource classification, fixed read/write/edit decisions, monotonic composition, and bounded configuration authorization are implemented as unenforced primitives. Configuration authorization passed independent review; owner acceptance is pending.**
 
 This directory will own pure, deterministic security decisions:
 
@@ -16,4 +16,6 @@ This directory will own pure, deterministic security decisions:
 
 The current GitHub CLI and Google Cloud credential matchers recognize only conventional `.config` paths: `.config/gh/hosts.yml` for the GitHub CLI, and `.config/gcloud/credentials.db`, `.config/gcloud/access_tokens.db`, and `.config/gcloud/application_default_credentials.json` for Google Cloud. These two rules require the exact terminal component sequence, match ASCII case insensitively, and do not match the same basenames or directory sequences outside `.config`; independent resource rules can still contribute stronger evidence. Custom configuration roots, content inspection, and discovery from environment variables are outside the current scope.
 
-Neither primitive authorizes or enforces any operation. The policy module must not display UI, start processes, or treat sandbox availability as proof of authorization. Operation classification, environment classification, configuration authority, and decision logic remain planned.
+`configuration.ts` implements the exact v1 operation-policy parser and privately issued immutable values. `config-loader.ts` loads one user/global and one project file from fixed locations without following symlink components. `effective.ts` combines exact-operation restrictions with a genuine resource's accepted baseline and returns frozen explanations. Invalid sources fail closed across all three operations. See [the configuration contract](../../docs/CONFIGURATION-AUTHORIZATION.md) for schema, locations, failure domains, and filesystem limits.
+
+None of these primitives authorizes or enforces an operation in Pi. The policy module does not display UI, start processes, obtain approval, or provide containment. Environment classification and enforcement remain planned.

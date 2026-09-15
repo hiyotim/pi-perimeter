@@ -1,0 +1,20 @@
+{
+  "package.json": "57b03c9a407d4d9c56e148dbe0dfc728b37a213c3bdb0b6d1496593e3993857f",
+  ".github/workflows/ci.yml": "891d1c476016c632b77ee7b590afe867c046b6139102f4300b0ecbe5a63c3d63",
+  "src/index.ts": "dca0d37da378f1d8d9c5492e8e51e69ba796069fca5d3deb3a3eb2aa7da1b46c",
+  "src/policy/operations.ts": "04ab2e7e2db2fbfae5ca7f00773049269b12f832e9ed70d3938feff57672460e",
+  "src/policy/control-plane.ts": "a417b5b9c503798d9eeb8d86dee3098b9720ba3ef737f52f9c413fa9e3bd97c9",
+  "src/gate/gate-input.ts": "7c175ff73558f18aba7ccac4109cdb715c4765e6bfd95bcd343f3ce02114d2a9",
+  "src/gate/authorizer.ts": "7301972f43f8d8b3609bbc63bc810c06b15fd63416317c0223d210ce793248e2",
+  "src/gate/controlled-traversal.ts": "8eb88aef07a539eb01944ddc09f08645a163e84c4b0e4592d2dacdbd6449f30c",
+  "src/gate/bound-execution.ts": "1bfbdd4c87906bd792e345a3ee63c782901a4b0248630d5dcdc8c0d56b41d2a2",
+  "src/gate/runtime.ts": "f9dd4f41942bd2431573177ba8a4a14c0284351a47f7f0262edcf08ed6166d08",
+  "src/approvals/approvals.ts": "505eb3f6a401d256130061144a93720376848ff742dab6b8d972a982ac1ad9ac",
+  "docs/FILE-GATE.md": "b3cb6f4e9480cfe4ab2bd5a8347f9f1c7eb9e55296752f298544c270e69c079b",
+  "docs/FILE-GATE-AUDIT.md": "25fadac2e2b8af093bbf90fb67055a9f525b584914f2134d55b1a24737c8d312",
+  "test/approvals.test.ts": "b3b5f9ee615c951dcb88dd2abe1763a320d46ca50688115e532ffa3eee6b04e4",
+  "test/controlled-traversal.test.ts": "9152c4efed468e5537b7fc2f97372e1c2b66d0fd534a570d1b357deb0e8498e7",
+  "test/gate-runtime.test.ts": "5c9c42399495b5506e1a95888438ce956b66e1ce9b506b53fa098d5308df114b",
+  "test/package-compat.test.ts": "7027e52efed2eaf3583cb97461cdd24ba3bca056e418d627a0e90d6c2286e4a1",
+  "test/package-lifecycle.test.ts": "735eb5333e868c0642206a8c6a9af6eefc9b454ac168a5a6305150c76a289de1"
+}
