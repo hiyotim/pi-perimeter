@@ -134,6 +134,39 @@ test("find walks the authorized root and excludes denied descendants", async () 
   }
 });
 
+test("find and grep withhold a sensitive directory name and never enumerate its subtree", async () => {
+  const fixture = await createFixture();
+  try {
+    const target = path.join(fixture.workspace, "target");
+    await mkdir(path.join(target, ".ssh"), { recursive: true });
+    await writeFile(path.join(target, ".ssh", "known_hosts"), "host key data\n");
+    await mkdir(path.join(target, "ordinary"));
+    await writeFile(path.join(target, "ordinary", "code.ts"), "");
+
+    const { snapshot } = await snapshotFor(fixture);
+    const found = await controlledFind(snapshot, "**", 1000);
+    assert.ok(
+      !found.lines.some((line) => line === ".ssh" || line.startsWith(".ssh/")),
+      `sensitive directory name must be withheld from find: ${JSON.stringify(found.lines)}`,
+    );
+    assert.ok(found.lines.includes("ordinary"), `ordinary directories still appear: ${JSON.stringify(found.lines)}`);
+
+    const grepped = await controlledGrep(snapshot, {
+      pattern: "host key",
+      ignoreCase: false,
+      literal: true,
+      context: 0,
+      limit: 100,
+    });
+    assert.ok(
+      !grepped.lines.some((line) => line.includes("known_hosts")),
+      `sensitive directory subtree must not be searched: ${JSON.stringify(grepped.lines)}`,
+    );
+  } finally {
+    await destroyFixture(fixture);
+  }
+});
+
 test("grep regex with a malformed pattern matches nothing and performs no content effects", async () => {
   const fixture = await createFixture();
   try {

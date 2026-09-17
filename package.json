@@ -12,14 +12,14 @@
     "node": ">=22.19.0"
   },
   "scripts": {
-    "test": "node --test test/*.test.ts",
-    "test:paths": "node --test test/paths.test.ts",
-    "test:configuration": "node --test test/configuration.test.ts",
-    "test:approvals": "node --test test/approvals.test.ts",
-    "test:controlled": "node --test test/controlled-traversal.test.ts",
-    "test:gate": "node --test test/gate-runtime.test.ts",
-    "test:package": "node --test test/package-lifecycle.test.ts",
-    "test:manifest": "node --test test/hash-manifest.test.ts",
+    "test": "node --import ./test/canonical-tmpdir.mjs --test test/*.test.ts",
+    "test:paths": "node --import ./test/canonical-tmpdir.mjs --test test/paths.test.ts",
+    "test:configuration": "node --import ./test/canonical-tmpdir.mjs --test test/configuration.test.ts",
+    "test:approvals": "node --import ./test/canonical-tmpdir.mjs --test test/approvals.test.ts",
+    "test:controlled": "node --import ./test/canonical-tmpdir.mjs --test test/controlled-traversal.test.ts",
+    "test:gate": "node --import ./test/canonical-tmpdir.mjs --test test/gate-runtime.test.ts",
+    "test:package": "node --import ./test/canonical-tmpdir.mjs --test test/package-lifecycle.test.ts",
+    "test:manifest": "node --import ./test/canonical-tmpdir.mjs --test test/hash-manifest.test.ts",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm test"
   },

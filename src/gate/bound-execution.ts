@@ -6,8 +6,11 @@
  * symlink to another file, or plant a symlinked directory at a missing
  * creation-parent path so that a path-based create/write lands outside the
  * authorized location (owner-reported write escape reproduced on the previous
- * implementation). This module therefore binds every effect to verified
- * directory objects, not to path strings:
+ * implementation). This module therefore binds effects to verified objects,
+ * with two explicit platform classes:
+ *
+ * Class 1 — descriptor-relative chain execution (preferred; Linux
+ * `/proc/self/fd`):
  *
  * - The gate (trusted host code) captures an execution plan immediately after
  *   authorization and before any approval: the dev/ino identity of the
@@ -27,14 +30,27 @@
  *   fstat-verified (regular file, `nlink === 1`, and for existing targets the
  *   plan's dev/ino plus size/timestamp) before any content is read/written.
  *   `plan.canonicalPath` is never used to resolve a creation effect.
- * - For an existing target the descriptor stays on the verified inode for the
- *   whole effect, so later directory-entry swaps cannot redirect it.
- * - Support for descriptor-relative opens is probed at runtime; on platforms
- *   or filesystems without it every controlled file effect refuses clearly
- *   instead of falling back to a path-based variant.
  *
- * The original unprotected Pi builtins are never used as a fallback: any
- * verification failure throws before a read or write effect.
+ * Class 2 — verified direct leaf bind (fallback; platforms where
+ * descriptor-relative opens are unavailable, e.g. macOS):
+ *
+ * - Creation is refused outright: a new leaf cannot be bound without
+ *   descriptor-relative creation, and a narrowed path race is not accepted as
+ *   a substitute. Missing creation parents are refused for the same reason.
+ * - For an existing target the leaf is opened from `plan.canonicalPath` with
+ *   `O_NOFOLLOW` and fstat-verified against the plan's dev/ino plus the
+ *   pre-approval size/timestamp and the `nlink === 1` rule before the effect.
+ *   An ancestor swap can therefore only select a *different* object, which
+ *   the identity comparison refuses; the effect itself is performed on the
+ *   verified descriptor. Inode reuse by a substitute that reproduces the
+ *   authorized dev/ino and metadata remains the declared residual of this
+ *   class (the same class of residual as controlled search reads).
+ *
+ * For an existing target the descriptor stays on the verified inode for the
+ * whole effect, so later directory-entry swaps cannot redirect it. Support
+ * for descriptor-relative opens is probed at runtime. The original
+ * unprotected Pi builtins are never used as a fallback: any verification
+ * failure throws before a read or write effect.
  */
 
 import { constants } from "node:fs";
@@ -181,10 +197,20 @@ function ensureFdRelativeSupport(): Promise<boolean> {
   return fdRelativeSupport;
 }
 
+/**
+ * Reports whether descriptor-relative (Class 1) execution is available on
+ * this platform. The probe runs once per process and never touches anything
+ * outside an isolated temporary fixture. A false result selects the Class 2
+ * verified direct leaf bind for existing targets; creation refuses.
+ */
+export async function descriptorRelativeExecutionAvailable(): Promise<boolean> {
+  return (await ensureFdRelativeSupport()) === true;
+}
+
 async function requireFdRelativeSupport(): Promise<void> {
   if ((await ensureFdRelativeSupport()) !== true) {
     throw new Error(
-      `${BOUND_EXECUTION_REFUSED_PREFIX}: descriptor-relative execution is unavailable on this platform; the variant is refused instead of using a path-based effect`,
+      `${BOUND_EXECUTION_REFUSED_PREFIX}: descriptor-relative execution is unavailable on this platform`,
     );
   }
 }
@@ -215,8 +241,8 @@ function insideDirectory(workspaceRoot: string, canonicalPath: string): boolean 
   return relative === "" || (relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
 }
 
-function parentComponents(workspaceRoot: string, parentPath: string): string[] {
-  const relativeParent = path.relative(workspaceRoot, parentPath);
+function parentComponents(anchorPath: string, parentPath: string): string[] {
+  const relativeParent = path.relative(anchorPath, parentPath);
   if (relativeParent === "" || relativeParent === ".") return [];
   return relativeParent.split(path.sep).filter((part) => part !== "" && part !== ".");
 }
@@ -250,7 +276,7 @@ export async function buildExecutionPlan(
     { name: "", canonicalPath: anchorPath, identity: anchorIdentity },
   ];
   let cursor = anchorPath;
-  for (const part of parentComponents(resolved.workspaceRoot, parentPath)) {
+  for (const part of parentComponents(anchorPath, parentPath)) {
     const candidate = path.join(cursor, part);
     chain.push({ name: part, canonicalPath: candidate, identity: await identityOrMissing(candidate) });
     cursor = candidate;
@@ -441,6 +467,45 @@ async function verifiedParentDir(plan: ExecutionPlan, allowCreate: boolean): Pro
   };
 }
 
+/**
+ * Verifies an opened leaf descriptor against the captured plan before any
+ * effect. Creation plans require a fresh singly linked regular file; existing
+ * plans require the exact dev/ino plus the pre-approval size/timestamp and a
+ * link count of exactly 1.
+ */
+async function verifyPlannedLeaf(handle: FileHandle, plan: ExecutionPlan): Promise<void> {
+  const stats = await handle.stat();
+  if (plan.targetIdentity === undefined) {
+    // Freshly created (O_CREAT|O_EXCL) leaf: must be a singly linked file.
+    if (!stats.isFile()) throw refusal("created target is not a regular file");
+    if (stats.nlink !== 1) throw refusal("created target reports a hard-linked identity");
+    return;
+  }
+  if (!matchesIdentity(stats, plan.targetIdentity)) {
+    throw refusal("target identity does not match the authorized object");
+  }
+  if (!plan.targetIdentity.isRegular) {
+    throw refusal("authorized target is not a regular file");
+  }
+  if (stats.size !== plan.targetIdentity.size || Math.round(stats.mtimeMs) !== plan.targetIdentity.mtimeMs) {
+    // Inode-number reuse by a substitute object is still refused because
+    // the original size/timestamp captured pre-approval do not match.
+    throw refusal("target identity does not match the authorized object (size/timestamp)");
+  }
+  if (stats.nlink !== plan.targetIdentity.nlink) {
+    // An additional link added after the plan must refuse before any effect.
+    throw refusal("target link count changed since authorization");
+  }
+  if (stats.nlink !== 1) {
+    // Conservative hard-link rule: regular-file effects only apply to
+    // singly linked files, so a hard-link alias of a secret never executes.
+    throw refusal("target is hard-linked (nlink must be 1)");
+  }
+  if (!stats.isFile()) {
+    throw refusal("authorized target is not a regular file");
+  }
+}
+
 /** Opens the planned leaf strictly relative to a verified parent directory fd. */
 async function openLeafFromParent(
   parent: VerifiedDir,
@@ -455,36 +520,40 @@ async function openLeafFromParent(
     throw refusal("target could not be safely opened relative to the verified parent (possible substitution)");
   }
   try {
-    const stats = await handle.stat();
-    if (plan.targetIdentity === undefined) {
-      // Freshly created (O_CREAT|O_EXCL) leaf: must be a singly linked file.
-      if (!stats.isFile()) throw refusal("created target is not a regular file");
-      if (stats.nlink !== 1) throw refusal("created target reports a hard-linked identity");
-      return handle;
-    }
-    if (!matchesIdentity(stats, plan.targetIdentity)) {
-      throw refusal("target identity does not match the authorized object");
-    }
-    if (!plan.targetIdentity.isRegular) {
-      throw refusal("authorized target is not a regular file");
-    }
-    if (stats.size !== plan.targetIdentity.size || Math.round(stats.mtimeMs) !== plan.targetIdentity.mtimeMs) {
-      // Inode-number reuse by a substitute object is still refused because
-      // the original size/timestamp captured pre-approval do not match.
-      throw refusal("target identity does not match the authorized object (size/timestamp)");
-    }
-    if (stats.nlink !== plan.targetIdentity.nlink) {
-      // An additional link added after the plan must refuse before any effect.
-      throw refusal("target link count changed since authorization");
-    }
-    if (stats.nlink !== 1) {
-      // Conservative hard-link rule: regular-file effects only apply to
-      // singly linked files, so a hard-link alias of a secret never executes.
-      throw refusal("target is hard-linked (nlink must be 1)");
-    }
-    if (!stats.isFile()) {
-      throw refusal("authorized target is not a regular file");
-    }
+    await verifyPlannedLeaf(handle, plan);
+    return handle;
+  } catch (error) {
+    await closeQuietly(handle);
+    throw error;
+  }
+}
+
+function hasMissingPlannedComponent(plan: ExecutionPlan): boolean {
+  return plan.chain.some((step) => step.identity === undefined);
+}
+
+/**
+ * Class 2 (fallback) binding for an existing target on platforms without
+ * descriptor-relative execution: open the planned canonical path with
+ * `O_NOFOLLOW` and require the opened object to match the plan's identity and
+ * pre-approval metadata. Creation — a missing leaf or any component that was
+ * missing at authorization — refuses outright; a path-based create is never
+ * attempted.
+ */
+async function openVerifiedLeafDirect(plan: ExecutionPlan, flags: number): Promise<FileHandle> {
+  if (!plan.targetExists || plan.targetIdentity === undefined || hasMissingPlannedComponent(plan)) {
+    throw refusal(
+      "creation requires descriptor-relative execution support, which is unavailable on this platform; the create variant is refused instead of using a path-based create",
+    );
+  }
+  let handle;
+  try {
+    handle = await open(plan.canonicalPath, flags | constants.O_NOFOLLOW);
+  } catch {
+    throw refusal("target could not be safely opened with O_NOFOLLOW on this platform (possible substitution)");
+  }
+  try {
+    await verifyPlannedLeaf(handle, plan);
     return handle;
   } catch (error) {
     await closeQuietly(handle);
@@ -515,11 +584,15 @@ export async function executeBoundRead(
   options: { offset?: number; limit?: number },
 ): Promise<{ text: string; truncated: boolean }> {
   requirePosixBindingSupport();
-  await requireFdRelativeSupport();
+  const relativeExecution = await descriptorRelativeExecutionAvailable();
   let parent, handle;
   try {
-    parent = await verifiedParentDir(plan, false);
-    handle = await openLeafFromParent(parent.parent, plan, constants.O_RDONLY);
+    if (relativeExecution) {
+      parent = await verifiedParentDir(plan, false);
+      handle = await openLeafFromParent(parent.parent, plan, constants.O_RDONLY);
+    } else {
+      handle = await openVerifiedLeafDirect(plan, constants.O_RDONLY);
+    }
     const raw = await handle.readFile("utf-8");
     const allLines = raw.split("\n");
     const totalFileLines = allLines.length;
@@ -554,14 +627,18 @@ export async function executeBoundRead(
 /** Overwrites the authorized object through its verified descriptor, or creates it. */
 export async function executeBoundWrite(plan: ExecutionPlan, content: string): Promise<void> {
   requirePosixBindingSupport();
-  await requireFdRelativeSupport();
+  const relativeExecution = await descriptorRelativeExecutionAvailable();
   let parent;
   let handle;
   try {
-    parent = await verifiedParentDir(plan, true);
-    handle = plan.targetExists
-      ? await openLeafFromParent(parent.parent, plan, constants.O_WRONLY)
-      : await openCreatableLeafFromParent(parent.parent, plan);
+    if (relativeExecution) {
+      parent = await verifiedParentDir(plan, true);
+      handle = plan.targetExists
+        ? await openLeafFromParent(parent.parent, plan, constants.O_WRONLY)
+        : await openCreatableLeafFromParent(parent.parent, plan);
+    } else {
+      handle = await openVerifiedLeafDirect(plan, constants.O_WRONLY);
+    }
     try {
       if (plan.targetExists) {
         await handle.truncate(0);
@@ -628,14 +705,18 @@ export async function executeBoundEdit(
   edits: readonly { oldText: string; newText: string }[],
 ): Promise<string> {
   requirePosixBindingSupport();
-  await requireFdRelativeSupport();
+  const relativeExecution = await descriptorRelativeExecutionAvailable();
   if (edits.length === 0) {
     throw new Error("pi-warden: controlled edit requires at least one edit");
   }
   let parent, handle;
   try {
-    parent = await verifiedParentDir(plan, false);
-    handle = await openLeafFromParent(parent.parent, plan, constants.O_RDWR);
+    if (relativeExecution) {
+      parent = await verifiedParentDir(plan, false);
+      handle = await openLeafFromParent(parent.parent, plan, constants.O_RDWR);
+    } else {
+      handle = await openVerifiedLeafDirect(plan, constants.O_RDWR);
+    }
     const content = await handle.readFile("utf-8");
     const updated = applyExactEdits(content, edits);
     await handle.truncate(0);

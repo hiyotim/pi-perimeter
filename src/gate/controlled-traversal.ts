@@ -10,11 +10,16 @@
  *   (including the user approval flow for an ASK root).
  * - Every candidate is classified per entry, before any content is read,
  *   through the same resolver/classifier/configuration snapshot as the root.
- *   Entries classified `secret` or `sensitive`, entries resolving into a
- *   protected control-plane zone, and symlink targets whose canonical identity
- *   escapes the authorized root are excluded from results and never read.
+ *   Entries classified `secret` or `sensitive` — including directory entries
+ *   whose names carry that evidence — entries resolving into a protected
+ *   control-plane zone, and symlink targets whose canonical identity escapes
+ *   the authorized root are excluded from results and never read.
+ * - A directory entry that is excluded is neither emitted nor descended into:
+ *   its subtree is withheld and no enumeration read touches it.
  * - Symlinked directories are never descended into (matching rg/fd default
- *   no-follow behavior). Broken symlinks fail closed and are never
+ *   no-follow behavior). Included file symlinks appear in `ls`/`find` results
+ *   after per-entry classification but are not content-searched (`grep`
+ *   matches rg's no-follow default). Broken symlinks fail closed and are never
  *   reinterpreted as ordinary missing paths.
  *
  * A denied resource is therefore never read first and filtered later:
@@ -273,6 +278,14 @@ async function walkIncludableEntries(
       }
 
       if (entry.isDirectory()) {
+        // Directory names are classified before they are emitted; an excluded
+        // directory (secret/sensitive/protected/escaping) is withheld and its
+        // subtree is not enumerated.
+        const verdict = await evaluateEntry(snapshot, relative);
+        if (verdict.status !== "include") {
+          excludedCount += 1;
+          continue;
+        }
         matches.push(relative);
         queue.push(absolute);
         continue;
@@ -396,24 +409,22 @@ async function collectAuthorizedFiles(snapshot: TraversalSnapshot): Promise<{
         const verdict = await evaluateEntry(snapshot, relative);
         if (verdict.status !== "include") {
           // Excluded (denied, protected, external, or broken) symlinks are
-          // witheld from content search and never followed.
+          // withheld from content search and never followed.
           excludedCount += 1;
-          continue;
         }
-        let symlinkMetadata;
-        try {
-          symlinkMetadata = await lstat(absolute);
-        } catch {
-          excludedCount += 1;
-          continue;
-        }
-        if (symlinkMetadata.isFile() && verdict.expected !== undefined) {
-          files.push({ path: absolute, expected: verdict.expected });
-        }
-        // Symlinked directories are never descended into.
+        // Included symlinks are not content-searched (rg no-follow default)
+        // and symlinked directories are never descended into.
         continue;
       }
       if (entry.isDirectory()) {
+        // A directory is classified before its subtree is enumerated: an
+        // excluded directory is withheld and is not descended into, so its
+        // names and files are never read or searched.
+        const verdict = await evaluateEntry(snapshot, relative);
+        if (verdict.status !== "include") {
+          excludedCount += 1;
+          continue;
+        }
         queue.push(absolute);
         continue;
       }

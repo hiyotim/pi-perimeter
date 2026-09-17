@@ -4,7 +4,7 @@ This roadmap uses release gates, not dates. A phase is complete only when its li
 
 ## Remaining implementation plan
 
-Planning decision: 2026-09-13; acceptance/selection update: 2026-09-15. The four-Goal plan below is unchanged. Goal 1 is accepted and Phase 1 is complete; Goals 2-4 remain. Goal 2 is implemented in the working tree but NOT accepted: its corrective pass is open after the owner-reproduced ancestor-directory symlink swap, and [STATE.md](STATE.md) records the finding and the absent acceptance. Accepted artifacts and review evidence are preserved. The phase checklist below remains the acceptance ledger, not a second queue of implementation Goals.
+Planning decision: 2026-09-13; acceptance/selection update: 2026-09-15. The four-Goal plan is unchanged. Goals 1 and 2 are accepted; Phases 1 and 2 are complete within their demonstrated guarantees. Goals 3-4 remain. Goal 3 is selected for backend/guarantee proposal preparation only, with a mandatory approval checkpoint before dependency adoption or dependent implementation. [STATE.md](STATE.md) records owner acceptance, exact Goal 2 provenance, and accepted limitations. The phase checklist remains the acceptance ledger, not a second queue of implementation Goals.
 
 Each Goal has one technical outcome and includes its related contract decisions, implementation, regression tests, documentation, and verification. These are internal scope/checklist items, not separate Goals. Work proceeds through one implementation cycle, machine checks, an independent review of the final snapshot, and acceptance. Findings and their fixes stay within that Goal; relevant changed artifacts require fresh checks and review before acceptance. No PASS transfers to different source/test hashes. Review evidence must distinguish reviewer-run checks from executor-run checks.
 
@@ -39,7 +39,7 @@ Across all Goals, preserve the [security invariants](AGENTS.md), [trust boundari
 
 ### Goal 2: Pi file gates and scoped approvals
 
-**Status:** implemented in the working tree; NOT accepted. Corrective pass open after the owner reproduced a write outside the workspace: a creation target's parent directory was swapped to a symlink between ancestor verification and the final `O_CREAT|O_EXCL|O_NOFOLLOW` open, which protects only the final component. No independent FULL review verdict for this snapshot; owner acceptance and Phase 2 closure absent. Task ID: `20260915-pi-file-gates-scoped-approvals`; Goal 1 prerequisite is satisfied.
+**Status:** accepted by the owner on 2026-09-15 after the corrective pass and fresh independent FULL PASS; Phase 2 complete within the demonstrated contract. Task ID: `20260915-pi-file-gates-scoped-approvals`. The accepted bytes fix the owner-reproduced ancestor-symlink-swap creation escape by descriptor-relative execution or fail-closed refusal, external-plan anchoring, and directory classification. macOS direct-file creation remains unavailable; Linux Class 1 lacks runtime evidence for this snapshot and hosted CI has not run. Other documented residuals remain bounded. [STATE.md](STATE.md) binds acceptance to the unchanged audit/manifest; no OS containment, network access, or broader platform guarantee is implied.
 
 **Outcome:** every supported Pi file operation uses central authorization, matching approval where needed, and controlled execution.
 
@@ -61,6 +61,8 @@ Across all Goals, preserve the [security invariants](AGENTS.md), [trust boundari
 **Checkpoint/review:** independent review of the complete host file execution and approval path, then owner acceptance closes Phase 2 and the demonstrated filesystem hardening items. This does not establish subprocess containment. Goal 3 depends on this acceptance.
 
 ### Goal 3: Sandboxed shell with network closed
+
+**Status:** selected on 2026-09-15; only backend/guarantee proposal preparation is authorized. Task ID: `20260915-sandboxed-shell-network-closed`. Goal 2 acceptance prerequisite is satisfied. Produce the concrete proposal and stop for explicit maintainer approval before dependency adoption or dependent implementation; the full scope and criteria below remain unchanged.
 
 **Outcome:** model and user shell commands execute only inside verified OS containment, with a constructed environment and no permitted network access.
 
@@ -111,7 +113,7 @@ The Phase 6 and Phase 7 gates below remain separate release checkpoints, not add
 
 ## Phase acceptance ledger
 
-The following phase checkboxes and release gates retain their acceptance meaning. Closure requires recorded acceptance evidence in STATE; the 2026-09-15 transition closes only the remaining Phase 1 authority item and Phase 1 gate.
+The following phase checkboxes and release gates retain their acceptance meaning. Closure requires recorded acceptance evidence in STATE; the 2026-09-15 transitions close Phase 1 and Phase 2 within the accepted contracts. Phase 3 and later release gates remain open.
 
 ## Phase 0 — Foundation
 
@@ -136,15 +138,15 @@ The following phase checkboxes and release gates retain their acceptance meaning
 
 **Release gate:** a platform-independent policy core passes table-driven and adversarial tests using temporary fixtures, with no Pi or sandbox side effects.
 
-Current acceptance checkpoint and historical Goal evidence: [STATE.md](STATE.md). Phase 1 is accepted as an unenforced core; Phase 2 is implemented in the working tree but not accepted (open ancestor-race corrective pass). Planning or completion of a scope item alone does not authorize further phase advancement.
+Current acceptance checkpoint and historical Goal evidence: [STATE.md](STATE.md). The pure policy core and bounded file gates/approvals are accepted as Goals 1 and 2. Goal 3 is selected for its backend/guarantee proposal only. Planning or completion of a scope item does not authorize implementation beyond the active checkpoint or further phase advancement.
 
 ## Phase 2 — Pi Tool Gates
 
-- [ ] Gate `read`, `write`, and `edit`.
-- [ ] Gate `grep`, `find`, and `ls`.
-- [ ] Define coverage behavior for unknown/new model-facing tools.
-- [ ] Implement precise approval UX and scoped approval state.
-- [ ] Re-verify supported Pi APIs and compatibility range.
+- [x] Gate `read`, `write`, and `edit`.
+- [x] Gate `grep`, `find`, and `ls`.
+- [x] Define coverage behavior for unknown/new model-facing tools.
+- [x] Implement precise approval UX and scoped approval state.
+- [x] Re-verify supported Pi APIs and compatibility range.
 
 **Release gate:** every supported in-process file tool demonstrably uses the central policy model; missing coverage fails closed; approval scope and timeout behavior have regression tests.
 

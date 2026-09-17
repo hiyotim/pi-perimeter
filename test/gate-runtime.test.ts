@@ -15,8 +15,9 @@ import {
   type PiRuntimeAPI,
   type ToolOwnerInfo,
 } from "../src/gate/runtime.ts";
+import { buildExecutionPlan, descriptorRelativeExecutionAvailable } from "../src/gate/bound-execution.ts";
 import { createProtectedZone } from "../src/policy/control-plane.ts";
-import { canonicalizeWorkspace } from "../src/policy/paths.ts";
+import { canonicalizeWorkspace, resolveWorkspacePath } from "../src/policy/paths.ts";
 
 type FakeHandler = (event: unknown, ctx: unknown) => Promise<unknown>;
 type FakeSourceInfo = NonNullable<ToolOwnerInfo["sourceInfo"]>;
@@ -351,11 +352,33 @@ test("creation keeps working for authorized nested depth with no substitution", 
   try {
     const harness = buildGateHarness(userRoot, []);
     const ctx = fakeCtx(workspace);
+    const writeExecute = controlledExecuteOf(harness, "write");
+
+    if (!(await descriptorRelativeExecutionAvailable())) {
+      // Creation is unsupported without descriptor-relative execution: the
+      // nested create refuses and no path-based create is attempted. Existing
+      // targets still work through the verified direct leaf bind.
+      const nested = { path: p.join("made", "deeper", "file.txt"), content: "nested create\n" };
+      const gateNested = await harness.toolCall({ type: "tool_call", toolName: "write", toolCallId: "mk1", input: nested }, ctx);
+      assert.equal(gateNested, undefined);
+      await assert.rejects(
+        async () => writeExecute("mk1", nested, undefined, undefined, ctx),
+        /bound execution refused/,
+      );
+      assert.equal(existsSync(p.join(workspace, "made")), false, "no path-based create may happen");
+      await writeFile(p.join(workspace, "later.txt"), "existing\n");
+      const overwrite = { path: "later.txt", content: "overwritten\n" };
+      const gateOverwrite = await harness.toolCall({ type: "tool_call", toolName: "write", toolCallId: "mk3", input: overwrite }, ctx);
+      assert.equal(gateOverwrite, undefined);
+      await writeExecute("mk3", overwrite, undefined, undefined, ctx);
+      assert.equal(await readFile(p.join(workspace, "later.txt"), "utf8"), "overwritten\n");
+      return;
+    }
+
     // Nested missing parents (two levels deep) using only fd-relative creation.
     const nested = { path: p.join("made", "deeper", "file.txt"), content: "nested create\n" };
     const gateResult = await harness.toolCall({ type: "tool_call", toolName: "write", toolCallId: "mk1", input: nested }, ctx);
     assert.equal(gateResult, undefined);
-    const writeExecute = controlledExecuteOf(harness, "write");
     await writeExecute("mk1", nested, undefined, undefined, ctx);
     assert.equal(await readFile(p.join(workspace, "made", "deeper", "file.txt"), "utf8"), "nested create\n");
 
@@ -456,16 +479,31 @@ test("write creates a workspace file through the controlled descriptor executor"
   try {
     const harness = buildGateHarness(userRoot, []);
     const ctx = fakeCtx(workspace);
-    const input = { path: p.join("made", "later.txt"), content: "written by gate\n" };
-    const gateResult = await harness.toolCall({ type: "tool_call", toolName: "write", toolCallId: "w1", input }, ctx);
-    assert.equal(gateResult, undefined);
-    assert.equal(harness.state.authorizedCalls.has("w1"), true);
-
-    // The controlled write executor performs the effect via the descriptor plan.
     const writeExecute = controlledExecuteOf(harness, "write");
-    await writeExecute("w1", input, undefined, undefined, ctx);
-    const written = await readFile(p.join(workspace, "made", "later.txt"), "utf8");
-    assert.equal(written, "written by gate\n");
+
+    if (await descriptorRelativeExecutionAvailable()) {
+      // The controlled write executor performs the effect via the descriptor plan.
+      const input = { path: p.join("made", "later.txt"), content: "written by gate\n" };
+      const gateResult = await harness.toolCall({ type: "tool_call", toolName: "write", toolCallId: "w1", input }, ctx);
+      assert.equal(gateResult, undefined);
+      assert.equal(harness.state.authorizedCalls.has("w1"), true);
+      await writeExecute("w1", input, undefined, undefined, ctx);
+      const written = await readFile(p.join(workspace, "made", "later.txt"), "utf8");
+      assert.equal(written, "written by gate\n");
+    } else {
+      // Without descriptor-relative execution the create variant must refuse
+      // before any effect instead of falling back to a path-based create.
+      const createInput = { path: p.join("made", "later.txt"), content: "written by gate\n" };
+      const gateCreate = await harness.toolCall({ type: "tool_call", toolName: "write", toolCallId: "w1", input: createInput }, ctx);
+      assert.equal(gateCreate, undefined);
+      await assert.rejects(
+        async () => writeExecute("w1", createInput, undefined, undefined, ctx),
+        /bound execution refused/,
+      );
+      assert.equal(existsSync(p.join(workspace, "made")), false, "no path-based create may happen");
+      await mkdir(p.join(workspace, "made"));
+      await writeFile(p.join(workspace, "made", "later.txt"), "written by gate\n");
+    }
 
     // Overwriting an existing target remains bound to the authorized object.
     const overwrite = { path: p.join("made", "later.txt"), content: "overwritten by gate\n" };
@@ -624,6 +662,51 @@ test("external read asks and approval blocks or grants exactly once, one call", 
     );
     assert.equal(allowed, undefined);
     assert.equal(allowedInput.path.startsWith(root), true, "post-approval execution is bound to the canonical target");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("external target execution plans are anchored at the filesystem root", async () => {
+  const { root, workspace } = await tempFixture();
+  try {
+    await mkdir(p.join(root, "outside", "nested"), { recursive: true });
+    await writeFile(p.join(root, "outside", "nested", "doc.txt"), "external plan\n");
+    const resource = await resolveWorkspacePath(workspace, p.join("..", "outside", "nested", "doc.txt"));
+    const plan = await buildExecutionPlan("read", resource);
+    assert.equal(plan.chain[0].canonicalPath, p.sep, "external plans are anchored at the filesystem root");
+    assert.notEqual(plan.chain[0].identity, undefined, "the filesystem root anchor must carry its identity");
+    assert.equal(
+      plan.chain.some((step) => step.name === ".."),
+      false,
+      `external plan chain must not contain parent-relative components: ${JSON.stringify(plan.chain)}`,
+    );
+    const expectedTail = plan.parentPath.slice(1).split(p.sep).filter((part) => part !== "");
+    const observedTail = plan.chain.slice(1).map((step) => step.name);
+    assert.deepEqual(observedTail, expectedTail, "chain components must walk the canonical path from the root");
+    for (const step of plan.chain.slice(1)) {
+      assert.notEqual(step.identity, undefined, `${step.canonicalPath} must exist at plan time`);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("external read executes through the approved binding", async () => {
+  const { root, workspace, userRoot } = await tempFixture();
+  try {
+    await mkdir(p.join(root, "outside"));
+    await writeFile(p.join(root, "outside", "external.txt"), "outside content\n");
+    const harness = buildGateHarness(userRoot, []);
+    const approver = fakeCtx(workspace, true);
+    const input = { path: p.join("..", "outside", "external.txt") };
+    const allowed = await harness.toolCall({ type: "tool_call", toolName: "read", toolCallId: "ext1", input }, approver);
+    assert.equal(allowed, undefined, "an approved external read must be authorized");
+    const readExecute = controlledExecuteOf(harness, "read");
+    const executed = (await readExecute("ext1", input, undefined, undefined, approver)) as {
+      content: { type: string; text: string }[];
+    };
+    assert.match(executed.content[0].text, /outside content/, `external read output: ${executed.content[0].text}`);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

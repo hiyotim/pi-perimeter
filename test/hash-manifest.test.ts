@@ -31,6 +31,7 @@ const COVERED_FILES = [
   "src/approvals/approvals.ts",
   "docs/FILE-GATE.md",
   "docs/FILE-GATE-AUDIT.md",
+  "test/canonical-tmpdir.mjs",
   "test/approvals.test.ts",
   "test/controlled-traversal.test.ts",
   "test/gate-runtime.test.ts",
