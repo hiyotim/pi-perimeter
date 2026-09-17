@@ -4,7 +4,7 @@ This roadmap uses release gates, not dates. A phase is complete only when its li
 
 ## Remaining implementation plan
 
-Planning decision: 2026-09-13; acceptance/selection update: 2026-09-15. The four-Goal plan is unchanged. Goals 1 and 2 are accepted; Phases 1 and 2 are complete within their demonstrated guarantees. Goals 3-4 remain. Goal 3 is selected for backend/guarantee proposal preparation only, with a mandatory approval checkpoint before dependency adoption or dependent implementation. [STATE.md](STATE.md) records owner acceptance, exact Goal 2 provenance, and accepted limitations. The phase checklist remains the acceptance ledger, not a second queue of implementation Goals.
+Planning decision: 2026-09-13; acceptance/selection update: 2026-09-15; architecture approval: 2026-09-17. The four-Goal plan is unchanged. Goals 1 and 2 are accepted; Phases 1 and 2 are complete within their demonstrated guarantees. Goals 3-4 remain. Goal 3 architecture is approved and its implementation cycle is authorized: staging-only Seatbelt execution, per-object import, controlled export, and a small native helper/descriptor-envelope launcher. The final implementation review and owner acceptance gates remain open. [STATE.md](STATE.md) records owner acceptance, exact Goal 2 provenance, and accepted limitations. The phase checklist remains the acceptance ledger, not a second queue of implementation Goals.
 
 Each Goal has one technical outcome and includes its related contract decisions, implementation, regression tests, documentation, and verification. These are internal scope/checklist items, not separate Goals. Work proceeds through one implementation cycle, machine checks, an independent review of the final snapshot, and acceptance. Findings and their fixes stay within that Goal; relevant changed artifacts require fresh checks and review before acceptance. No PASS transfers to different source/test hashes. Review evidence must distinguish reviewer-run checks from executor-run checks.
 
@@ -62,13 +62,13 @@ Across all Goals, preserve the [security invariants](AGENTS.md), [trust boundari
 
 ### Goal 3: Sandboxed shell with network closed
 
-**Status:** selected on 2026-09-15; only backend/guarantee proposal preparation is authorized. Task ID: `20260915-sandboxed-shell-network-closed`. Goal 2 acceptance prerequisite is satisfied. Produce the concrete proposal and stop for explicit maintainer approval before dependency adoption or dependent implementation; the full scope and criteria below remain unchanged.
+**Status:** selected on 2026-09-15; architecture approved and implementation authorized on 2026-09-17. Task ID: `20260915-sandboxed-shell-network-closed`. The backend-selection gate is satisfied for private workspace projection + staging-only Seatbelt + per-object import/export + minimal native creation/descriptor-envelope component. Initial target: macOS 27.0 (26A428), arm64. No direct original-workspace shell access, `.git` projection, host delete/rename, new runtime package dependencies, or Goal 4 work. B3 remains declared and mount guarantees remain UNVERIFIED; unsupported topologies fail closed. See [STATE.md](STATE.md) for the exact approval and [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md) for autonomous execution. The outcome and acceptance criteria below are unchanged.
 
 **Outcome:** model and user shell commands execute only inside verified OS containment, with a constructed environment and no permitted network access.
 
 **Scope/checklist:**
 
-- Re-evaluate containment mechanisms, including Anthropic Sandbox Runtime if suitable, and review the backend/dependency surface. Preserve explicit maintainer approval of backend and claimed guarantees before dependent implementation.
+- Backend evaluation and owner architecture selection are complete for the approved projection design. Implement its bounded contract; do not restart candidate research or adopt a different backend without a material blocker and owner decision.
 - Implement the adapter, initialization/failure handling, and one controlled route for model `bash`, user `!`/`!!`, and subprocesses.
 - Construct a minimal child environment and enforce filesystem restrictions protecting credentials and Pi/control-plane state; verify inheritance of restrictions by descendants.
 - Adopt an auditable bounded parser/AST strategy and conservative policy for destructive, privilege, credential, system, publish/deploy, and unknown shell behavior. Exercise nested shells, substitutions, redirections, sourced scripts, and subprocesses as part of this Goal.
@@ -81,7 +81,7 @@ Across all Goals, preserve the [security invariants](AGENTS.md), [trust boundari
 - Network remains closed, including relevant local/proxy/alternate routes in the claimed boundary; network approvals cannot open it in this Goal.
 - Dangerous and unsupported shell forms have explicit conservative outcomes; regex-only classification is never the security boundary. Platform-tagged regression and hostile tests substantiate each guarantee; unavailable target-platform evidence blocks acceptance.
 
-**Checkpoint/review:** preserve the backend/guarantee design checkpoint before dependent work, then independently review the finished shell execution path and exact evidence. Owner acceptance closes Phase 3 and its demonstrated Phase 5 items. Goal 4 must not open network access before this checkpoint passes.
+**Checkpoint/review:** the backend/guarantee architecture checkpoint is satisfied within the 2026-09-17 approval. Independently review the finished shell execution path and exact evidence. Owner acceptance closes Phase 3 and its demonstrated Phase 5 items. Goal 4 must not open network access before this checkpoint passes.
 
 ### Goal 4: Restricted networking and end-to-end security evidence
 

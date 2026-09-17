@@ -1,16 +1,16 @@
 # Project State
 
-Updated: 2026-09-15
+Updated: 2026-09-17
 Branch at planning update: `codex/operation-policy-contribution-contract`
-Current branch: `codex/mac-migration-snapshot` (Goal 2 corrective-pass acceptance and Goal 3 proposal transition)
-Current baseline HEAD: `664871d9276049322f30acfb58e792462ad8538f` plus the accepted, uncommitted Goal 2 corrective pass. Historical Goal 1 planning baseline: `c10e8f384e678c41792937d340d716d25e592e28`.
+Current branch: `codex/mac-migration-snapshot` (Goal 3 architecture approval and implementation preparation)
+Committed implementation baseline: `b9060dad829a92d3699da3b689fe909446a1e810` (accepted Goal 2 corrective pass and Goal 3 research). The subsequent preparation commit changes only STATE, ROADMAP, and IMPLEMENTATION_HANDOFF. Historical Goal 1 planning baseline: `c10e8f384e678c41792937d340d716d25e592e28`.
 Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c276e2154e2910e6`
 
 ## Current checkpoint
 
-**GOALS 1 AND 2 ACCEPTED; PHASES 1 AND 2 COMPLETE. GOAL 3 SELECTED FOR BACKEND/GUARANTEE PROPOSAL ONLY.** On 2026-09-15, after the fresh independent Goal 2 PASS and an explicit explanation of the macOS and Linux evidence limitations, the owner confirmed acceptance of Goal 2 and selection of Goal 3 for proposal preparation. The accepted file gates and scoped approvals cover only the guarantees demonstrated by the reviewed corrective-pass bytes. Shell routes remain blocked; no OS containment or network permission is implemented or accepted. Backend/dependency adoption and dependent Goal 3 implementation require a further explicit approval of the concrete proposal.
+**GOALS 1 AND 2 ACCEPTED; PHASES 1 AND 2 COMPLETE. GOAL 3 ARCHITECTURE APPROVED; IMPLEMENTATION AUTHORIZED, NOT IMPLEMENTED OR ACCEPTED.** On 2026-09-17 the owner approved proceeding with the proposed isolated-workspace architecture, requested committing the existing work, and requested an autonomous implementation handoff. This supersedes the earlier proposal-only gate for the architecture below. Shell routes are still blocked in the current code. Phase 3 and Goal 4 remain unaccepted and unauthorized respectively.
 
-This file is the canonical acceptance/checkpoint and Goal-selection record. [ROADMAP.md](ROADMAP.md) retains the four-Goal plan and phase/release gates; Goals 3-4 remain. [ARCHITECTURE.md](ARCHITECTURE.md) defines component and trust boundaries; earlier status wording there and in reviewed Goal 2 artifacts describes the pre-acceptance snapshot, while this record supplies the later owner decision. [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md) now describes Goal 3 and its mandatory backend/guarantee checkpoint. The older untracked `QWEN_TASK.md` is absent; do not recreate it or treat it as active instruction.
+This file is the canonical acceptance/checkpoint and Goal-selection record. [ROADMAP.md](ROADMAP.md) retains the four-Goal plan and phase/release gates; Goals 3-4 remain. [ARCHITECTURE.md](ARCHITECTURE.md) defines component and trust boundaries; earlier status wording there and in reviewed Goal 2 artifacts describes the pre-acceptance snapshot, while this record supplies the later owner decision. [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md) now authorizes the complete Goal 3 implementation and verification cycle within the approved architecture; final independent review and owner acceptance remain required. The older untracked `QWEN_TASK.md` is absent; do not recreate it or treat it as active instruction.
 
 ## Selected next Goal and planning decision
 
@@ -18,12 +18,26 @@ On 2026-09-13 the owner authorized a planning-only replacement of the remaining 
 
 1. **Configuration authorization** — complete configuration loading, validation, source/operation association, and composition with accepted read/write/edit baselines. **ACCEPTED; UNENFORCED.** Task ID: `20260913-configuration-authorization`.
 2. **Pi file gates and scoped approvals** — **ACCEPTED on 2026-09-15; Phase 2 complete within the demonstrated contract and limitations.** Task ID: `20260915-pi-file-gates-scoped-approvals`. The fresh independent PASS covers the corrective-pass artifacts identified below; owner acceptance is the subsequent decision recorded in this transition.
-3. **Sandboxed shell with network closed** — **SELECTED; backend/guarantee proposal preparation authorized only.** Task ID: `20260915-sandboxed-shell-network-closed`. Goal 2 acceptance prerequisite is satisfied. Stop for explicit maintainer approval before sandbox dependency adoption or dependent implementation.
+3. **Sandboxed shell with network closed** — **SELECTED; architecture approved and implementation authorized on 2026-09-17.** Task ID: `20260915-sandboxed-shell-network-closed`. Goal 2 acceptance and the bounded backend-selection prerequisite are satisfied; final implementation review and owner acceptance remain open.
 4. **Restricted networking and end-to-end security evidence** — narrowly allowed connections and cross-layer verification; depends on Goal 3 acceptance.
 
 The Goal scopes, acceptance criteria, exclusions, and checkpoints are fixed in [ROADMAP.md](ROADMAP.md). Goal 2 covers all six supported file tools, scoped approvals, complete resource/effect mediation, enforcement-time identity, protected control-plane resources, unknown-tool/shell blocking, and package/compatibility verification in one cycle. Its concrete integration and approval design must be explicit before dependent code and reviewed with the resulting implementation. No permission-widening configuration or weakening of accepted policy/provenance contracts is authorized.
 
 Historical Goal 1-to-Goal 2 transition: it recorded acceptance/selection and authorized replacement of that handoff without implementation, staging, commit, branch change, push, or publication. Its HEAD was `c10e8f384e678c41792937d340d716d25e592e28`; the then-uncommitted Goal 1 snapshot was required input to Goal 2. This historical baseline does not replace the current baseline above.
+
+## Goal 3 architecture approval and autonomous implementation (2026-09-17)
+
+Approved direction: a private workspace projection, per-object authorized and descriptor-bound import, staging-only Seatbelt containment with closed networking, and controlled descriptor-bound export. A small, auditable native component for safe new-file/directory export and construction of the child descriptor envelope is authorized. This is not approval of the earlier direct-workspace Option B: shell children receive no direct access to the original workspace. Policy and approval remain trusted host responsibilities; the helper supplies narrow mechanisms, not authority.
+
+Approved initial scope: macOS 27.0 (26A428), arm64; no broader platform claim. Exclude `.git`, secrets, sensitive/control-plane resources and hard-linked file aliases from projection. No automatic host delete/rename effects. Retain the declared B3 boundary (same-user host writers, including ordinary staging-file tampering) and object-binding rather than permanent pathname-residency semantics. Mount isolation remains UNVERIFIED, not approved as a guarantee; any supported topology must have an explicit bounded contract and evidence before acceptance. No weakening of Goal 2 or policy monotonicity is authorized.
+
+The executor may implement, test, document, consult independent advisors, obtain independent review and fix findings within Goal 3 without asking the owner at routine intermediate steps. Use existing toolchains and an auditable zero-new-runtime-package-dependency design; helper build/package mechanics and bounded parser details are executor design work within this architecture. New dependencies, privileged setup, a different containment class, or reduced security guarantees need an explicit decision. Final owner acceptance remains separate. Goal 4, publication, installation into a real Pi profile, and executor commit/push are not authorized.
+
+Research references: [feasibility report](docs/SHELL-ISOLATION-FEASIBILITY.md), SHA-256 `b1fdad250699c3a2951f3a70afe318bd74a919d13c049d3e086945d4cfb0df96`, and [proposal revision 3](docs/SANDBOX-BACKEND-PROPOSAL.md), SHA-256 `4e10c1d5d787b101da47fe439f8d05de47892871a4b40b6500e9b65ec5a7d3f5`. These are historical research evidence, not a production implementation specification or PASS. The final feasibility bytes differ from its last reviewer snapshot; its helper excerpts are incomplete, and the shown native replacement excerpt has an inconsistent read-only open before truncation. Production behavior must be independently implemented and tested, with complete retained reproduction sources.
+
+Preparation verification: on 2026-09-17, `npm run check` passed typecheck and 213/213 tests (including the manifest); `git diff --check` was clean. Reviewed Goal 2 manifest/audit and research hashes matched. This is a fresh executor-run baseline check, not a new independent implementation review. The owner authorized snapshot and preparation commits; no push was requested. Stash `mac-local-before-migration` is retained.
+
+The sections below record historical authority and evidence at their original checkpoints. Their proposal-only/no-commit restrictions do not override this later approval. Accepted artifact bytes and historical reviews remain preserved; any implementation changes require new evidence rather than reassignment of old PASS verdicts.
 
 ## Goal 2 acceptance and Goal 3 proposal authorization (2026-09-15)
 
