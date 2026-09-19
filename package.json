@@ -21,10 +21,16 @@
     "test:package": "node --import ./test/canonical-tmpdir.mjs --test test/package-lifecycle.test.ts",
     "test:manifest": "node --import ./test/canonical-tmpdir.mjs --test test/hash-manifest.test.ts",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm test"
+    "check": "npm run typecheck && npm test",
+    "build:native": "node scripts/build-native.mjs",
+    "test:shell": "node --import ./test/canonical-tmpdir.mjs --test test/shell-grammar.test.ts test/shell-plan.test.ts test/shell-policy.test.ts test/shell-approvals.test.ts test/seatbelt-profile.test.ts",
+    "test:sandbox": "node --import ./test/canonical-tmpdir.mjs --test test/projection.test.ts test/export.test.ts test/quiescence.test.ts",
+    "test:containment": "node --import ./test/canonical-tmpdir.mjs --test --test-timeout=180000 test/shell-containment.test.ts"
   },
   "files": [
     "src",
+    "native",
+    "scripts",
     "docs",
     "README.md",
     "LICENSE",

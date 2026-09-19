@@ -1,14 +1,184 @@
 # Project State
 
-Updated: 2026-09-17
+Updated: 2026-09-19
 Branch at planning update: `codex/operation-policy-contribution-contract`
-Current branch: `codex/mac-migration-snapshot` (Goal 3 architecture approval and implementation preparation)
-Committed implementation baseline: `b9060dad829a92d3699da3b689fe909446a1e810` (accepted Goal 2 corrective pass and Goal 3 research). The subsequent preparation commit changes only STATE, ROADMAP, and IMPLEMENTATION_HANDOFF. Historical Goal 1 planning baseline: `c10e8f384e678c41792937d340d716d25e592e28`.
+Current branch: `codex/mac-migration-snapshot` (Goal 3 acceptance and Goal 4 handoff preparation)
+Goal 3 implementation start baseline: `b9060dad829a92d3699da3b689fe909446a1e810` (accepted Goal 2 corrective pass and Goal 3 research). The subsequent preparation commit changes only STATE, ROADMAP, and IMPLEMENTATION_HANDOFF. Historical Goal 1 planning baseline: `c10e8f384e678c41792937d340d716d25e592e28`.
 Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c276e2154e2910e6`
 
 ## Current checkpoint
 
-**GOALS 1 AND 2 ACCEPTED; PHASES 1 AND 2 COMPLETE. GOAL 3 ARCHITECTURE APPROVED; IMPLEMENTATION AUTHORIZED, NOT IMPLEMENTED OR ACCEPTED.** On 2026-09-17 the owner approved proceeding with the proposed isolated-workspace architecture, requested committing the existing work, and requested an autonomous implementation handoff. This supersedes the earlier proposal-only gate for the architecture below. Shell routes are still blocked in the current code. Phase 3 and Goal 4 remain unaccepted and unauthorized respectively.
+**GOALS 1–3 ACCEPTED; PHASES 1–3 COMPLETE WITHIN THEIR DOCUMENTED GUARANTEES. GOAL 4 SELECTED BY THE OWNER ON 2026-09-19; ITS IMPLEMENTATION HAS NOT BEGUN.**
+
+Implementation status (accepted 2026-09-19): the contained shell route is
+implemented (`src/policy/shell-*.ts`, `src/sandbox/**`,
+`src/gate/shell-runtime.ts`, `src/approvals/shell-approvals.ts`,
+`src/sandbox/native/piwarden-helper.c`) and exercised by the registered suites on
+the declared target. Artifacts:
+
+- Contract: [docs/SHELL-GATE.md](docs/SHELL-GATE.md) — routes, projection,
+  profile, grammar, approvals, topology, limits and guarantee wording.
+- Evidence and provenance: [docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md)
+  — executor-run effect evidence, changed accepted bytes with old/new hashes,
+  the round-by-round independent review record, and the bounded limitations.
+- Snapshot binding: [docs/shell-gate-hashes.json](docs/shell-gate-hashes.json)
+  (33 entries, including the audit) and
+  [docs/file-gate-hashes.json](docs/file-gate-hashes.json) for the Goal 2 files.
+
+Independent review: eight separate fresh-context reviewer passes (rounds 1–8,
+recorded in the audit) ran against successive snapshots. Rounds 1–6 each found
+real defects in the classification layer plus one host-crash path and one
+target-destroying path; every finding was fixed with a biting regression and
+re-verified in the following round. Round 7 returned **PASS with no blocking
+finding**; the bounded documentation-delta and inline-flag verifications are
+recorded in the audit's §17. The containment guarantees (no uncontained spawn
+path, workspace isolation, closed networking, per-target export authorization)
+held in every round.
+
+Post-review correction (2026-09-18): the owner's acceptance review found that
+the quiescence step proved only the original process group empty, and that a
+regression accepted a detached descendant while reporting `quiescent: true`.
+Both were fixed within this Goal: quiescence is now three-condition
+(process group empty, no attributed invocation process alive, projection
+unchanged for two consecutive windows — any change after the entry process
+exited refuses), attribution comes from a native process-table census sampled
+during and after the run, attributed survivors are killed and refuse the export,
+and the export source is a frozen copy taken outside every writable root. The
+envelope evidence now covers inherited descriptors 3, 300 and 1024. The
+previous "unprovable process group" test was replaced; see
+docs/SHELL-GATE-AUDIT.md §18 for the exact changes and regressions. That
+section's claim that the frozen source keeps an unattributable survivor out of
+"every byte, structure and decision the host authorizes and applies"
+overclaimed (it described post-capture isolation only) and is superseded by the
+variant-B contract decision below and by §11/G5 of the contract.
+
+Owner contract decision (2026-09-18, variant B): the owner approved amending the
+Goal 3 export contract — descendant termination is no longer guaranteed or
+claimed; an unattributable survivor's lifetime and resource consumption are
+accepted as unconstrained; the export guarantee is the captured-bytes invariant
+(every applied effect consists exactly of the captured, verified,
+re-authorized content of the frozen export source — payload bytes and
+captured permission bits), which is not an atomic tree
+snapshot and does not promise absence of descendant influence before or during
+the capture (a write racing an already-opened object is detectable unless it
+preserves the size and exact modification time; a write or substitution landing
+before an object's own measurement is bounded only by the scan's manifest
+comparison and per-target re-authorization — both declared in §11).
+Implementation continued within this decision:
+[IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md) and the contract's
+§11/G5 were rewritten to the amended contract, the freeze module's comment was
+corrected, a test-only deterministic freeze interleaving hook was added, four
+freeze-race regressions (mtime-restore residual, file substitution refusal,
+directory-to-file refusal, directory-to-symlink caught by the pre-apply
+re-measurement) and a contained-run authorization-binding regression were
+added, and docs/SHELL-GATE-AUDIT.md §19 records the change and evidence.
+Additional census/lsof heuristics were explicitly not authorized and were not
+implemented. Goal 3 remains not owner-accepted; no commit and no Goal 4.
+
+Blocker fix (2026-09-18, same day): the owner reported that the §19
+freeze-time race work exposed a real bypass — a mid-freeze swap of a projected
+directory for a symlink to an external fixture, undone before the pre-apply
+re-measurement, copied foreign bytes into the frozen source while the
+re-measurement stayed blind (`snapshotDeviation` empty). The executor
+reproduced it deterministically and fixed the source-read binding: the frozen
+capture is now **descriptor-bound** (new audited helper `freeze` mode, protocol
+version 2) — the host opens and identity-verifies both root descriptors, and
+every name lookup during the copy is a single component resolved against held
+directory descriptors, so no swap can redirect a read; directory descent never
+follows symlinks; regular files are re-checked (identity, link count, size,
+mtime at nanosecond precision) after their bytes are read; the projection root
+identity recorded at import is verified by the freeze and by every quiescence
+measurement. A deterministic swap→copy→restore regression with an external
+synthetic secret asserts the refusal, the blindness of the measurement layer
+(documented), and that no external byte and no host effect occurs. The other
+host-side readers were checked for the same bypass class; findings and the
+independent review of the whole capture chain are recorded in
+docs/SHELL-GATE-AUDIT.md §20. Goal 3 remains not owner-accepted; no commit and
+no Goal 4.
+
+Blocker fix (2026-09-18, second same-day pass): the owner then reported that
+the measurement layer itself still walked the child-modifiable projection by
+path — a deterministic swap of a projected directory for a symlink to an
+external fixture landing immediately before that directory's enumeration
+placed the outside directory's names into the snapshot, the deviation
+diagnostics and the quiescence result, and the root check, the re-measurement
+and the export refusal could not repair a poisoned measurement. The executor
+closed the bypass class for measurement: a new audited helper `measure` mode
+(protocol still 2) performs every projection measurement descriptor-bound —
+single-component lookups against held, identity-verified directory
+descriptors, `O_NOFOLLOW` directory descent with a post-open identity check
+(the two together refuse a swapped component at access time), symlink entries
+contributing only their link text — and `snapshotProjection`,
+`establishTreeQuiescence` and the pre-apply re-measurement were rewired to it;
+a partial measurement is never used. Deterministic regressions with an
+external synthetic name assert the access-time refusal and that the name
+reaches no snapshot, diagnostic or result, and that a held swap is measured as
+a symlink and caught by the next window or the scan's manifest comparison.
+The whole chain of host-side traversals of the child-modifiable projection was
+re-checked, and the fresh independent review of the boundary returned PASS
+WITH FINDINGS (two non-blocking wording-precision items, resolved); see
+docs/SHELL-GATE-AUDIT.md §21. No new residual was declared. Goal 3 remains not
+owner-accepted; no commit and no Goal 4.
+
+Post-review correction (2026-09-18, third same-day pass): the owner then
+rejected the remaining diagnostic-only read of the live projection — the
+export flow called scanProjection unconditionally with
+`frozenRoot ?? staging`, so after a refused quiescence or a refused freeze the
+host walked, read and diffed the child-modifiable tree, and its per-entry
+refusals, change records and removal reports reached the diagnostics; the
+owner rejected declaring that read safe merely because nothing is applied
+afterwards. The fallback scan, the live payload reads and the removal
+computation are now removed: with no trusted frozen source the export ends
+with the already-known refusal reason and no projection walk at all, and
+`scanProjection`'s single production call receives only a successfully frozen
+source. Runtime regressions for both branches (quiescence refused; freeze
+refused) prove with an external synthetic fixture that the live scan and its
+payload reads do not run (no per-entry refusals reappear), that external and
+staged names/bytes reach no result, and that no host effect occurs; a
+mutation check shows both regressions fail when the fallback is restored. The
+chain and the no-read-after-refusal discipline are recorded in
+docs/SHELL-GATE-AUDIT.md §22. Goal 3 remains not owner-accepted; no commit and
+no Goal 4.
+
+Declared limitations at acceptance: *observational quiescence, accepted as the
+variant-B contract boundary (2026-09-18)* — a child descendant that calls
+`setsid()` and is reparented between census samples cannot be attributed,
+killed or refused on by an unprivileged observer (macOS exposes no session id
+and reparenting destroys the lineage); its lifetime and resource consumption
+are not bounded by pi-warden; it stays confined to the disposable projection,
+session home and session temp, and after the freeze capture it cannot change
+the captured, verified and re-authorized content (payload bytes and captured
+permission bits) that the host applies; a write racing an already-opened
+capture object is detectable unless it preserves the size and exact
+modification time, while a write or substitution landing before an object's
+own measurement is bounded only by the scan's manifest comparison — the
+declared pre-capture residual, and its bytes remain child-controlled output
+subject to per-target re-authorization; a same-user host writer is outside the
+claim (B3, including ordinary projection tampering); mount isolation is
+UNVERIFIED; descendants are not parsed; `sandbox-exec` is pinned and an OS
+update blocks the shell route until re-verified; the projection costs a full
+copy per invocation; deletions and renames inside the projection have no host
+effect; an abrupt host kill can leave one invocation directory in the system
+temporary directory. Full list in the audit.
+
+Owner acceptance (2026-09-19): after the final reviewed snapshot and its
+variant-B limitations were presented, the owner explicitly accepted Goal 3,
+authorized the local acceptance commit, and selected Goal 4. Acceptance binds
+to [docs/shell-gate-hashes.json](docs/shell-gate-hashes.json), SHA-256
+`d5e4e5f2f8497d4da39826130e37f23287b066fe1369fcd3a4a87f971b97cfaa`,
+whose three manifest checks passed again immediately before this transition.
+The prior final evidence remains 329/330 registered tests with the one declared
+platform skip, typecheck PASS, `git diff --check` PASS, and a fresh independent
+review PASS with no findings after the fallback removal. This decision accepts
+the declared variant-B boundary; it does not add descendant-termination,
+atomic-tree-snapshot, B3 same-user-writer, or mount-isolation guarantees.
+Publication, installation into a real Pi profile, and push remain unauthorized.
+Goal 4 is selected for a separate autonomous implementation handoff based on
+the accepted commit; no Goal 4 implementation is included in this snapshot.
+
+Historical status text for the architecture approval follows.
+
+**GOAL 3 ARCHITECTURE APPROVED; IMPLEMENTATION AUTHORIZED, IMPLEMENTED AND VERIFIED, NOT ACCEPTED.** On 2026-09-17 the owner approved proceeding with the proposed isolated-workspace architecture, requested committing the existing work, and requested an autonomous implementation handoff. This supersedes the earlier proposal-only gate for the architecture below. The shell routes were blocked at the time of that approval and are now implemented behind the same authorization, containment and export lifecycle. Phase 3 remains unaccepted and Goal 4 remains unauthorized.
 
 This file is the canonical acceptance/checkpoint and Goal-selection record. [ROADMAP.md](ROADMAP.md) retains the four-Goal plan and phase/release gates; Goals 3-4 remain. [ARCHITECTURE.md](ARCHITECTURE.md) defines component and trust boundaries; earlier status wording there and in reviewed Goal 2 artifacts describes the pre-acceptance snapshot, while this record supplies the later owner decision. [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md) now authorizes the complete Goal 3 implementation and verification cycle within the approved architecture; final independent review and owner acceptance remain required. The older untracked `QWEN_TASK.md` is absent; do not recreate it or treat it as active instruction.
 
@@ -18,8 +188,8 @@ On 2026-09-13 the owner authorized a planning-only replacement of the remaining 
 
 1. **Configuration authorization** — complete configuration loading, validation, source/operation association, and composition with accepted read/write/edit baselines. **ACCEPTED; UNENFORCED.** Task ID: `20260913-configuration-authorization`.
 2. **Pi file gates and scoped approvals** — **ACCEPTED on 2026-09-15; Phase 2 complete within the demonstrated contract and limitations.** Task ID: `20260915-pi-file-gates-scoped-approvals`. The fresh independent PASS covers the corrective-pass artifacts identified below; owner acceptance is the subsequent decision recorded in this transition.
-3. **Sandboxed shell with network closed** — **SELECTED; architecture approved and implementation authorized on 2026-09-17.** Task ID: `20260915-sandboxed-shell-network-closed`. Goal 2 acceptance and the bounded backend-selection prerequisite are satisfied; final implementation review and owner acceptance remain open.
-4. **Restricted networking and end-to-end security evidence** — narrowly allowed connections and cross-layer verification; depends on Goal 3 acceptance.
+3. **Sandboxed shell with network closed** — **ACCEPTED on 2026-09-19 within the variant-B contract and declared limitations; Phase 3 complete.** Task ID: `20260915-sandboxed-shell-network-closed`. The implementation adds a bounded shell grammar and risk model, single-use fully bound shell approvals, a deny-default Seatbelt profile with closed networking, a native launcher that constructs the child descriptor envelope, per-object workspace projection with identity binding, and descriptor-bound export through the native helper. Evidence, accepted bytes and declared limitations are in [docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md) and the manifest bound above.
+4. **Restricted networking and end-to-end security evidence** — **SELECTED on 2026-09-19; implementation not begun.** Narrowly allowed connections and cross-layer verification build on the accepted Goal 3 boundary.
 
 The Goal scopes, acceptance criteria, exclusions, and checkpoints are fixed in [ROADMAP.md](ROADMAP.md). Goal 2 covers all six supported file tools, scoped approvals, complete resource/effect mediation, enforcement-time identity, protected control-plane resources, unknown-tool/shell blocking, and package/compatibility verification in one cycle. Its concrete integration and approval design must be explicit before dependent code and reviewed with the resulting implementation. No permission-widening configuration or weakening of accepted policy/provenance contracts is authorized.
 

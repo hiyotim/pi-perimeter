@@ -4,7 +4,7 @@ This roadmap uses release gates, not dates. A phase is complete only when its li
 
 ## Remaining implementation plan
 
-Planning decision: 2026-09-13; acceptance/selection update: 2026-09-15; architecture approval: 2026-09-17. The four-Goal plan is unchanged. Goals 1 and 2 are accepted; Phases 1 and 2 are complete within their demonstrated guarantees. Goals 3-4 remain. Goal 3 architecture is approved and its implementation cycle is authorized: staging-only Seatbelt execution, per-object import, controlled export, and a small native helper/descriptor-envelope launcher. The final implementation review and owner acceptance gates remain open. [STATE.md](STATE.md) records owner acceptance, exact Goal 2 provenance, and accepted limitations. The phase checklist remains the acceptance ledger, not a second queue of implementation Goals.
+Planning decision: 2026-09-13; acceptance/selection updates: 2026-09-15 and 2026-09-19; architecture approval: 2026-09-17. The four-Goal plan is unchanged. Goals 1–3 are accepted; Phases 1–3 are complete within their demonstrated guarantees. Goal 4 is selected and its implementation has not begun. Goal 3 acceptance is bounded by the variant-B contract, target platform and limitations recorded in [STATE.md](STATE.md) and the shell gate audit; it does not add descendant-termination, atomic-tree-snapshot, B3 or mount-isolation guarantees. The phase checklist remains the acceptance ledger, not a second queue of implementation Goals.
 
 Each Goal has one technical outcome and includes its related contract decisions, implementation, regression tests, documentation, and verification. These are internal scope/checklist items, not separate Goals. Work proceeds through one implementation cycle, machine checks, an independent review of the final snapshot, and acceptance. Findings and their fixes stay within that Goal; relevant changed artifacts require fresh checks and review before acceptance. No PASS transfers to different source/test hashes. Review evidence must distinguish reviewer-run checks from executor-run checks.
 
@@ -62,7 +62,7 @@ Across all Goals, preserve the [security invariants](AGENTS.md), [trust boundari
 
 ### Goal 3: Sandboxed shell with network closed
 
-**Status:** selected on 2026-09-15; architecture approved and implementation authorized on 2026-09-17. Task ID: `20260915-sandboxed-shell-network-closed`. The backend-selection gate is satisfied for private workspace projection + staging-only Seatbelt + per-object import/export + minimal native creation/descriptor-envelope component. Initial target: macOS 27.0 (26A428), arm64. No direct original-workspace shell access, `.git` projection, host delete/rename, new runtime package dependencies, or Goal 4 work. B3 remains declared and mount guarantees remain UNVERIFIED; unsupported topologies fail closed. See [STATE.md](STATE.md) for the exact approval and [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md) for autonomous execution. The outcome and acceptance criteria below are unchanged.
+**Status:** **accepted by the owner on 2026-09-19 within the documented variant-B contract and limitations; Phase 3 complete.** Task ID: `20260915-sandboxed-shell-network-closed`. The accepted design is private workspace projection + staging-only Seatbelt + per-object import/export + minimal native creation/descriptor-envelope component: bounded shell grammar and policy, single-use fully bound shell approvals, deny-default Seatbelt containment with closed networking, a constructed descriptor envelope, per-object import with identity binding, and descriptor-bound controlled export. The full regression/effect evidence is in [docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md) against [docs/SHELL-GATE.md](docs/SHELL-GATE.md), with exact accepted identities recorded in [STATE.md](STATE.md). Initial target: macOS 27.0 (26A428), arm64. No direct original-workspace shell access, `.git` projection, host delete/rename, new runtime package dependencies, or Goal 4 work is part of this accepted snapshot. B3 remains declared and mount guarantees remain UNVERIFIED; unsupported topologies fail closed. The outcome and acceptance criteria below are retained as the accepted contract.
 
 **Outcome:** model and user shell commands execute only inside verified OS containment, with a constructed environment and no permitted network access.
 
@@ -84,6 +84,8 @@ Across all Goals, preserve the [security invariants](AGENTS.md), [trust boundari
 **Checkpoint/review:** the backend/guarantee architecture checkpoint is satisfied within the 2026-09-17 approval. Independently review the finished shell execution path and exact evidence. Owner acceptance closes Phase 3 and its demonstrated Phase 5 items. Goal 4 must not open network access before this checkpoint passes.
 
 ### Goal 4: Restricted networking and end-to-end security evidence
+
+**Status:** selected by the owner on 2026-09-19; implementation has not begun. A separate implementation handoff must use the accepted Goal 3 commit as its baseline.
 
 **Outcome:** narrowly permitted development connections work without weakening the accepted filesystem, authorization, approval, or process boundaries.
 
@@ -113,7 +115,7 @@ The Phase 6 and Phase 7 gates below remain separate release checkpoints, not add
 
 ## Phase acceptance ledger
 
-The following phase checkboxes and release gates retain their acceptance meaning. Closure requires recorded acceptance evidence in STATE; the 2026-09-15 transitions close Phase 1 and Phase 2 within the accepted contracts. Phase 3 and later release gates remain open.
+The following phase checkboxes and release gates retain their acceptance meaning. Closure requires recorded acceptance evidence in STATE; the 2026-09-15 transitions close Phases 1 and 2, and the 2026-09-19 transition closes Phase 3 within the accepted contracts. Phase 4 and later release gates remain open.
 
 ## Phase 0 — Foundation
 
@@ -138,7 +140,7 @@ The following phase checkboxes and release gates retain their acceptance meaning
 
 **Release gate:** a platform-independent policy core passes table-driven and adversarial tests using temporary fixtures, with no Pi or sandbox side effects.
 
-Current acceptance checkpoint and historical Goal evidence: [STATE.md](STATE.md). The pure policy core and bounded file gates/approvals are accepted as Goals 1 and 2. Goal 3 is selected for its backend/guarantee proposal only. Planning or completion of a scope item does not authorize implementation beyond the active checkpoint or further phase advancement.
+Current acceptance checkpoint and historical Goal evidence: [STATE.md](STATE.md). The pure policy core, bounded file gates/approvals, and contained shell route are accepted as Goals 1–3 within their documented guarantees. Goal 4 is selected but not yet implemented. Planning or completion of a scope item does not authorize implementation beyond the active checkpoint or further phase advancement.
 
 ## Phase 2 — Pi Tool Gates
 
@@ -152,12 +154,12 @@ Current acceptance checkpoint and historical Goal evidence: [STATE.md](STATE.md)
 
 ## Phase 3 — Sandboxed Shell
 
-- [ ] Re-evaluate available OS-level containment mechanisms.
-- [ ] Investigate and, if suitable, integrate Anthropic Sandbox Runtime.
-- [ ] Route model `bash` and user `!`/`!!` commands through containment.
-- [ ] Construct a sanitized child environment.
-- [ ] Block on missing, unsupported, or failed sandbox initialization.
-- [ ] Prove there is no unrestricted fallback.
+- [x] Re-evaluate available OS-level containment mechanisms.
+- [x] Investigate Anthropic Sandbox Runtime and select the evidenced Seatbelt projection design instead.
+- [x] Route model `bash` and user `!`/`!!` commands through containment.
+- [x] Construct a sanitized child environment.
+- [x] Block on missing, unsupported, or failed sandbox initialization.
+- [x] Prove there is no unrestricted fallback within the accepted contract.
 
 **Release gate:** ordinary shell workflow runs in verified containment on supported macOS versions; failure-path and bypass tests pass; provider authentication remains outside child processes by default.
 

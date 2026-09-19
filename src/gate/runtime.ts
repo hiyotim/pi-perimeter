@@ -12,15 +12,21 @@
  *   binding. A foreign tool registered over these names, or any dispatch that
  *   reaches a controlled tool without a matching gate authorization, fails
  *   closed.
- * - `bash` / `powershell`: blocked (no unrestricted shell for any route).
+ * - `bash`: mediated by the contained shell lifecycle (plan, effective
+ *   policy, single-use approval, projection, Seatbelt containment, controlled
+ *   export). Every failure blocks; there is no uncontained fallback.
+ * - `powershell`: blocked (no containment path exists for it).
  * - unknown/unintegrated model-facing tools: blocked (fail closed), so dynamic
  *   registration or activation still cannot create unmediated effects.
- * - user `!` / `!!` shell execution: replaced with a blocked result; no shell
- *   is spawned. Failure to register a controlled tool, or to observe its owned
- *   registration, marks the runtime degraded and blocks the affected tools.
+ * - user `!` / `!!` shell execution: mediated by the same contained shell
+ *   lifecycle and returned as a full result replacement; a refusal returns a
+ *   blocked result and no shell is spawned. Failure to register a controlled
+ *   tool, or to observe its owned registration, marks the runtime degraded and
+ *   blocks the affected tools.
  */
 
 import {
+  createBashToolDefinition,
   createEditToolDefinition,
   createFindToolDefinition,
   createGrepToolDefinition,
@@ -33,13 +39,23 @@ import { requestScopedApproval, type ApprovalUI } from "../approvals/approvals.t
 import { buildExecutionPlan, executeBoundEdit, executeBoundRead, executeBoundWrite, BOUND_EXECUTION_REFUSED_PREFIX, type ExecutionPlan } from "./bound-execution.ts";
 import type { LoadedPolicySources } from "../policy/config-loader.ts";
 import { createProtectedZone, type ProtectedZone } from "../policy/control-plane.ts";
-import { mapFileToolToOperation, isBlockedShellTool } from "../policy/operations.ts";
+import { mapFileToolToOperation, isBlockedShellTool, isContainedShellTool } from "../policy/operations.ts";
 import type { ResolvedPath } from "../policy/paths.ts";
 import { authorizeResource, type GateServices } from "./authorizer.ts";
 import { parseGateInput } from "./gate-input.ts";
 import { controlledFind, controlledGrep, controlledLs } from "./controlled-traversal.ts";
+import {
+  authorizeShellRoute,
+  executeAuthorizedShellRoute,
+  SHELL_APPROVAL_PREFIX,
+  SHELL_POLICY_DENY_PREFIX,
+  type AuthorizedShell,
+  type ShellServices,
+} from "./shell-runtime.ts";
+import { defaultBuildManifestPath, defaultHelperPath, packageRootFromModule } from "../sandbox/helper.ts";
+import { randomUUID } from "node:crypto";
 
-export const SHELL_BLOCK_REASON = "pi-warden: shell execution is disabled while pi-warden is active";
+export const SHELL_UNSUPPORTED_REASON = "pi-warden: this shell dialect has no containment path and is blocked";
 export const UNKNOWN_TOOL_REASON = "pi-warden: tool is not integrated and is blocked (fail closed)";
 export const MALFORMED_INPUT_REASON = "pi-warden: tool input failed validation";
 export const MISSING_WORKSPACE_REASON = "pi-warden: missing trusted workspace context";
@@ -65,6 +81,12 @@ export interface PiRuntimeAPI {
 }
 
 /** One gate-issued authorization for exactly one controlled tool call. */
+/** One gate-issued shell authorization awaiting its controlled execution. */
+interface PendingShellCall {
+  readonly authorized: AuthorizedShell;
+  readonly createdAtMs: number;
+}
+
 interface AuthorizedCall {
   readonly tool: string;
   readonly workspace: string;
@@ -78,6 +100,8 @@ interface AuthorizedCall {
 export interface RuntimeState {
   /** Gate-issued per-call bindings; entries are consumed exactly once. */
   readonly authorizedCalls: Map<string, AuthorizedCall>;
+  /** Gate-issued shell authorizations; entries are consumed exactly once. */
+  readonly pendingShellCalls: Map<string, PendingShellCall>;
   readonly degraded: boolean;
 }
 
@@ -90,6 +114,13 @@ export interface GateRuntimeOptions {
   }[];
   /** Optional confirmation dialog timeout in milliseconds. */
   readonly approvalTimeoutMs?: number;
+  /** Trusted helper location; defaults to the package's own native directory. */
+  readonly helperPath?: string;
+  readonly buildManifestPath?: string;
+  /** Runtime-instance identity used for shell approval bindings. */
+  readonly instanceId?: string;
+  /** Lifetime of a prepared shell invocation that is never executed. */
+  readonly pendingShellTtlMs?: number;
 }
 
 type ExtCtx = { readonly ui?: unknown; readonly hasUI?: unknown; readonly cwd?: unknown };
@@ -114,10 +145,16 @@ function positiveIntOr(value: unknown, fallback: number): number {
 }
 
 /** Signature of a controlled tool executor. */
-type ControlledRun = (toolCallId: string, workspace: string, params: unknown) => Promise<unknown>;
+type ControlledRun = (
+  toolCallId: string,
+  workspace: string,
+  params: unknown,
+  ctx: unknown,
+  signal: AbortSignal | undefined,
+) => Promise<unknown>;
 
 interface ControlledTool {
-  readonly name: "grep" | "find" | "ls" | "read" | "write" | "edit";
+  readonly name: "grep" | "find" | "ls" | "read" | "write" | "edit" | "bash";
   readonly run: ControlledRun;
 }
 
@@ -125,6 +162,7 @@ function controlledBaseDefinition(
   toolName: ControlledTool["name"],
   cwd: string,
 ): object | undefined {
+  if (toolName === "bash") return createBashToolDefinition(cwd);
   if (toolName === "grep") return createGrepToolDefinition(cwd);
   if (toolName === "find") return createFindToolDefinition(cwd);
   if (toolName === "ls") return createLsToolDefinition(cwd);
@@ -144,8 +182,30 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
     protectedZones,
   };
 
+  const packageRoot = packageRootFromModule(import.meta.url);
+  const shellServices: ShellServices = {
+    trustedUserConfigRoot: options.trustedUserConfigRoot,
+    protectedZones,
+    helperPath: options.helperPath ?? defaultHelperPath(packageRoot),
+    buildManifestPath: options.buildManifestPath ?? defaultBuildManifestPath(packageRoot),
+    instanceId: options.instanceId ?? randomUUID(),
+    ...(options.approvalTimeoutMs !== undefined ? { approvalTimeoutMs: options.approvalTimeoutMs } : {}),
+  };
+  let sessionEpoch = 0;
   let degraded = false;
   const authorizedCalls = new Map<string, AuthorizedCall>();
+  const pendingShellCalls = new Map<string, PendingShellCall>();
+  /** Prepared invocations that Pi never executes are released after this long. */
+  const PENDING_SHELL_TTL_MS = options.pendingShellTtlMs ?? 10 * 60 * 1000;
+
+  async function releaseStalePendingShellCalls(): Promise<void> {
+    const deadline = Date.now() - PENDING_SHELL_TTL_MS;
+    for (const [toolCallId, pending] of [...pendingShellCalls]) {
+      if (pending.createdAtMs > deadline) continue;
+      pendingShellCalls.delete(toolCallId);
+      await pending.authorized.prepared.dispose();
+    }
+  }
   const controlledToolOwners = new Map<string, ToolOwnerInfo["sourceInfo"]>();
 
   function approvalUI(ctx: unknown): ApprovalUI | undefined {
@@ -160,6 +220,11 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
   }
 
   pi.on("session_shutdown", () => {
+    sessionEpoch += 1;
+    for (const pending of pendingShellCalls.values()) {
+      void pending.authorized.prepared.dispose();
+    }
+    pendingShellCalls.clear();
     authorizedCalls.clear();
     // Ownership observations belong to the current session binding; a new
     // session binding must reobserve them before controlled calls run.
@@ -174,14 +239,134 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
     }
   });
 
-  pi.on("user_bash", () => ({
-    result: {
-      output: `${SHELL_BLOCK_REASON}\n(command not executed)`,
-      exitCode: 126,
-      cancelled: false,
-      truncated: false,
-    },
-  }));
+  /**
+   * User `!`/`!!` commands run the same contained lifecycle as model `bash`.
+   * The result is a full replacement: no shell is spawned by Pi itself, and a
+   * refusal returns a blocked result instead of executing anything.
+   */
+  pi.on("user_bash", async (event: unknown, ctx: unknown) => {
+    const blocked = (reason: string) => ({
+      result: {
+        output: `${reason}\n(command not executed)`,
+        exitCode: 126,
+        cancelled: false,
+        truncated: false,
+      },
+    });
+    try {
+      if (typeof event !== "object" || event === null) return blocked(MALFORMED_INPUT_REASON);
+      const frame = event as { command?: unknown };
+      if (typeof frame.command !== "string" || frame.command.length === 0 || frame.command.includes("\0")) {
+        return blocked(`${MALFORMED_INPUT_REASON} (SHELL_INPUT)`);
+      }
+      if (degraded) return blocked(GATE_FAILURE_REASON);
+      const dyn = (typeof ctx === "object" && ctx !== null ? ctx : {}) as ExtCtx;
+      const workspace =
+        typeof dyn.cwd === "string" && dyn.cwd.length > 0 ? dyn.cwd : undefined;
+      if (workspace === undefined) return blocked(MISSING_WORKSPACE_REASON);
+      const ui = approvalUI(ctx);
+
+      const authorization = await authorizeShellRoute({
+        services: shellServices,
+        workspace,
+        command: frame.command,
+        ui,
+        sessionEpoch,
+      });
+      if (authorization.status === "blocked") return blocked(authorization.reason);
+
+      let output = "";
+      const execution = await executeAuthorizedShellRoute({
+        services: shellServices,
+        authorized: authorization.authorized,
+        ui,
+        signal: undefined,
+        timeoutMs: undefined,
+        onOutput: (chunk) => {
+          output += chunk.toString("utf8");
+          if (output.length > 4 * 1024 * 1024) output = output.slice(-2 * 1024 * 1024);
+        },
+      });
+      if ("blocked" in execution) return blocked(execution.blocked);
+      const text = [output.trimEnd(), execution.report].filter((part) => part.length > 0).join("\n\n");
+      return {
+        result: {
+          output: text.length > 0 ? text : "(no output)",
+          exitCode: execution.cancelled
+            ? undefined
+            : (execution.exitCode === null ? undefined : execution.exitCode),
+          cancelled: execution.cancelled,
+          truncated: execution.outputTruncated,
+        },
+      };
+    } catch {
+      return blocked(GATE_FAILURE_REASON);
+    }
+  });
+
+  /** Validates the model `bash` input frame exactly as the gate sees it. */
+  function parseShellToolInput(input: unknown): { command: string; timeoutMs: number | undefined } | undefined {
+    if (typeof input !== "object" || input === null || Array.isArray(input)) return undefined;
+    const frame = input as { command?: unknown; timeout?: unknown };
+    if (typeof frame.command !== "string" || frame.command.length === 0 || frame.command.includes("\0")) {
+      return undefined;
+    }
+    if (frame.timeout !== undefined) {
+      if (typeof frame.timeout !== "number" || !Number.isFinite(frame.timeout) || frame.timeout <= 0) {
+        return undefined;
+      }
+      return { command: frame.command, timeoutMs: Math.round(frame.timeout * 1000) };
+    }
+    return { command: frame.command, timeoutMs: undefined };
+  }
+
+  async function handleContainedShellToolCall(
+    toolName: string,
+    call: ExtEvent,
+    ctx: ExtCtx,
+    workspace: string,
+  ): Promise<Record<string, unknown> | undefined> {
+    if (degraded) {
+      return { block: true, reason: GATE_FAILURE_REASON };
+    }
+    const frame = parseShellToolInput(call.input);
+    if (frame === undefined) {
+      return { block: true, reason: `${MALFORMED_INPUT_REASON} (SHELL_INPUT)` };
+    }
+    const toolCallId =
+      typeof call.toolCallId === "string" && call.toolCallId.length > 0 ? call.toolCallId : undefined;
+    if (toolCallId === undefined) {
+      return { block: true, reason: MALFORMED_INPUT_REASON };
+    }
+    const expected = controlledToolOwners.get(toolName);
+    const observed = pi.getAllTools().filter((tool) => tool.name === toolName);
+    if (expected === undefined || observed.length !== 1 || !sameOwner(observed[0].sourceInfo, expected)) {
+      return { block: true, reason: CONTROLLED_TOOL_FOREIGN_OWNER_REASON };
+    }
+
+    await releaseStalePendingShellCalls();
+    const previous = pendingShellCalls.get(toolCallId);
+    if (previous !== undefined) {
+      pendingShellCalls.delete(toolCallId);
+      await previous.authorized.prepared.dispose();
+    }
+
+    const authorization = await authorizeShellRoute({
+      services: shellServices,
+      workspace,
+      command: frame.command,
+      ui: approvalUI(ctx),
+      sessionEpoch,
+    });
+    if (authorization.status === "blocked") {
+      return { block: true, reason: authorization.reason };
+    }
+    pendingShellCalls.set(toolCallId, {
+      authorized: authorization.authorized,
+      createdAtMs: Date.now(),
+    });
+    return undefined;
+  }
 
   async function handleToolCall(
     event: unknown,
@@ -205,7 +390,11 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
     const workspace: string = dyn.cwd as string;
 
     if (isBlockedShellTool(toolName)) {
-      return { block: true, reason: `${SHELL_BLOCK_REASON} (${toolName})` };
+      return { block: true, reason: `${SHELL_UNSUPPORTED_REASON} (${toolName})` };
+    }
+
+    if (isContainedShellTool(toolName)) {
+      return await handleContainedShellToolCall(toolName, call, dyn, workspace);
     }
 
     const mappedOp = mapFileToolToOperation(toolName);
@@ -481,7 +670,69 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
     return { content: [{ type: "text", text }], details: undefined };
   }
 
+  async function executeControlledBash(
+    toolCallId: string,
+    workspace: string,
+    params: unknown,
+    ctx: unknown,
+    signal: AbortSignal | undefined,
+  ): Promise<unknown> {
+    const pending = pendingShellCalls.get(toolCallId);
+    const consumed = pendingShellCalls.delete(toolCallId);
+    if (pending === undefined || !consumed) {
+      throw new Error(CONTROLLED_TOOL_MISSING_AUTHORIZATION_REASON);
+    }
+    const frame = parseShellToolInput(params);
+    if (frame === undefined || frame.command !== pending.authorized.plan.command) {
+      await pending.authorized.prepared.dispose();
+      throw new Error(CONTROLLED_TOOL_MISSING_AUTHORIZATION_REASON);
+    }
+    return await runControlledShellExecution(
+      pending.authorized,
+      shellServices,
+      approvalUI(ctx),
+      signal,
+      frame.timeoutMs,
+    );
+  }
+
+  async function runControlledShellExecution(
+    authorized: AuthorizedShell,
+    services: ShellServices,
+    ui: ApprovalUI | undefined,
+    signal: AbortSignal | undefined,
+    timeoutMs: number | undefined,
+  ): Promise<unknown> {
+    let output = "";
+    const execution = await executeAuthorizedShellRoute({
+      services,
+      authorized,
+      ui,
+      signal,
+      timeoutMs,
+      onOutput: (chunk) => {
+        output += chunk.toString("utf8");
+        if (output.length > 4 * 1024 * 1024) output = output.slice(-2 * 1024 * 1024);
+      },
+    });
+    if ("blocked" in execution) {
+      throw new Error(execution.blocked);
+    }
+    const text = [output.trimEnd(), execution.report].filter((part) => part.length > 0).join("\n\n");
+    if (execution.timedOut) {
+      throw new Error(`${text}\n\nCommand timed out inside containment`);
+    }
+    if (execution.cancelled) {
+      throw new Error(`${text}\n\nCommand aborted`);
+    }
+    if (execution.exitCode !== 0 && execution.exitCode !== null) {
+      throw new Error(`${text}\n\nCommand exited with code ${execution.exitCode}`);
+    }
+    return { content: [{ type: "text", text }], details: undefined };
+  }
+
   const controlledTools: readonly ControlledTool[] = [
+    { name: "bash", run: executeControlledBash },
     { name: "read", run: executeControlledRead },
     { name: "write", run: executeControlledWrite },
     { name: "edit", run: executeControlledEdit },
@@ -498,8 +749,8 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
     }
     const definition: object = {
       ...base,
-      execute: (toolCallId: unknown, params: unknown, _signal: unknown, _onUpdate: unknown, ctx: unknown) =>
-        runControlledToolCall(controlled.run, toolCallId, params, ctx),
+      execute: (toolCallId: unknown, params: unknown, signal: unknown, _onUpdate: unknown, ctx: unknown) =>
+        runControlledToolCall(controlled.run, toolCallId, params, ctx, signal),
     };
     try {
       pi.registerTool(definition);
@@ -515,7 +766,7 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
     controlledToolOwners.set(controlled.name, observed[0].sourceInfo);
   }
 
-  return { authorizedCalls, degraded };
+  return { authorizedCalls, pendingShellCalls, degraded };
 }
 
 export function runControlledToolCall(
@@ -523,6 +774,7 @@ export function runControlledToolCall(
   toolCallId: unknown,
   params: unknown,
   ctx: unknown,
+  signal?: unknown,
 ): Promise<unknown> {
   const dyn = ctx as ExtCtx | undefined;
   const workspace =
@@ -532,8 +784,10 @@ export function runControlledToolCall(
   if (typeof toolCallId !== "string" || toolCallId.length === 0) {
     return Promise.reject(new Error(CONTROLLED_TOOL_MISSING_AUTHORIZATION_REASON));
   }
+  const abortSignal =
+    typeof signal === "object" && signal !== null && "aborted" in signal ? (signal as AbortSignal) : undefined;
   try {
-    return run(toolCallId, workspace, params);
+    return run(toolCallId, workspace, params, ctx, abortSignal);
   } catch (error) {
     return Promise.reject(error);
   }

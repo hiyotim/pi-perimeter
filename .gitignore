@@ -10,3 +10,7 @@ coverage/
 .conductor/
 .qwen/
 .opencode-permission-canary.txt
+
+# Native helper build artifacts (built explicitly by `npm run build:native`).
+/native/piwarden-helper
+/native/build-manifest.json

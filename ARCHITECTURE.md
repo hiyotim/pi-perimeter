@@ -2,9 +2,16 @@
 
 ## Status and scope
 
-This document describes the architecture as it is implemented incrementally. Phase 1A path handling, Phase 1B resource classification, fixed read/write/edit decisions, pairwise/N-ary authorization composition, and bounded configuration authorization are accepted unenforced primitives. Goal 1 owner acceptance was recorded on 2026-09-15. No accepted Pi enforcement exists; the Goal 2 gate is present only as an unaccepted working-tree implementation and is not a security guarantee. Other components below remain design boundaries, not current guarantees, unless explicitly marked as implemented.
-
-Phase 1 is accepted as an unenforced policy core. [STATE.md](STATE.md) records the evidence and the open corrective pass for Goal 2 (Pi file gates and scoped approvals): the implementation is present in the working tree but NOT accepted after an owner-reproduced ancestor-directory symlink swap wrote outside the workspace between authorization and execution.
+This document describes the architecture as it is implemented incrementally.
+Phase 1A path handling, Phase 1B resource classification, fixed read/write/edit
+decisions, pairwise/N-ary authorization composition, and bounded configuration
+authorization are accepted unenforced primitives; the Goal 2 file gate is
+accepted within its documented contract. Goal 3 adds the contained shell route
+and is accepted within its documented target and variant-B limitations; its contract,
+declared target and bounded guarantees are in
+[docs/SHELL-GATE.md](docs/SHELL-GATE.md) and its evidence in
+[docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md). Sections below that still
+say "planned" describe work that Goal 4 or later would own.
 
 ## Remaining implementation boundaries
 
@@ -85,21 +92,53 @@ The accepted write-path and edit-path default decision contracts add the same fi
 
 ## 6. Approvals
 
-**Planned.** The approval layer will present the exact operation, canonical target, reason, duration, and scope. Approvals must be narrow, visible, and non-transferable between materially different resources or operations. Timeout, unavailable UI, and malformed responses do not grant access.
+**Implemented.** The approval layer presents the exact operation, canonical
+target, reason, duration, and scope, and its grants are narrow, visible and
+non-transferable. For file tools the grant covers one tool call; for shell
+(shell-approvals.ts) a grant additionally binds the exact command text, the
+parsed form, the workspace/cwd, the runtime instance and session epoch, the
+loaded policy states, the generated containment profile, the constructed
+environment, every sealed script input and every static resource outcome, with
+a 60-second expiry and single use.
+
+An approval changes authorization only. It does not weaken containment or
+convert an unsandboxed process into a sandboxed one, and a shell grant never
+authorizes a host write: each exported effect carries its own fresh decision.
+
+Historical design text for the file-tool approval contract follows. The approval layer will present the exact operation, canonical target, reason, duration, and scope. Approvals must be narrow, visible, and non-transferable between materially different resources or operations. Timeout, unavailable UI, and malformed responses do not grant access.
 
 An approval changes authorization only. It does not weaken containment or convert an unsandboxed process into a sandboxed one.
 
 ## 7. Shell command classification
 
-**Planned.** Shell handling will identify destructive operations, privilege escalation, credential access, nested interpreters, command substitution, filesystem escape, network access, and publish/deploy actions. A parser or AST-based approach is expected for robust classification; regexes may provide limited signals but cannot be the complete boundary.
+**Implemented for the supported grammar.** The bounded lexer/parser
+(`src/policy/shell-grammar.ts`), the plan builder (`shell-plan.ts`) and the
+fixed command-risk tables (`shell-commands.ts`) classify destructive,
+privilege, credential, system, publish/deploy, network and unknown behaviour,
+and refuse anything they cannot represent exactly. Parsing is advisory with
+teeth: it decides approval requirements and early refusals, while the Seatbelt
+profile and the controlled export remain the enforcement boundary.
+
+Historical design text follows. Shell handling will identify destructive operations, privilege escalation, credential access, nested interpreters, command substitution, filesystem escape, network access, and publish/deploy actions. A parser or AST-based approach is expected for robust classification; regexes may provide limited signals but cannot be the complete boundary.
 
 Because shell languages are highly dynamic, classification alone is insufficient. Shell execution must also be contained by the OS adapter.
 
 ## 8. OS sandbox adapter
 
-**Planned.** A platform adapter will contain shell subprocesses using an independently reviewed OS-level mechanism. Anthropic Sandbox Runtime is the current primary candidate, but suitability and current behavior must be re-evaluated in Phase 3.
+**Implemented (macOS 27 arm64 only).** The adapter generates a deny-default
+Seatbelt profile from trusted host inputs, closes the child descriptor envelope
+with a small audited native launcher, and runs the entry shell inside
+`sandbox-exec`. The child sees a private projection of the workspace plus the
+toolchain and read-only system roots, with `staging/`, `home/` and `tmp/` as
+its only writable data roots. `/usr/bin/sandbox-exec` and the helper are
+identity-pinned; the platform, architecture and kernel major are declared and
+checked.
 
-Initialization is an explicit prerequisite. If the requested policy requires containment and the adapter is unsupported, unavailable, or fails to initialize, execution is blocked. There is no unrestricted fallback.
+Initialization is an explicit prerequisite. Unsupported platform, missing or
+mismatched helper, unverifiable `sandbox-exec`, failed profile generation, or a
+failed self-test blocks every shell route. There is no unrestricted fallback,
+and no outcome-dependent profile: a `DENY` blocks the invocation instead of
+running it with fewer roots.
 
 ## 9. Network policy
 
@@ -109,11 +148,24 @@ Goal 3 proves closed networking before Goal 4 adds destination permissions. A ne
 
 ## 10. Environment sanitization
 
-**Planned.** Child processes receive a constructed environment rather than an unfiltered copy of the host environment. Sensitive variables, provider credentials, agent state paths, proxy settings, and dynamic-loader controls must be removed unless explicitly required by a narrow operation.
+**Implemented for the shell route.** The child environment is constructed from
+`{}`: `PATH` (toolchain bin plus system directories), `HOME` and `TMPDIR`
+inside the invocation directory, a stable UTF-8 locale, and `SHELL`. Provider
+credentials, `*_TOKEN`/`*_KEY`/`*_SECRET`, `SSH_AUTH_SOCK`, `DYLD_*`,
+`NODE_OPTIONS`, `BASH_ENV`/`ENV` and proxy variables are absent by
+construction; the entry shell runs with `--noprofile --norc`.
+
+Historical design text follows. Child processes receive a constructed environment rather than an unfiltered copy of the host environment. Sensitive variables, provider credentials, agent state paths, proxy settings, and dynamic-loader controls must be removed unless explicitly required by a narrow operation.
 
 ## 11. Audit and status reporting
 
-**Planned.** Decisions will produce structured, non-secret status and audit events. Reports should identify the operation, decision, reason, policy source, approval scope, and containment state without logging secret values. The UI must make degraded or unavailable protection conspicuous.
+**Implemented for the shell route.** Every contained run returns a non-secret
+status block: exit state, the verified platform/`sandbox-exec`/profile
+identities, projection counts, exported/refused/ignored effect counts, and the
+reason for each refused effect or refused export (for example a missing
+quiescence proof). No secret value is included.
+
+Historical design text follows. Decisions will produce structured, non-secret status and audit events. Reports should identify the operation, decision, reason, policy source, approval scope, and containment state without logging secret values. The UI must make degraded or unavailable protection conspicuous.
 
 ## Different enforcement strategies
 

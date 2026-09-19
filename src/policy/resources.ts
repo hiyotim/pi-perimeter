@@ -288,6 +288,16 @@ const RULES: readonly ResourceRule[] = [
   },
 ];
 
+/**
+ * Every reason code this classifier can emit, in rule order. Exported so
+ * containment-profile generation can prove that each classified family is
+ * rendered: a new rule that is not reflected in the profile must make
+ * generation refuse rather than silently lose coverage.
+ */
+export const RESOURCE_RULE_REASONS: readonly ResourceMatchReason[] = Object.freeze(
+  RULES.map((rule) => rule.reason),
+);
+
 function maximumSensitivity(matches: readonly ResourceMatch[]): ResourceSensitivity {
   if (matches.some(({ sensitivity }) => sensitivity === "secret")) {
     return "secret";

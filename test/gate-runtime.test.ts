@@ -10,9 +10,9 @@ import {
   CONTROLLED_TOOL_MISSING_AUTHORIZATION_REASON,
   GATE_FAILURE_REASON,
   MALFORMED_INPUT_REASON,
-  SHELL_BLOCK_REASON,
   UNKNOWN_TOOL_REASON,
   type PiRuntimeAPI,
+  type RuntimeState,
   type ToolOwnerInfo,
 } from "../src/gate/runtime.ts";
 import { buildExecutionPlan, descriptorRelativeExecutionAvailable } from "../src/gate/bound-execution.ts";
@@ -86,13 +86,14 @@ async function tempFixture() {
 function buildGateHarness(
   userRoot: string,
   protectedRoots: readonly string[],
-  options?: { throwOnRegister?: boolean; dropRegistered?: boolean },
+  options?: { throwOnRegister?: boolean; dropRegistered?: boolean; pendingShellTtlMs?: number },
 ): Harness {
   const fake = makeHost();
   if (options?.throwOnRegister === true) fake.setThrowOnRegister(true);
   const state = createPiWardenRuntime(fake as unknown as PiRuntimeAPI, {
     trustedUserConfigRoot: userRoot,
     protectedRoots: protectedRoots.map((canonicalRoot) => ({ name: "pi-warden-user-config" as const, canonicalRoot })),
+    ...(options?.pendingShellTtlMs !== undefined ? { pendingShellTtlMs: options.pendingShellTtlMs } : {}),
   });
   if (options?.dropRegistered === true) fake.dropRegistered();
   const toolCall = fake.handlers.get("tool_call");
@@ -126,7 +127,7 @@ interface Harness {
   fake: Host;
   toolCall: FakeHandler;
   userBash: FakeHandler;
-  state: { authorizedCalls: Map<string, unknown>; degraded: boolean };
+  state: RuntimeState;
 }
 
 test("controlled gate registers same-name tools and stays non-degraded", async () => {
@@ -581,20 +582,107 @@ test("missing read targets fail closed", async () => {
   }
 });
 
-test("model bash and user !/!! shell routes are blocked without spawning an unrestricted shell", async () => {
+test("shell routes are either contained or blocked; nothing runs uncontained", async () => {
   const { root, workspace, userRoot } = await tempFixture();
   try {
     const harness = buildGateHarness(userRoot, []);
     const ctx = fakeCtx(workspace);
-    for (const name of ["bash", "powershell"]) {
-      const result = await harness.toolCall({ type: "tool_call", toolName: name, toolCallId: name, input: { command: "echo hi" } }, ctx);
-      assert.ok((result as { block?: unknown })?.block === true, `${name} must be blocked`);
-      assert.match((result as { reason?: string }).reason ?? "", /shell/i);
+
+    // A shell dialect without a containment path is always blocked.
+    const powershell = await harness.toolCall(
+      { type: "tool_call", toolName: "powershell", toolCallId: "ps", input: { command: "echo hi" } },
+      ctx,
+    );
+    assert.ok((powershell as { block?: unknown })?.block === true, "powershell must be blocked");
+    assert.match((powershell as { reason?: string }).reason ?? "", /blocked/);
+
+    // Denied, unsupported and malformed shell input never reaches containment.
+    for (const [id, command] of [
+      ["deny-network", "curl https://example.com"],
+      ["deny-privilege", "sudo id"],
+      ["deny-external", "cat /etc/passwd"],
+      ["unsupported-expansion", "echo $(id)"],
+    ] as const) {
+      const blocked = await harness.toolCall(
+        { type: "tool_call", toolName: "bash", toolCallId: id, input: { command } },
+        ctx,
+      );
+      assert.ok((blocked as { block?: unknown })?.block === true, `${id} must be blocked`);
+      assert.match((blocked as { reason?: string }).reason ?? "", /pi-warden SHELL DENY/);
     }
-    const userResult = await harness.userBash({ type: "user_bash", command: "echo hi", excludeFromContext: false, cwd: workspace }, fakeCtx(workspace));
-    assert.equal((userResult as { result?: { output?: string; exitCode?: number; cancelled?: boolean; truncated?: boolean } }).result?.exitCode, 126);
-    assert.equal((userResult as { result?: { cancelled?: boolean } }).result?.cancelled, false, "no shell was run");
-    assert.match((userResult as { result?: { output?: string } }).result?.output ?? "", /shell execution is disabled/);
+    const malformed = await harness.toolCall(
+      { type: "tool_call", toolName: "bash", toolCallId: "malformed", input: { command: "" } },
+      ctx,
+    );
+    assert.ok((malformed as { block?: unknown })?.block === true);
+
+    // An ordinary command is either prepared for containment or blocked by a
+    // platform/helper refusal. It is never executed uncontained here: the
+    // gate does not spawn anything, and the harness observes the outcome.
+    const ordinary = await harness.toolCall(
+      { type: "tool_call", toolName: "bash", toolCallId: "ordinary", input: { command: "ls" } },
+      ctx,
+    );
+    if (ordinary === undefined) {
+      assert.equal(harness.state.pendingShellCalls.size, 1, "prepared invocation must be bound to the call");
+      for (const pending of harness.state.pendingShellCalls.values()) {
+        await pending.authorized.prepared.dispose();
+      }
+      harness.state.pendingShellCalls.clear();
+    } else {
+      assert.ok((ordinary as { block?: unknown })?.block === true, "non-prepared shell calls must be blocked");
+      assert.match(
+        (ordinary as { reason?: string }).reason ?? "",
+        /PLATFORM_UNSUPPORTED|HELPER|SANDBOX_EXEC|PROFILE|SHELL DENY/,
+      );
+    }
+
+    // user `!` commands follow the same path: a refusal replaces the result.
+    const userDenied = await harness.userBash(
+      { type: "user_bash", command: "curl https://example.com", excludeFromContext: false, cwd: workspace },
+      fakeCtx(workspace),
+    );
+    const deniedResult = (userDenied as { result?: { output?: string; exitCode?: number; cancelled?: boolean } }).result;
+    assert.equal(deniedResult?.exitCode, 126);
+    assert.equal(deniedResult?.cancelled, false, "no shell was run");
+    assert.match(deniedResult?.output ?? "", /pi-warden SHELL DENY/);
+    assert.match(deniedResult?.output ?? "", /command not executed/);
+
+    const userAllowed = await harness.userBash(
+      { type: "user_bash", command: "ls", excludeFromContext: false, cwd: workspace },
+      fakeCtx(workspace),
+    );
+    const allowedResult = (userAllowed as { result?: { output?: string; exitCode?: number } }).result;
+    if (allowedResult?.exitCode === 126) {
+      assert.match(allowedResult.output ?? "", /PLATFORM_UNSUPPORTED|HELPER|SANDBOX_EXEC|PROFILE|SHELL DENY/);
+    } else {
+      assert.match(allowedResult?.output ?? "", /pi-warden: contained run finished/);
+    }
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("prepared shell bindings do not accumulate and are bounded by their TTL", async () => {
+  const { root, workspace, userRoot } = await tempFixture();
+  try {
+    const harness = buildGateHarness(userRoot, [], { pendingShellTtlMs: 0 });
+    const ctx = fakeCtx(workspace);
+    // On the declared target the first call prepares an invocation; anywhere
+    // else it is refused. Either way no prepared state may accumulate.
+    await harness.toolCall({ type: "tool_call", toolName: "bash", toolCallId: "ttl-1", input: { command: "ls" } }, ctx);
+    const afterFirst = harness.state.pendingShellCalls.size;
+    assert.ok(afterFirst <= 1, "at most one prepared invocation may exist");
+    await harness.toolCall({ type: "tool_call", toolName: "bash", toolCallId: "ttl-2", input: { command: "ls" } }, ctx);
+    assert.ok(
+      harness.state.pendingShellCalls.size <= 1,
+      "an expired prepared invocation must be released before a new one is bound",
+    );
+    for (const pending of harness.state.pendingShellCalls.values()) {
+      await pending.authorized.prepared.dispose();
+    }
+    harness.state.pendingShellCalls.clear();
+    assert.equal(harness.state.pendingShellCalls.size, 0);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

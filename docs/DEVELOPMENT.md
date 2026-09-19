@@ -17,7 +17,14 @@
 
 Follow the required workflow in [AGENTS.md](../AGENTS.md) for the selected task. Review the diff for widened authority, unsafe fallback, secrets, and unrelated edits; update documentation when demonstrated behavior changes. Commit only when explicitly authorized and the adversarial review is complete.
 
-The project uses the Node test runner for TypeScript tests and a local TypeScript compiler. For code, test, or dependency changes, run `npm run check` (typecheck and all tests). Focused checks such as `npm run test:paths` or `node --test test/resources.test.ts` are useful during diagnosis; the full check already includes them. For documentation-only edits, verify affected claims, links, and the diff. Additional checks explicitly required by the task or handoff still apply.
+The project uses the Node test runner for TypeScript tests and a local TypeScript compiler. For code, test, or dependency changes, run `npm run check` (typecheck and all tests). Focused checks such as `npm run test:paths`, `npm run test:shell`,
+`npm run test:sandbox` or `node --test test/resources.test.ts` are useful during
+diagnosis; the full check already includes them. The contained shell route adds
+one more prerequisite and one target-specific suite: build the native helper
+explicitly with `npm run build:native` (no implicit compilation happens at
+runtime), then run `npm run test:containment`, which exercises real processes,
+the real profile and the real helper on the declared macOS target and is
+skipped elsewhere. For documentation-only edits, verify affected claims, links, and the diff. Additional checks explicitly required by the task or handoff still apply.
 
 ## Code placement
 

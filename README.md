@@ -2,9 +2,15 @@
 
 `pi-warden` is an early lightweight security extension/package for [Pi](https://pi.dev/), focused on workspace-scoped authorization and OS-level containment without requiring Docker or a full virtual machine.
 
-> **Project status: Phase 1 / Pre-alpha**
+> **Project status: Phases 1–3 accepted; Goal 4 selected, not yet implemented.**
 
-This repository contains design documents, a minimal extension skeleton, and tested unenforced policy primitives through bounded configuration authorization. It does not enforce an accepted security policy in Pi; the Goal 2 file gate is present only as an unaccepted working-tree implementation with an open corrective pass.
+Goals 1–3 (bounded configuration authorization, Pi file gates with scoped
+approvals, and contained shell execution) are accepted within their documented
+contracts and limitations. Goal 3 is accepted on the declared macOS target;
+its exact evidence and limitations are recorded in
+[docs/SHELL-GATE.md](docs/SHELL-GATE.md) and
+[docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md). Nothing here is a general
+security guarantee.
 
 ## Problem
 
@@ -40,20 +46,45 @@ All model-facing tools must use one security model even though in-process file t
 
 Phase 1A implements path canonicalization and component-aware workspace membership, including existing symlinks and non-existent creation targets. Phase 1B classifies a deliberately small set of secret and sensitive paths using Phase 1A's canonical and normalized lexical results. Fixed read/write/edit baselines and monotonic authorization composition are implemented. The accepted Goal 1 implements a strict v1 operation-policy parser, one fixed user/global source, one fixed project source, and explainable composition with those baselines.
 
-The Goal 2 working-tree implementation (NOT accepted; corrective pass open) adds central enforcement: pi-warden mediates every supported model-facing file tool (`read`, `write`, `edit`, `grep`, `find`, `ls`) through one gate (`src/gate/`), requests exact single-use scoped approvals for effective `ASK` outcomes (`src/approvals/`), protects the Pi agent directory and its policy location structurally (`src/policy/control-plane.ts`), replaces `grep`/`find`/`ls` with controlled same-name tools that classify every entry before reading and exclude denied resources from results, blocks model `bash`/`powershell` and user `!`/`!!` shell execution without spawning a shell, and fails closed for unknown or dynamically registered model-facing tools. See [docs/FILE-GATE.md](docs/FILE-GATE.md) for the exact operation mapping and limits. Important limitations remain: TOCTOU-style filesystem replacement races between authorization and execution are narrowed to the Pi tool-call boundary but not eliminated, and the owner reproduced an ancestor-directory symlink swap that writes outside the workspace between the ancestor verification and the final open; Goal 2 is therefore on an open corrective pass and is not a security control; shell execution and network access are blocked, not sandboxed; there is no OS containment, environment sanitization, or audit log.
+The accepted Goal 2 gate mediates every supported model-facing file tool
+(`read`, `write`, `edit`, `grep`, `find`, `ls`) through one authorizer
+(`src/gate/`), requests exact single-use scoped approvals for effective `ASK`
+outcomes (`src/approvals/`), protects the Pi agent directory and its policy
+location structurally (`src/policy/control-plane.ts`), replaces
+`grep`/`find`/`ls` with controlled same-name tools that classify every entry
+before reading, and fails closed for unknown tools. macOS direct-file creation
+and missing-parent creation stay unavailable. See
+[docs/FILE-GATE.md](docs/FILE-GATE.md) for the accepted operation mapping and
+limits.
+
+The accepted Goal 3 adds one contained shell route for
+model `bash` and user `!`/`!!` on macOS 27 arm64: the command is parsed by a
+bounded grammar, evaluated against the same policy core, approved with a
+single-use binding when required, executed against a **private projection** of
+the workspace under a deny-default Seatbelt profile with closed networking and
+a constructed environment, and its changes are exported back only after
+per-target re-authorization. The original workspace is never visible to the
+child. See [docs/SHELL-GATE.md](docs/SHELL-GATE.md).
 
 The project still does **not** provide:
 
-- shell execution capability (Shell enablement is deliberately blocked until Goal 3);
-- process, filesystem, or network containment;
-- environment sanitization;
+- shell execution on any platform other than the declared macOS target
+  (Linux stays blocked, not merely unsupported);
+- network access of any kind from contained processes (Goal 4);
+- protection against an independent same-user host writer, including ordinary
+  tampering with the disposable projection, or mount isolation (declared,
+  unverified);
 - secret-content detection beyond path classification;
-- audit logging or established security guarantees.
+- host delete or rename effects, or direct `create` for file tools on macOS;
+- audited security guarantees beyond the reviewed contracts above.
 
 ## Platform
 
-- macOS on Apple Silicon is the first target.
-- Linux support is under consideration for a later phase.
+- Declared containment target: macOS 27.0 (26A428) on Apple Silicon, arm64.
+- Other macOS versions, other architectures and Linux are unsupported and
+  fail closed; a passing self-test does not widen this table. Linux remains
+  blocked even for the file gates, which have no recorded runtime evidence
+  there.
 
 ## Installation
 
@@ -63,7 +94,24 @@ Do not install or rely on this package as a security control.
 
 ## Security notice
 
-`pi-warden` is not a mature security boundary. The current path primitive is not integrated with Pi tools. Do not use it to process untrusted repositories, protect real credentials, or run unmonitored agent workloads. See [SECURITY.md](SECURITY.md) for the current reporting policy.
+`pi-warden` is not a mature general-purpose security boundary. Its accepted
+controls apply only within their documented platform, operation and threat
+model limits; do not use real credentials in tests or infer protection outside
+those limits. See [SECURITY.md](SECURITY.md) for the current reporting policy.
+
+## Building the native helper
+
+Contained shell execution needs the small native helper described in
+[docs/SHELL-GATE.md](docs/SHELL-GATE.md). Build it explicitly with the
+platform toolchain:
+
+```sh
+npm run build:native     # writes native/piwarden-helper + native/build-manifest.json
+```
+
+There is no implicit compilation at runtime, no download, and no privileged
+step. If the helper is missing or does not match its recorded build identity,
+every shell route is blocked with an actionable reason.
 
 ## Development
 

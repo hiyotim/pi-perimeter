@@ -29,10 +29,12 @@
 export type FileToolName = "read" | "write" | "edit" | "grep" | "find" | "ls";
 
 /**
- * Shell tools that must never execute while pi-warden is active. Shell
- * enablement belongs to a later Goal; this Goal blocks all shell routes.
+ * Shell routes. `bash` is integrated through the contained shell lifecycle
+ * (Goal 3); every other shell dialect, including `powershell`, stays blocked
+ * until it has its own reviewed containment path.
  */
-export const BLOCKED_SHELL_TOOLS: readonly string[] = ["bash", "powershell"];
+export const SUPPORTED_SHELL_TOOLS: readonly string[] = ["bash"];
+export const BLOCKED_SHELL_TOOLS: readonly string[] = ["powershell"];
 
 const FILE_TOOL_OPERATIONS: Readonly<Record<FileToolName, "read" | "write" | "edit">> = Object.freeze({
   read: "read",
@@ -61,5 +63,10 @@ export function mapFileToolToOperation(tool: string): "read" | "write" | "edit" 
 }
 
 export function isBlockedShellTool(tool: string): boolean {
-  return tool === "bash" || tool === "powershell";
+  return tool === "powershell";
+}
+
+/** True for the shell tool mediated by the contained shell lifecycle. */
+export function isContainedShellTool(tool: string): boolean {
+  return tool === "bash";
 }
