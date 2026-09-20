@@ -8,10 +8,10 @@ Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c2
 
 ## Continuation
 
-- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting` and `20260920-hosted-ci-reproducibility` were accepted 2026-09-20; **no new Goal is selected**.
-- Review: **PASS** — the hosted-CI Goal's fresh independent review passed on the reviewed bytes at `1f6b1e7`.
-- Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the Phase 6 release gate, compatibility matrix, packaging/publication safeguards and release-candidate reviews remain open; the unscoped npm name `pi-warden` is taken by another maintainer, so publication under it is blocked; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin/main`.
-- Next: none established — the next bounded Goal must be selected from [ROADMAP.md](ROADMAP.md) by the owner; do not self-select or advance a phase.
+- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting` and `20260920-hosted-ci-reproducibility` were accepted 2026-09-20, and `20260920-compatibility-matrix` is implemented and reviewed with **owner acceptance pending**; no further Goal is selected.
+- Review: **PASS** — the hosted-CI Goal's fresh independent review passed on the reviewed bytes at `1f6b1e7`, and the compatibility-matrix fresh review passed at `b81ae5d` with both prior findings closed.
+- Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the compatibility matrix reports verified rows only and commits to no support; the Phase 6 release gate, packaging/publication safeguards and release-candidate reviews remain open; the unscoped npm name `pi-warden` is taken by another maintainer, so publication under it is blocked; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin/main`.
+- Next: owner acceptance of `20260920-compatibility-matrix`; afterwards the next bounded Goal must be selected from [ROADMAP.md](ROADMAP.md) by the owner — do not self-select or advance a phase.
 
 ## Current checkpoint
 
@@ -492,6 +492,85 @@ Executor-run local evidence for the reviewed snapshot: `npm run check` PASS
 - One Phase 6 checklist item is closed by this Goal on acceptance; the Phase 6
   release gate, the compatibility matrix, packaging, and the release-candidate
   reviews remain open.
+
+## Compatibility matrix Goal: implementation and independent review (2026-09-20)
+
+Task ID: `20260920-compatibility-matrix`. Status: **implemented, hosted-verified,
+and independently reviewed; owner acceptance pending.** Nothing is published,
+released, or installed.
+
+### What changed
+
+- [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md): one matrix over Pi, Node,
+  OS/architecture and distribution, where every cell is either verified with the
+  exact version and its evidence pointer, or explicitly unsupported/declared with
+  the mechanism (or the absence of one) stated, plus a "Not claimed" section and an
+  evidence index. Owner decisions applied: verified rows only, no support
+  commitment, and `peerDependencies: "*"` left as declared but documented as
+  unverified beyond `0.84.4`.
+- [README.md](README.md) Platform section points at the matrix without widening it.
+- `docs/compatibility-hashes.json` and `test/compatibility-manifest.test.ts` bind
+  the Goal's artifacts; `test/ci-manifest.test.ts` declares
+  `CHANGED_IN_COMPATIBILITY`; the declared `linux` CI budget rises from `tests 373`
+  to `tests 376` because this Goal adds three tests.
+
+### Accepted bytes changed
+
+| Artifact | Accepted bytes | Current bytes |
+| --- | --- | --- |
+| `docs/CI-EVIDENCE.md` | `546dc26f7c4ae728942db2e24fcbae733d8cd9a8f48556118d07feb79aa1c34e` | `127f4ac1477e9c577302f5e26898a0318153bb55bcacd6fbdd3816b6471508f3` |
+| `test/ci-test-budget.json` | `3287e756c97947a8d57bcfe443cc7cecbaba5acdf94a63957b651c8f68aaebb9` | `ea1e11ce5262337af8f9a26f6e8d32572ceb7ff47c130fbec2490364dc126049` |
+| `test/ci-manifest.test.ts` | `4f3550f1d4d6e69e7e00dda9f0f130d3723bb819a559e44950adfbecbcad06ef` | `3fc8de374f42f0726e9e3f8d03282b6db22c32a40a226f82e75fa3e34cd75012` |
+| `docs/ci-hashes.json` | unchanged | `796fcf2b8b7a928ab045e4e38ea886f3fb1afc67d618755bc125722796d52c1e` |
+
+The hosted-CI manifest keeps its historical entries for the three changed
+artifacts, its own bytes are unchanged so the hosted-CI acceptance binding stays
+valid, and [docs/compatibility-hashes.json](docs/compatibility-hashes.json),
+SHA-256 `0657cfd7803e11b4e7d4f7842667eaa250b461be96945cfb95852dea77d9e841`, binds
+the current bytes.
+
+### Hosted evidence
+
+Runs `35531506720` (`f92e557`) and `35531992518` (`b81ae5d`) both succeeded, and
+the assertion step reported `tests 376, pass 322, fail 0, skipped 54, todo 0,
+cancelled 0` against the declared budget. These are executor-observed outputs, not
+reviewer evidence, and they satisfy the run-recording promise made by
+[docs/CI-EVIDENCE.md](docs/CI-EVIDENCE.md) §2.
+
+### Independent review
+
+Two reviewer passes ran in a separate context on model `z-ai/glm-5.3-flash`,
+read-only, each running its own checks:
+
+1. Review of `f92e557`: **PASS** with one medium finding (the Node-below-floor cell
+   was labelled fail-closed although `engines` is advisory and nothing refuses it at
+   runtime) and one low finding (the hosted-CI evidence record still stated the old
+   `tests 373` budget, leaving two documents disagreeing). Reviewer-run evidence
+   included the citation checks behind each cell, `gh run view` of the hosted runs,
+   independent `shasum` recomputation, and the three manifest suites.
+2. Fresh review of the fix delta on `b81ae5d`: **PASS**, both findings closed, no new
+   findings, and confirmation that `docs/ci-hashes.json` is byte-identical across the
+   Goal so the hosted-CI acceptance binding is intact. Non-blocking observation,
+   recorded without a code change: the "How to read this" taxonomy does not literally
+   cover the Distribution cell's externally-blocked state, although the cell text and
+   body are factual.
+
+### Attribution note
+
+The uncommitted owner edit to `AGENTS.md` (the "Continuity documents" section) was
+swept into commit `f92e557` by this Goal's `git add -A`. It is the owner's content,
+not this Goal's output, and it is disclosed here rather than re-attributed by
+rewriting published history.
+
+### Declared limits
+
+- The matrix reports the verified rows and the refusals only; it is not a support
+  commitment, and it does not close the Phase 6 release gate or any other Phase 6
+  item.
+- The Pi row's `0.86.1` gap and the unverified `peerDependencies: "*"` range remain
+  open; narrowing the range or verifying `0.86.1` needs its own decision.
+- The Class 1 `/proc/self/fd` runtime-evidence question stays open, and no Linux or
+  Windows support follows from this Goal.
 
 ## Selected next Goal and planning decision
 
