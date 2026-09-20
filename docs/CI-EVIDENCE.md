@@ -2,7 +2,10 @@
 
 Task ID: `20260920-hosted-ci-reproducibility`.
 Phase 6 checklist item: "Add GitHub CI and reproducible checks".
-Repository: `hiyotim/pi-perimeter` (public, transferred from `pi-warden/pi-warden` on 2026-09-20); working line `main`.
+Repository: `pi-warden/pi-warden` (public); working line `main`. This record is
+append-only: the repository was transferred to `hiyotim/pi-perimeter` on 2026-09-20, so the
+locator above is preserved as the location where these runs executed, while the run
+identifiers recorded here now resolve under the new owner.
 
 This record contains hosted-run identities, the declared platform limits, the count
 assertion, and the accepted bytes this Goal changed. Hosted results and executor-local

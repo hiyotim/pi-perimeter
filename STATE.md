@@ -8,10 +8,10 @@ Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c2
 
 ## Continuation
 
-- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting`, `20260920-hosted-ci-reproducibility` and `20260920-compatibility-matrix` were accepted 2026-09-20, as was the Phase 5 ledger reconciliation; `20260920-npm-packaging` is implemented and reviewed with **owner acceptance pending**, and the repository transfer to the renamed personal location is the outstanding owner action; **no further Goal is selected**.
-- Review: **PASS** — fresh independent reviews passed at `1f6b1e7` (hosted CI), `b81ae5d` (compatibility matrix), `b9ba949` (ledger reconciliation), `9a99881` (the private-vulnerability-reporting item, closing its audit-trail gap) and `abdbf8d` (packaging, after its `ea13956` medium finding was fixed); the reconciliation's first pass was a FAIL whose findings are fixed and closed. Every accepted item has a recorded independent review.
-- Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the compatibility matrix reports verified rows only; the Phase 5 release gate is reconciled but not closed; `pi-perimeter` is unpublished with `private: true`, its `repository`/`homepage`/`bugs` and the PVR route still name `github.com/pi-warden/pi-warden` until the transfer, and provenance is not wired up; the Phase 6 release gate, packaging/publication safeguards sign-off and release-candidate reviews remain open; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin/main`.
-- Next: owner acceptance of `20260920-npm-packaging`, then the owner's repository transfer, then the separate post-transfer pass (URLs, PVR route, local `origin`, hosted references, PVR re-check, local and hosted checks, fresh review); afterwards the next bounded Goal must be selected from [ROADMAP.md](ROADMAP.md) by the owner — do not self-select or advance a phase.
+- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting`, `20260920-hosted-ci-reproducibility`, `20260920-compatibility-matrix` and `20260920-npm-packaging` were accepted 2026-09-20, as was the Phase 5 ledger reconciliation; the repository was transferred to the canonical location `hiyotim/pi-perimeter` and the post-transfer pass completed; **no further Goal is selected**.
+- Review: **PASS** — fresh independent reviews passed at `1f6b1e7` (hosted CI), `b81ae5d` (compatibility matrix), `b9ba949` (ledger reconciliation), `9a99881` (the private-vulnerability-reporting item, closing its audit-trail gap), `abdbf8d` (packaging, after its `ea13956` medium finding was fixed) and `c13f8c3` (the post-transfer delta, whose three findings are closed). Every accepted item has a recorded independent review.
+- Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the compatibility matrix reports verified rows only; the Phase 5 release gate is reconciled but not closed; `pi-perimeter` stays unpublished with `private: true` and provenance unwired, and its package metadata now names the canonical repository; the Phase 6 release gate, publication safeguards sign-off and release-candidate reviews remain open; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin` (`hiyotim/pi-perimeter`).
+- Next: none established — the next bounded Goal must be selected from [ROADMAP.md](ROADMAP.md) by the owner; do not self-select or advance a phase.
 
 ## Current checkpoint
 
@@ -711,6 +711,68 @@ read-only, and both ran their own checks:
   post-transfer pass must update those URLs, the PVR route, the local `origin`, any
   remaining hosted references to the old owner/repo, re-check PVR, and re-run the local
   and hosted checks with a fresh review.
+
+## npm packaging Goal: accepted; repository transferred (2026-09-20)
+
+Task ID: `20260920-npm-packaging`. Status: **accepted by the owner on 2026-09-20.**
+The acceptance covers the post-transfer revision of this Goal's artifacts: the owner
+accepted the packaging Goal as recorded below and then performed the repository
+transfer, and the URL corrections the Goal's own contract required were made in the
+same pass and reviewed separately. Nothing is published, no version exists, and no
+release gate is closed.
+
+**Repository transfer (2026-09-20, owner action).** The repository moved out of the
+`pi-warden` organization to the owner's personal account and was renamed:
+`pi-warden/pi-warden` → **`hiyotim/pi-perimeter`** (the old URL redirects). The
+`pi-warden` organization still exists and no longer holds this project; nothing in the
+repository depends on it. Verified against the new location the same day: the repository
+is public, private vulnerability reporting is still `{"enabled":true}`, Actions is
+enabled and the preserved run history is visible, and the synthetic advisory from the
+reporting-channel Goal transferred with the repository (one entry, `triage`,
+`published_at: null`, the recorded `created_at` and summary), with access control
+unchanged (authenticated list one entry, unauthenticated list empty, the advisory
+itself `404`).
+
+**Post-transfer pass.** Canonical surface updated to the new location:
+`package.json` `repository`/`homepage`/`bugs`, the published reporting route in
+[SECURITY.md](SECURITY.md), the packaging document, and the identity test's expected
+URLs. Historical records were not rewritten: the reporting-channel audit gained a
+dated post-transfer section and an explicit note that its acceptance-bound
+`SECURITY.md` hash is superseded by
+[docs/post-transfer-hashes.json](docs/post-transfer-hashes.json), and
+[docs/CI-EVIDENCE.md](docs/CI-EVIDENCE.md) keeps its original repository locator with an
+appended dated note. Five earlier manifest suites declare the post-transfer change set
+they cover (`CHANGED_IN_POST_TRANSFER`) rather than rewriting historical entries; the
+declared `linux` CI count rises 382 → 385 for the new manifest suite.
+
+**Hosted and local evidence.** Hosted run `35535376079` on the new repository succeeded
+with the assertion reporting `tests 385, pass 331, fail 0, skipped 54`, so GitHub Actions
+works after the transfer. Locally, `npm run check` reports typecheck plus 385 tests, 384
+pass, 0 fail, 1 declared platform skip, and `npm pack --dry-run` reports
+`pi-perimeter@0.0.0`, 82 files, 327.0 kB packed and 1.1 MB unpacked.
+
+**Independent reviews.**
+
+1. The packaging Goal's review of `ea13956` returned **PASS** with one medium finding
+   (the `files` allowlist shipped the locally built helper) and the fresh review of the
+   fix at `abdbf8d` returned **PASS** with the finding closed and one low observation
+   recorded without change.
+2. The post-transfer delta review at `c13f8c3` returned **PASS** with one medium finding
+   — this record's predecessor in the Continuation block still described the transfer as
+   outstanding, which this section fixes — one low finding that the CI evidence record
+   had been edited in place instead of appended to (now append-only), and one low
+   finding that the reporting-channel audit did not state that its acceptance-bound
+   `SECURITY.md` hash was superseded (now stated). The reviewer re-verified the transfer
+   facts with `gh`, confirmed every remaining old-organization reference is historical or
+   another maintainer's npm entry, and confirmed no earlier manifest was rewritten.
+
+### Declared limits
+
+- Unpublished: `private: true` still blocks `npm publish`, provenance is not wired up,
+  and the release checklist in [docs/PACKAGING.md](docs/PACKAGING.md) is not satisfied.
+- `peerDependencies: "*"` remains a declared, not a verified, range.
+- The Phase 6 release gate stays open: the release-candidate security and documentation
+  reviews are still outstanding, and publication remains an explicit maintainer action.
 
 ## Selected next Goal and planning decision
 
