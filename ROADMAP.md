@@ -174,14 +174,16 @@ Current acceptance checkpoint and historical Goal evidence: [STATE.md](STATE.md)
 
 ## Phase 5 — Hardening
 
-- [ ] Adopt or implement an auditable shell parser/AST strategy.
-- [ ] Test nested shells, substitutions, redirections, sourced scripts, and subprocesses.
-- [ ] Expand symlink and time-of-check/time-of-use adversarial coverage.
-- [ ] Investigate macOS Keychain behavior without promising isolation prematurely.
-- [ ] Build a maintained adversarial regression suite.
-- [ ] Conduct an independent security-focused review.
+Ledger reconciliation (2026-09-20, task `20260920-ledger-reconciliation`): these items were distributed across the owning Goals and are closed below by their accepted evidence. This reconciliation does **not** close the phase's release gate.
 
-**Release gate:** all high-priority threats have explicit enforcement evidence, regression coverage, or a clearly documented limitation.
+- [x] Adopt or implement an auditable shell parser/AST strategy. (Goal 3: bounded lexer/parser with fixed limits in `src/policy/shell-grammar.ts`; the profile, not the parser, is the enforcement boundary, and command substitution and backticks are denied rather than parsed — [docs/SHELL-GATE.md](docs/SHELL-GATE.md) §8, with content binding for sourced and literal script inputs in §9.)
+- [x] Test nested shells, substitutions, redirections, sourced scripts, and subprocesses. (Goal 3: `test/shell-grammar.test.ts`, `test/shell-plan.test.ts`, `test/shell-containment.test.ts`, including pipeline/list/subshell/redirection structure, sourced-input binding, and nested `sandbox-exec` refusal inside containment.)
+- [x] Expand symlink and time-of-check/time-of-use adversarial coverage. (Goal 2 corrective pass: the ancestor-symlink-swap creation escape and descriptor-relative execution in [docs/FILE-GATE-AUDIT.md](docs/FILE-GATE-AUDIT.md); Goal 3: descriptor-bound freeze and measurement races with the declared pre-capture residual in [docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md) §20–22.)
+- [x] Investigate macOS Keychain behavior without promising isolation prematurely. (Goal 3: the synthetic-Keychain effect test in `test/shell-containment.test.ts`; Keychain beyond that probe stays declared UNVERIFIED in [docs/SHELL-GATE.md](docs/SHELL-GATE.md) and the audit, and no isolation guarantee is claimed.)
+- [x] Build a maintained adversarial regression suite. (The containment, network, freeze-race and manifest suites run inside `npm run check` and are now enforced on every push by the hosted CI check with a declared count budget — [docs/CI-EVIDENCE.md](docs/CI-EVIDENCE.md).)
+- [x] Conduct an independent security-focused review. (Independent reviewer passes are recorded for every accepted Goal, including the eight rounds in [docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md) and the passes bound by the acceptance records in [STATE.md](STATE.md).)
+
+**Release gate:** all high-priority threats have explicit enforcement evidence, regression coverage, or a clearly documented limitation. (Not closed by this reconciliation: whether that condition is met is an owner decision, and the declared residuals — mount isolation UNVERIFIED, same-user host writers (B3), no descendant-termination guarantee, the Class 1 Linux runtime-evidence gap, and Keychain beyond the synthetic probe — are the boundary any such acceptance would inherit.)
 
 ## Phase 6 — Public Beta
 
