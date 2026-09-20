@@ -32,11 +32,13 @@ No secret is required and no network access beyond the npm registry fetch perfor
 | 35523982904 | `2fa89b6` (`main` consolidation) | push `main` | success: tests 356, pass 302, fail 0, skipped 54 |
 | 35524137666 | `964b408` (Goal selection record) | push `main` | success, same counts |
 | 35524360355 | `a507be4` (this Goal's implementation) | push `main` | success: tests 369, pass 315, fail 0, skipped 54, and the count assertion reported `tests 369, pass 315, fail 0, skipped 54` for `linux` |
+| 35525006502 | `f8f7257` (skip-composition correction) | push `main` | success, same counts |
 
 The 2026-09-15 failure had never been recorded; `STATE.md` now records the correction.
-The hosted runs for this Goal's later documentation-only commits are recorded in
-`STATE.md` with the acceptance, because recording them here would change the bytes this
-manifest binds.
+The hosted run for the acceptance transition itself is recorded in `STATE.md`, not here:
+adding it here would change the bytes this manifest binds, and the acceptance record
+carries the run identifier, commit, and counts. Until that record exists, no hosted run
+after `f8f7257` is covered by this file.
 
 ## 3. Declared platform limits
 
@@ -44,7 +46,9 @@ The hosted runner is Linux. This project's declared containment target is macOS 
 (26A428) arm64, and `verifyPlatform` (`src/sandbox/containment.ts`) requires darwin,
 `arm64`, the declared Darwin major, and a pinned `/usr/bin/sandbox-exec` sha256
 (`scripts/build-native.mjs` additionally refuses every non-darwin platform). A
-GitHub-hosted macOS runner satisfies none of those conditions by design.
+GitHub-hosted macOS runner is darwin and arm64, but cannot satisfy all of those
+conditions at once by design: its Darwin major and `sandbox-exec` identity are not the
+pinned ones.
 
 Therefore:
 
@@ -56,7 +60,10 @@ Therefore:
   `quiescence.test.ts` 16, `seatbelt-profile.test.ts` 6, `shell-containment.test.ts` 20
   (as reported by run 35524360355). They are skipped by their own declared conditions;
   the workflow neither excludes nor disables them. `projection.test.ts` and
-  `export.test.ts` carry no platform condition and do run on Linux.
+  `export.test.ts` carry no platform condition and do run on Linux. The skip predicates
+  are the tests' own `process.platform === "darwin"` checks, which are narrower than
+  `verifyPlatform`: on a darwin runner outside the declared target these tests would run
+  and fail rather than skip, which is why no darwin job is added here.
 - No Linux (or other platform) support claim is made. The hosted Linux run does execute
   the platform-independent suites, including `src/gate/bound-execution.ts`, which selects
   the descriptor-relative execution path (`/proc/self/fd`) when
@@ -66,19 +73,33 @@ Therefore:
 
 ## 4. Count assertion
 
-`test/ci-test-budget.json` declares, per platform key, `minTests`, `fail` and `skipped`.
-`scripts/assert-test-outcome.mjs` refuses the run when the TAP summary is missing or
-internally inconsistent, when a count is outside the declaration, when the platform has
-no declared budget, or when the budget is not declared as integers. Its behavior is
-covered by `test/ci-budget.test.ts` against synthetic logs in isolated temporary
-directories.
+`test/ci-test-budget.json` declares, per platform key, the exact `tests`, `fail` and
+`skipped` counts. `scripts/assert-test-outcome.mjs` refuses the run when the TAP summary
+is missing or completes to a different total than `tests` (`pass + fail + skipped + todo
++ cancelled` must equal it), when any declared count differs, when the platform has no
+declared budget, or when the budget is not declared as integers. Its behavior is covered
+by `test/ci-budget.test.ts` against synthetic logs in isolated temporary directories.
 
 The assertion exists because a printed count is not a check: without it, a new skip
-condition, a suite that stopped being collected, or a masked failure would still look
-green. The `linux` budget is `minTests 356, fail 0, skipped 54`. `minTests` is a floor
-rather than an exact total, so adding tests does not require a budget update, while
-adding or removing a skip does — the skip count is the quantity that can hide lost
-coverage.
+condition, a collected set that shrank or grew, or a masked failure would still look
+green. The declaration is exact rather than a floor, because a floor would let a test
+silently disappear as long as the total stayed above it; every change to the collected
+set or the skip set therefore needs an explicit budget update and review.
+
+The current `linux` budget is `tests 373, fail 0, skipped 54`. The hosted runs listed
+above reported 369 collected tests because they ran before this Goal's review fixes
+added four regression tests in `test/ci-budget.test.ts`; the exact-count rule means that
+change had to be declared, which is the intended behaviour.
+The assertion is coupled to Node's TAP reporter, which the pinned CI Node (22.19.0)
+selects for a piped, non-TTY stdout; a different summary shape (for example the `ℹ`
+lines a newer Node prints locally) refuses the run instead of guessing, so the assertion
+cannot silently pass on an unexpected format.
+
+Known limits of the assertion, stated rather than implied: it verifies counts, not test
+identities, so a rename or a swap of one test for another inside the same counts is not
+detected; it cannot detect a test that never registers at all, unless that changes a
+count; and it runs only where a budget is declared, which today is `linux` alone —
+`darwin` runs remain executor-local and are judged by the audits, not by this budget.
 
 ## 5. Accepted bytes changed by this Goal
 

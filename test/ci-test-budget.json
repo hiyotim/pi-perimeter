@@ -1,6 +1,6 @@
 {
   "linux": {
-    "minTests": 356,
+    "tests": 373,
     "fail": 0,
     "skipped": 54
   }
