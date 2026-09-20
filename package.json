@@ -42,7 +42,6 @@
   },
   "files": [
     "src",
-    "native",
     "scripts",
     "docs",
     "README.md",

@@ -49,17 +49,20 @@ longer contains one, so the list cannot rot silently.
 
 ## Packaged contents
 
-`files` ships `src`, `native`, `scripts`, `docs`, `README.md`, `LICENSE` and
-`package.json`. A dry run on 2026-09-20 (`npm pack --dry-run`) reported name
-`pi-perimeter`, version `0.0.0`, **83 files**, 340.9 kB packed and 1.2 MB unpacked. It was
-a dry run: no tarball was published, and any shasum or integrity value it printed belongs
-to that run, not to a release.
+`files` ships `src`, `scripts`, `docs`, `README.md`, `LICENSE` and `package.json`. A dry
+run on 2026-09-20 (`npm pack --dry-run`) reported name `pi-perimeter`, version `0.0.0`,
+**81 files**, 325.8 kB packed and 1.1 MB unpacked. It was a dry run: no tarball was
+published, and any shasum or integrity value it printed belongs to that run, not to a
+release.
 
 Notes on the contents:
 
-- The C source of the native helper ships, but never a compiled helper binary: the helper
-  is built explicitly per platform with `npm run build:native`, and is not compiled at
-  install time.
+- The C source of the native helper ships (`src/sandbox/native/piwarden-helper.c`), but
+  the build-output directory `native/` is deliberately **not** in `files`. A locally
+  compiled helper and its build manifest therefore cannot enter the tarball even when a
+  release is packed on a machine that has built them, and nothing is compiled at install
+  time — the helper is built explicitly per platform with `npm run build:native`.
+  `test/packaging-identity.test.ts` asserts that exclusion.
 - The audits and contracts under `docs/` ship with the package, deliberately: the
   documented guarantees and their declared limitations are part of the artifact.
 

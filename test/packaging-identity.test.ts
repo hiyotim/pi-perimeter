@@ -168,9 +168,13 @@ test("the publishable identity is pi-perimeter and stays unpublished by default"
   assert.deepEqual(pkg["publishConfig"], { access: "public", provenance: true });
   assert.equal((pkg["engines"] as { node: string }).node, ">=22.19.0");
   const files = pkg["files"] as string[];
-  for (const entry of ["src", "native", "scripts", "docs", "README.md", "LICENSE", "package.json"]) {
+  for (const entry of ["src", "scripts", "docs", "README.md", "LICENSE", "package.json"]) {
     assert.ok(files.includes(entry), `the packaged files list must include ${entry}`);
   }
+  assert.ok(
+    !files.includes("native"),
+    "the build-output directory must not ship: a locally built helper must never enter the tarball",
+  );
   const pi = pkg["pi"] as { extensions: string[] };
   assert.deepEqual(pi.extensions, ["./src/index.ts"], "the Pi manifest entry is unchanged by the rename");
   assert.ok(readdirSync("src").includes("index.ts"), "the Pi manifest entry path exists");
