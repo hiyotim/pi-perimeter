@@ -18,6 +18,14 @@ import { test } from "node:test";
 
 const MANIFEST_PATH = "docs/network-gate-hashes.json";
 
+/**
+ * Artifacts whose bytes the packaging Goal (`20260920-npm-packaging`) changed:
+ * the Goal 3 manifest test that now declares its own packaging change set. Its
+ * entry here is historical accepted bytes; docs/packaging-hashes.json binds the
+ * current bytes.
+ */
+const CHANGED_IN_PACKAGING = new Set<string>(["test/shell-manifest.test.ts", "test/network-manifest.test.ts"]);
+
 const COVERED_FILES = [
   "src/policy/configuration.ts",
   "src/policy/network.ts",
@@ -45,6 +53,7 @@ test("the Goal 4 artifact hash manifest matches the final working tree", async (
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if (CHANGED_IN_PACKAGING.has(file)) continue; // renamed identity; the packaging manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

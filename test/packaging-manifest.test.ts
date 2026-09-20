@@ -1,0 +1,132 @@
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { test } from "node:test";
+
+/**
+ * Deterministic hash manifest for the packaging Goal artifacts
+ * (`20260920-npm-packaging`).
+ *
+ * Every entry lists the sha256 of the final file. The test recomputes hashes
+ * each run, prints the current value for any mismatch, and fails until the
+ * manifest matches the working tree, so the renamed identity, the packaging
+ * document and any reviewer verdict are tied to exact file contents. To refresh
+ * the manifest after a verified intentional change, replace each entry with the
+ * hash printed in the failure diff and re-run this suite.
+ */
+
+const MANIFEST_PATH = "docs/packaging-hashes.json";
+
+const COVERED_FILES = [
+  "package.json",
+  "package-lock.json",
+  "README.md",
+  "LICENSE",
+  "AGENTS.md",
+  "CONTRIBUTING.md",
+  "SECURITY.md",
+  "docs/COMPATIBILITY.md",
+  "docs/PACKAGING.md",
+  "test/ci-test-budget.json",
+  "test/packaging-identity.test.ts",
+  "test/package-lifecycle.test.ts",
+  "test/packaging-manifest.test.ts",
+  "test/hash-manifest.test.ts",
+  "test/shell-manifest.test.ts",
+  "test/ci-manifest.test.ts",
+  "test/compatibility-manifest.test.ts",
+  "test/network-manifest.test.ts",
+] as const;
+
+/** Artifacts this Goal also changed inside an earlier manifest. */
+const SHARED_WITH_EARLIER_MANIFESTS: Record<string, string[]> = {
+  "package.json": ["docs/file-gate-hashes.json", "docs/shell-gate-hashes.json"],
+  "README.md": ["docs/compatibility-hashes.json"],
+  "docs/COMPATIBILITY.md": ["docs/compatibility-hashes.json"],
+  "test/ci-test-budget.json": ["docs/ci-hashes.json", "docs/compatibility-hashes.json"],
+  "test/hash-manifest.test.ts": ["docs/ci-hashes.json"],
+  "test/package-lifecycle.test.ts": ["docs/file-gate-hashes.json"],
+  "test/shell-manifest.test.ts": ["docs/shell-gate-hashes.json", "docs/network-gate-hashes.json"],
+  "test/ci-manifest.test.ts": ["docs/ci-hashes.json", "docs/compatibility-hashes.json"],
+  "test/compatibility-manifest.test.ts": ["docs/compatibility-hashes.json"],
+  "test/network-manifest.test.ts": ["docs/network-gate-hashes.json"],
+};
+
+/** The declared change set each earlier manifest must carry, exactly. */
+const DECLARED_CHANGE_SETS: Record<string, string[]> = {
+  "test/hash-manifest.test.ts": ["package.json", "test/package-lifecycle.test.ts"],
+  "test/shell-manifest.test.ts": ["package.json", "test/shell-manifest.test.ts"],
+  "test/ci-manifest.test.ts": [
+    "test/ci-test-budget.json",
+    "test/ci-manifest.test.ts",
+    "test/hash-manifest.test.ts",
+  ],
+  "test/compatibility-manifest.test.ts": [
+    "docs/COMPATIBILITY.md",
+    "README.md",
+    "test/ci-test-budget.json",
+    "test/ci-manifest.test.ts",
+    "test/compatibility-manifest.test.ts",
+  ],
+  "test/network-manifest.test.ts": ["test/shell-manifest.test.ts", "test/network-manifest.test.ts"],
+};
+
+test("the packaging artifact hash manifest matches the final working tree", async () => {
+  const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
+  const mismatches: { file: string; current: string; expected: string | null }[] = [];
+  for (const file of COVERED_FILES) {
+    const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
+    if (manifest[file] !== current) {
+      mismatches.push({ file, current, expected: manifest[file] ?? null });
+    }
+    if (process.env["PIWARDEN_MANIFEST_VERBOSE"] === "1") console.log(`sha256 ${file} = ${current}`);
+  }
+  assert.equal(
+    mismatches.length,
+    0,
+    `hash manifest mismatch for:\n${mismatches
+      .map((entry) => `${entry.file}: current ${entry.current} recorded ${entry.expected}`)
+      .join("\n")}`,
+  );
+});
+
+test("the packaging manifest records every artifact with its earlier-manifest provenance", async () => {
+  const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
+  for (const file of COVERED_FILES) {
+    assert.ok(typeof manifest[file] === "string" && manifest[file].length === 64, `${file} must be recorded`);
+  }
+  assert.equal(Object.keys(manifest).length, COVERED_FILES.length);
+  // Every artifact this Goal shares with an earlier manifest must carry a fresh
+  // identity there, so the historical entries cannot be mistaken for the tree.
+  for (const [file, earlier] of Object.entries(SHARED_WITH_EARLIER_MANIFESTS)) {
+    for (const earlierPath of earlier) {
+      const previous = JSON.parse(await readFile(earlierPath, "utf8")) as Record<string, string>;
+      assert.notEqual(
+        previous[file],
+        manifest[file],
+        `${file} must have a fresh identity after its packaging change (${earlierPath})`,
+      );
+    }
+  }
+});
+
+test("every earlier manifest declares exactly the packaging changes it covers", async () => {
+  for (const [file, expected] of Object.entries(DECLARED_CHANGE_SETS)) {
+    const source = await readFile(file, "utf8");
+    const declaration = /CHANGED_IN_PACKAGING = new Set<string>\(\[([\s\S]*?)\]\)/.exec(source);
+    assert.ok(declaration, `${file} must declare its packaging change set`);
+    const declared = [...declaration[1]!.matchAll(/"([^"]+)"/g)].map((match) => match[1]!).sort();
+    assert.deepEqual(
+      declared,
+      [...expected].sort(),
+      `${file} must declare exactly the covered packaging changes`,
+    );
+    for (const covered of declared) {
+      assert.ok(
+        Object.hasOwn(SHARED_WITH_EARLIER_MANIFESTS, covered),
+        `${covered} must be listed as shared with an earlier manifest`,
+      );
+    }
+  }
+});

@@ -36,7 +36,7 @@ test("isolated npm pack, install, and rollback cycle with no real-home or reposi
     // in this Goal; the pack/install evidence here also relies on POSIX tooling.
     return;
   }
-  const fixture = await mkdtemp(path.join(tmpdir(), "pi-warden-package-"));
+  const fixture = await mkdtemp(path.join(tmpdir(), "pi-perimeter-package-"));
   const tarballs = path.join(fixture, "tarballs");
   const consumer = path.join(fixture, "consumer");
   const cache = path.join(fixture, "npm-cache");
@@ -56,7 +56,7 @@ test("isolated npm pack, install, and rollback cycle with no real-home or reposi
     assert.equal(pack.status, 0, `npm pack failed: ${pack.stderr}`);
     const packOutput = pack.stdout.trim().split("\n");
     const tarball = packOutput[packOutput.length - 1].trim();
-    assert.match(tarball, /^pi-warden-\d+\.\d+\.\d+\.tgz$/, `unexpected tarball path: ${tarball}`);
+    assert.match(tarball, /^pi-perimeter-\d+\.\d+\.\d+\.tgz$/, `unexpected tarball path: ${tarball}`);
     const tarballPath = path.join(tarballs, tarball);
     assert.ok(existsSync(tarballPath));
 
@@ -81,24 +81,24 @@ test("isolated npm pack, install, and rollback cycle with no real-home or reposi
     );
     assert.equal(install.status, 0, `npm install failed: ${install.stderr}`);
     const installedPkg = JSON.parse(
-      await readFile(path.join(consumer, "node_modules", "pi-warden", "package.json"), "utf8"),
+      await readFile(path.join(consumer, "node_modules", "pi-perimeter", "package.json"), "utf8"),
     ) as { name: string; pi: { extensions: string[] } };
-    assert.equal(installedPkg.name, "pi-warden");
+    assert.equal(installedPkg.name, "pi-perimeter");
     assert.deepEqual(installedPkg.pi.extensions, ["./src/index.ts"]);
-    assert.ok(existsSync(path.join(consumer, "node_modules", "pi-warden", "src", "index.ts")));
+    assert.ok(existsSync(path.join(consumer, "node_modules", "pi-perimeter", "src", "index.ts")));
 
     // 4) Rollback: uninstall and confirm the consumer is restored.
     const uninstall = npm(
-      ["uninstall", "pi-warden", "--prefix", consumer, "--legacy-peer-deps", "--no-audit", "--no-fund"],
+      ["uninstall", "pi-perimeter", "--prefix", consumer, "--legacy-peer-deps", "--no-audit", "--no-fund"],
       fixture,
       env,
     );
     assert.equal(uninstall.status, 0, `npm uninstall failed: ${uninstall.stderr}`);
-    assert.equal(existsSync(path.join(consumer, "node_modules", "pi-warden")), false, "installed package must be removed by rollback");
+    assert.equal(existsSync(path.join(consumer, "node_modules", "pi-perimeter")), false, "installed package must be removed by rollback");
 
     // 5) The repository working tree stays untouched by the cycle.
     const manifestAfter = JSON.parse(await readFile(path.join(REPO_ROOT, "package.json"), "utf8")) as { name: string };
-    assert.equal(manifestAfter.name, "pi-warden");
+    assert.equal(manifestAfter.name, "pi-perimeter");
   } finally {
     await rm(fixture, { recursive: true, force: true });
   }

@@ -26,6 +26,13 @@ const MANIFEST_PATH = "docs/file-gate-hashes.json";
  */
 const CHANGED_IN_HOSTED_CI = new Set<string>([".github/workflows/ci.yml"]);
 
+/**
+ * Artifacts whose bytes the packaging Goal (`20260920-npm-packaging`) changed:
+ * the package identity in `package.json`. Its entry here is historical accepted
+ * bytes; docs/packaging-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_PACKAGING = new Set<string>(["package.json", "test/package-lifecycle.test.ts"]);
+
 const COVERED_FILES = [
   "package.json",
   ".github/workflows/ci.yml",
@@ -53,6 +60,7 @@ test("the Goal 2 artifact hash manifest matches the final working tree", async (
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
     if (CHANGED_IN_HOSTED_CI.has(file)) continue; // historical bytes; fresh evidence binds the current tree
+    if (CHANGED_IN_PACKAGING.has(file)) continue; // renamed identity; the packaging manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

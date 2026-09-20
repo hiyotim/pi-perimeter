@@ -2,7 +2,7 @@
 
 ## Current status
 
-`pi-warden` is in **Pre-alpha**. Goals 1–4 — bounded configuration
+`pi-perimeter` (formerly `pi-warden`) is in **Pre-alpha**. Goals 1–4 — bounded configuration
 authorization, Pi file gates with scoped approvals, contained shell execution,
 and restricted networking — are implemented, verified on the declared macOS
 target, and accepted within their documented contracts and declared

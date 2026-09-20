@@ -1,23 +1,20 @@
-# pi-warden
+# pi-perimeter
 
-`pi-warden` is an early lightweight security extension/package for [Pi](https://pi.dev/), focused on workspace-scoped authorization and OS-level containment without requiring Docker or a full virtual machine.
+`pi-perimeter` (formerly `pi-warden`) is an early lightweight security extension/package for [Pi](https://pi.dev/), focused on workspace-scoped authorization and OS-level containment without requiring Docker or a full virtual machine.
 
-> **Project status: Phases 1–3 accepted; Goal 4 implemented and verified on the declared target, awaiting owner acceptance.**
+> **Project status: Goals 1–4 accepted; no public beta, no release, and no installation path.**
 
-Goals 1–3 (bounded configuration authorization, Pi file gates with scoped
-approvals, and contained shell execution) are accepted within their documented
-contracts and limitations. Goal 4 (restricted networking) is implemented on the
-declared macOS target under its own contract and is **not yet accepted**; its
-exact evidence and limitations are recorded in
-[docs/NETWORK-GATE.md](docs/NETWORK-GATE.md) and
-[docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md). Nothing here is a general
-security guarantee.
+Goals 1–4 (bounded configuration authorization, Pi file gates with scoped
+approvals, contained shell execution, and restricted networking) are accepted
+within their documented contracts and declared limitations; their exact evidence
+is recorded in [STATE.md](STATE.md) and the per-Goal contracts and audits linked
+below. Nothing here is a general security guarantee.
 
 ## Problem
 
 Pi is a local coding agent. Its built-in tools and extensions run with the permissions of the user who started Pi. Pi's Project Trust feature controls whether project-local settings, packages, and extensions are loaded, but it is not a runtime sandbox and does not constrain later tool calls.
 
-That behavior is appropriate for Pi's general-purpose local workflow, but it does not provide the workspace-oriented threat model intended here. A permission prompt can authorize an action; it cannot contain a process after execution begins. `pi-warden` therefore treats authorization, user approval, and OS containment as separate controls.
+That behavior is appropriate for Pi's general-purpose local workflow, but it does not provide the workspace-oriented threat model intended here. A permission prompt can authorize an action; it cannot contain a process after execution begins. `pi-perimeter` therefore treats authorization, user approval, and OS containment as separate controls.
 
 ## Goal
 
@@ -67,7 +64,7 @@ a constructed environment, and its changes are exported back only after
 per-target re-authorization. The original workspace is never visible to the
 child. See [docs/SHELL-GATE.md](docs/SHELL-GATE.md).
 
-The Goal 4 implementation (not yet accepted) adds narrowly scoped outbound
+The accepted Goal 4 adds narrowly scoped outbound
 development connections to that same route: trusted-configuration destination
 allowlists and per-invocation approvals for representable destinations are
 enforced by a per-invocation network broker in the host process, and the
@@ -107,11 +104,16 @@ The project still does **not** provide:
 
 **Not available yet.**
 
+The package identity is `pi-perimeter` (formerly `pi-warden`); the unscoped npm
+name `pi-warden` belongs to another maintainer, so installing `npm:pi-warden`
+installs a different project. The publishable identity, publication safeguards
+and release checklist are in [docs/PACKAGING.md](docs/PACKAGING.md).
+
 Do not install or rely on this package as a security control.
 
 ## Security notice
 
-`pi-warden` is not a mature general-purpose security boundary. Its accepted
+`pi-perimeter` is not a mature general-purpose security boundary. Its accepted
 controls apply only within their documented platform, operation and threat
 model limits; do not use real credentials in tests or infer protection outside
 those limits. See [SECURITY.md](SECURITY.md) for the current reporting policy.

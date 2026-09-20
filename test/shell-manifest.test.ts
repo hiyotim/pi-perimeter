@@ -39,6 +39,13 @@ const CHANGED_IN_GOAL_4 = new Set<string>([
   "test/shell-manifest.test.ts",
 ]);
 
+/**
+ * Artifacts whose bytes the packaging Goal (`20260920-npm-packaging`) changed:
+ * the package identity and this declaration. Their entries here are historical
+ * accepted bytes; docs/packaging-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_PACKAGING = new Set<string>(["package.json", "test/shell-manifest.test.ts"]);
+
 const COVERED_FILES = [
   "package.json",
   "src/index.ts",
@@ -84,6 +91,7 @@ test("the Goal 3 artifact hash manifest matches the final working tree", async (
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
     if (CHANGED_IN_GOAL_4.has(file)) continue; // historical bytes; fresh evidence binds the current tree
+    if (CHANGED_IN_PACKAGING.has(file)) continue; // renamed identity; the packaging manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

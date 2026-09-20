@@ -28,7 +28,7 @@ the current security status.
 | Pi (`@earendil-works/pi-coding-agent`) | `0.84.4` | — | every other version, including the locally installed `0.86.1` |
 | Node | `26.8.1` (macOS target, full local suite) and `22.19.0` (hosted Linux CI, platform-independent suite) | below the declared `engines` floor `>=22.19.0` (declared only, not enforced at runtime) | every other version in `>=22.19.0` |
 | OS / architecture | macOS 27.0 (build `26A428`), arm64 | any other Darwin major, any other architecture, and Linux for the shell and file-gate routes | Linux for the platform-independent policy suite (exercised, not a support claim); Windows in every respect |
-| Distribution | none | installing `npm:pi-warden` installs another maintainer's package | a future scoped or renamed package |
+| Distribution | none | installing `npm:pi-warden` installs another maintainer's package | publishing `pi-perimeter` |
 
 ## Pi
 
@@ -105,10 +105,12 @@ approximating them.
 available, and nothing in this repository has been published or installed into a real Pi
 profile.
 
-**Blocked:** the unscoped npm name `pi-warden` is already published by another
-maintainer, so this project cannot publish under it; installing `npm:pi-warden` today
-installs that other project's package, not this one. The name decision belongs to the
-packaging Goal (see [STATE.md](../STATE.md)).
+**Blocked:** the unscoped npm name `pi-warden` — this project's former name — is already
+published by another maintainer, so it can never be used here, and installing
+`npm:pi-warden` installs that other project. The publishable identity is now
+`pi-perimeter`; nothing under it has been published, no version has been released, and
+there is no installation path. See [docs/PACKAGING.md](PACKAGING.md) for the identity,
+the publication safeguards and the release checklist.
 
 ## Not claimed
 
