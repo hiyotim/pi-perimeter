@@ -6,6 +6,12 @@ Build `pi-warden`: a small, auditable Pi extension/package that is intended to p
 
 See [STATE.md](STATE.md) for the current acceptance checkpoint and implemented primitives. There is no functional enforcement. Do not represent planned protections as implemented.
 
+## Continuity documents
+
+- [STATE.md](STATE.md) is authoritative for factual execution state and cross-session continuation.
+- [ROADMAP.md](ROADMAP.md) owns planned/completed Goals and dependencies.
+- [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md), when present for an active task, owns the contract for that prepared Goal.
+
 ## Non-goals
 
 `pi-warden` is not:

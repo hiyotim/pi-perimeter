@@ -99,7 +99,9 @@ The project still does **not** provide:
 - Other macOS versions, other architectures and Linux are unsupported and
   fail closed; a passing self-test does not widen this table. Linux remains
   blocked even for the file gates, which have no recorded runtime evidence
-  there.
+  there. Windows is unsupported in every respect.
+- Every row, the exact version behind it, and the evidence for it:
+  [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 
 ## Installation
 

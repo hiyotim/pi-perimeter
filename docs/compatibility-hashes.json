@@ -1,0 +1,7 @@
+{
+  "docs/COMPATIBILITY.md": "aa13c7a19c133f60e25934783e5a542bb5137b4502bb59f9adc51483935f8b0b",
+  "README.md": "2cfc02a610041651513dc8d3f97479f82e1ef35d1b739c53770a66ec42a6a976",
+  "test/ci-test-budget.json": "ea1e11ce5262337af8f9a26f6e8d32572ceb7ff47c130fbec2490364dc126049",
+  "test/ci-manifest.test.ts": "415f819d6d263b467c35b89d7c09bc24bfae05ec9b8585cd98c896abe847ad6d",
+  "test/compatibility-manifest.test.ts": "ce9f028031c727e1ae60e3467f83685261e513b73a3940063f181c726e03d21e"
+}

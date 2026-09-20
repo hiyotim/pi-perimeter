@@ -18,6 +18,19 @@ import { test } from "node:test";
 
 const MANIFEST_PATH = "docs/ci-hashes.json";
 
+/**
+ * Artifacts whose bytes the compatibility-matrix Goal
+ * (`20260920-compatibility-matrix`) deliberately changed: adding that Goal's
+ * manifest suite raises the declared test count, and declaring the change
+ * requires editing this file. Their entries below are the accepted hosted-CI
+ * bytes, not working-tree assertions; docs/compatibility-hashes.json binds the
+ * current bytes.
+ */
+const CHANGED_IN_COMPATIBILITY = new Set<string>([
+  "test/ci-test-budget.json",
+  "test/ci-manifest.test.ts",
+]);
+
 const COVERED_FILES = [
   ".github/workflows/ci.yml",
   "scripts/assert-test-outcome.mjs",
@@ -32,6 +45,7 @@ test("the hosted-CI artifact hash manifest matches the final working tree", asyn
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if (CHANGED_IN_COMPATIBILITY.has(file)) continue; // accepted hosted-CI bytes; the compatibility Goal binds the current ones
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });
@@ -64,4 +78,24 @@ test("the hosted-CI manifest records every artifact with its Goal 2 provenance",
   );
   const goal2Test = await readFile("test/hash-manifest.test.ts", "utf8");
   assert.match(goal2Test, /CHANGED_IN_HOSTED_CI = new Set<string>\(\["\.github\/workflows\/ci\.yml"\]\)/);
+});
+
+test("the compatibility Goal changed exactly the budget and this manifest suite", () => {
+  const compatibilityOnly = [
+    "docs/COMPATIBILITY.md",
+    "docs/compatibility-hashes.json",
+    "test/compatibility-manifest.test.ts",
+  ];
+  for (const file of CHANGED_IN_COMPATIBILITY) {
+    assert.ok(
+      COVERED_FILES.includes(file as (typeof COVERED_FILES)[number]),
+      `${file} must be in the hosted-CI manifest`,
+    );
+  }
+  for (const file of compatibilityOnly) {
+    assert.ok(
+      !COVERED_FILES.includes(file as (typeof COVERED_FILES)[number]),
+      `${file} is compatibility-matrix-only and must not be in the hosted-CI manifest`,
+    );
+  }
 });
