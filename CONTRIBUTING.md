@@ -25,4 +25,4 @@ Use [docs/SECURITY-CHECKLIST.md](docs/SECURITY-CHECKLIST.md) before requesting r
 
 ## Security reports
 
-Do not publish sensitive exploit details or real credentials. See [SECURITY.md](SECURITY.md); a private reporting channel will be defined before public beta.
+Report suspected vulnerabilities privately through GitHub private vulnerability reporting, as described in [SECURITY.md](SECURITY.md). Do not publish sensitive exploit details, reproduction steps, or real credentials.
