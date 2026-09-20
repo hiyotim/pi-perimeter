@@ -8,10 +8,10 @@ Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c2
 
 ## Continuation
 
-- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting` and `20260920-hosted-ci-reproducibility` were accepted 2026-09-20, and `20260920-compatibility-matrix` is implemented and reviewed with **owner acceptance pending**; no further Goal is selected.
+- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting`, `20260920-hosted-ci-reproducibility` and `20260920-compatibility-matrix` were accepted 2026-09-20; **no further Goal is selected**.
 - Review: **PASS** — the hosted-CI Goal's fresh independent review passed on the reviewed bytes at `1f6b1e7`, and the compatibility-matrix fresh review passed at `b81ae5d` with both prior findings closed.
 - Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the compatibility matrix reports verified rows only and commits to no support; the Phase 6 release gate, packaging/publication safeguards and release-candidate reviews remain open; the unscoped npm name `pi-warden` is taken by another maintainer, so publication under it is blocked; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin/main`.
-- Next: owner acceptance of `20260920-compatibility-matrix`; afterwards the next bounded Goal must be selected from [ROADMAP.md](ROADMAP.md) by the owner — do not self-select or advance a phase.
+- Next: none established — the next bounded Goal must be selected from [ROADMAP.md](ROADMAP.md) by the owner; do not self-select or advance a phase.
 
 ## Current checkpoint
 
@@ -493,11 +493,16 @@ Executor-run local evidence for the reviewed snapshot: `npm run check` PASS
   release gate, the compatibility matrix, packaging, and the release-candidate
   reviews remain open.
 
-## Compatibility matrix Goal: implementation and independent review (2026-09-20)
+## Compatibility matrix Goal: accepted (2026-09-20)
 
 Task ID: `20260920-compatibility-matrix`. Status: **implemented, hosted-verified,
-and independently reviewed; owner acceptance pending.** Nothing is published,
-released, or installed.
+independently reviewed, and accepted by the owner on 2026-09-20; the Phase 6
+checklist item "Publish a Pi, Node, macOS, and Linux compatibility matrix" is
+closed.** Acceptance binds to [docs/compatibility-hashes.json](docs/compatibility-hashes.json),
+SHA-256 `0657cfd7803e11b4e7d4f7842667eaa250b461be96945cfb95852dea77d9e841`, and to
+the fresh independent review PASS of the reviewed bytes at `b81ae5d`. Nothing is
+published, released, or installed, and the acceptance does not close the Phase 6
+release gate or advance any other Phase 6 item.
 
 ### What changed
 
