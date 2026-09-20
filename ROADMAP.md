@@ -4,7 +4,7 @@ This roadmap uses release gates, not dates. A phase is complete only when its li
 
 ## Remaining implementation plan
 
-Planning decision: 2026-09-13; acceptance/selection updates: 2026-09-15 and 2026-09-19; architecture approval: 2026-09-17. The four-Goal plan is unchanged. Goals 1–3 are accepted; Phases 1–3 are complete within their demonstrated guarantees. Goal 4 is selected and its implementation has not begun. Goal 3 acceptance is bounded by the variant-B contract, target platform and limitations recorded in [STATE.md](STATE.md) and the shell gate audit; it does not add descendant-termination, atomic-tree-snapshot, B3 or mount-isolation guarantees. The phase checklist remains the acceptance ledger, not a second queue of implementation Goals.
+Planning decision: 2026-09-13; acceptance/selection updates: 2026-09-15 and 2026-09-19; architecture approval: 2026-09-17. The four-Goal plan is unchanged. Goals 1–3 are accepted; Phases 1–3 are complete within their demonstrated guarantees. Goal 4 is selected and its implementation is complete and verified on the declared target (Task `20260919-restricted-networking-e2e-evidence`), awaiting fresh independent review and owner acceptance; nothing is committed or pushed. Goal 3 acceptance is bounded by the variant-B contract, target platform and limitations recorded in [STATE.md](STATE.md) and the shell gate audit; it does not add descendant-termination, atomic-tree-snapshot, B3 or mount-isolation guarantees. The phase checklist remains the acceptance ledger, not a second queue of implementation Goals.
 
 Each Goal has one technical outcome and includes its related contract decisions, implementation, regression tests, documentation, and verification. These are internal scope/checklist items, not separate Goals. Work proceeds through one implementation cycle, machine checks, an independent review of the final snapshot, and acceptance. Findings and their fixes stay within that Goal; relevant changed artifacts require fresh checks and review before acceptance. No PASS transfers to different source/test hashes. Review evidence must distinguish reviewer-run checks from executor-run checks.
 
@@ -85,7 +85,7 @@ Across all Goals, preserve the [security invariants](AGENTS.md), [trust boundari
 
 ### Goal 4: Restricted networking and end-to-end security evidence
 
-**Status:** selected by the owner on 2026-09-19; implementation has not begun. A separate implementation handoff must use the accepted Goal 3 commit as its baseline.
+**Status:** selected by the owner on 2026-09-19; implemented and verified on the declared target under Task `20260919-restricted-networking-e2e-evidence`, awaiting fresh independent review and owner acceptance. The contract is [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md); evidence and artifact identities are in [docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md) and [docs/network-gate-hashes.json](docs/network-gate-hashes.json). No acceptance, commit, push, publication or real-profile installation has occurred.
 
 **Outcome:** narrowly permitted development connections work without weakening the accepted filesystem, authorization, approval, or process boundaries.
 
@@ -140,7 +140,7 @@ The following phase checkboxes and release gates retain their acceptance meaning
 
 **Release gate:** a platform-independent policy core passes table-driven and adversarial tests using temporary fixtures, with no Pi or sandbox side effects.
 
-Current acceptance checkpoint and historical Goal evidence: [STATE.md](STATE.md). The pure policy core, bounded file gates/approvals, and contained shell route are accepted as Goals 1–3 within their documented guarantees. Goal 4 is selected but not yet implemented. Planning or completion of a scope item does not authorize implementation beyond the active checkpoint or further phase advancement.
+Current acceptance checkpoint and historical Goal evidence: [STATE.md](STATE.md). The pure policy core, bounded file gates/approvals, and contained shell route are accepted as Goals 1–3 within their documented guarantees. Goal 4 is implemented and verified on the declared target (Task `20260919-restricted-networking-e2e-evidence`) and awaits fresh independent review and owner acceptance; nothing is committed or pushed. Planning or completion of a scope item does not authorize implementation beyond the active checkpoint or further phase advancement.
 
 ## Phase 2 — Pi Tool Gates
 

@@ -22,7 +22,11 @@ export type ShellRefusalCode =
   | "QUIESCENCE_NOT_ESTABLISHED"
   | "SELF_TEST_FAILED"
   | "CONTAINMENT_FAILED"
-  | "CANCELLED";
+  | "CANCELLED"
+  | "NETWORK_BROKER_FAILED"
+  | "NETWORK_SCOPE_EMPTY"
+  | "NETWORK_DESTINATION_UNRESOLVABLE"
+  | "NETWORK_DESTINATION_NOT_PUBLIC";
 
 export class ShellRefusal extends Error {
   readonly code: ShellRefusalCode;

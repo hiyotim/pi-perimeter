@@ -78,6 +78,34 @@ test("the generated profile denies by default, with no network or Mach rule", { 
   assert.deepEqual(result.profile.renderedFamilies.length, new Set(RESOURCE_RULE_REASONS).size);
 });
 
+test("a non-empty network scope adds exactly one rule: the broker endpoint", { skip: !darwin }, () => {
+  const scoped = generateSeatbeltProfile(roots({ networkBrokerPort: 43117 }));
+  assert.equal(scoped.ok, true);
+  if (!scoped.ok) throw new Error("unreachable");
+  const text = scoped.profile.text;
+  const networkRules = text.split("\n").filter((line) => /network/.test(line));
+  assert.deepEqual(networkRules, ['(allow network-outbound (remote tcp "localhost:43117"))']);
+  assert.ok(!/mach-lookup/.test(text), "no Mach rule may appear even with a scope");
+  // The rule is the profile's only network allowance; no bind, listen, UDP,
+  // unix or wildcard-destination allowance exists.
+  assert.ok(!text.includes('":*"'), "no wildcard port may appear");
+  assert.ok(!text.includes('(remote ip "localhost:'), "only the tcp broker rule is emitted");
+  // Without a scope the same trusted inputs produce a profile with no network
+  // rule at all, byte-identical in structure to Goal 3.
+  const closed = generateSeatbeltProfile(roots());
+  if (!closed.ok) throw new Error("unreachable");
+  assert.ok(!/network/i.test(closed.profile.text), "the closed scope must produce no network rule");
+});
+
+test("an invalid broker port refuses profile generation", { skip: !darwin }, () => {
+  for (const port of [0, -1, 65536, 1.5, Number.NaN]) {
+    const result = generateSeatbeltProfile(roots({ networkBrokerPort: port }));
+    assert.equal(result.ok, false, `port ${String(port)} must refuse`);
+    if (result.ok) throw new Error("unreachable");
+    assert.equal(result.code, "UNSAFE_PROFILE_PATH");
+  }
+});
+
 test("ancestor metadata is literal-only, so listing is never granted", { skip: !darwin }, () => {
   const result = generateSeatbeltProfile(roots());
   if (!result.ok) throw new Error("unreachable");

@@ -22,6 +22,8 @@ function inputs(overrides: Partial<ShellPolicyInputs> = {}): ShellPolicyInputs {
     refusals: [],
     commandRisk: "ordinary",
     commandRiskReasons: [],
+    riskClasses: ["ordinary"],
+    network: { status: "closed", entries: [], unapprovedTargets: [] },
     resourceOutcomes: [],
     ...overrides,
   };
@@ -52,7 +54,9 @@ test("unknown and destructive command classes require approval, never a bypass",
   for (const risk of ["network", "privilege", "system", "credential", "publish", "unsupported-builtin"] as const) {
     assert.equal(commandRiskOutcome(risk), "DENY");
     assert.equal(isDeniedRisk(risk), true);
-    const decision = decideShellInvocation(inputs({ commandRisk: risk, commandRiskReasons: [`${risk} denied`] }));
+    const decision = decideShellInvocation(
+      inputs({ commandRisk: risk, riskClasses: [risk], commandRiskReasons: [`${risk} denied`] }),
+    );
     assert.equal(decision.decision, "DENY", risk);
     assert.equal(decision.reason, "SHELL_COMMAND_DENIED");
   }
@@ -85,10 +89,52 @@ test("DENY always wins over ALLOW and ASK inputs", () => {
 
   // A denied command class outranks an otherwise allowed policy.
   const classDenied = decideShellInvocation(
-    inputs({ commandRisk: "network", commandRiskReasons: ["curl: network command is denied"], readOutcome: "ALLOW" }),
+    inputs({
+      commandRisk: "network",
+      riskClasses: ["network"],
+      network: { status: "closed", entries: [], unapprovedTargets: [] },
+      commandRiskReasons: ["curl: network command is denied"],
+      readOutcome: "ALLOW",
+    }),
   );
   assert.equal(classDenied.decision, "DENY");
   assert.equal(classDenied.reason, "SHELL_COMMAND_DENIED");
+
+  // With a composed scope a network command is not class-denied; the scope and
+  // the representable destinations govern it instead.
+  const networkAllowed = decideShellInvocation(
+    inputs({
+      commandRisk: "network",
+      riskClasses: ["network"],
+      network: { status: "open", entries: ["registry.npmjs.org:443"], unapprovedTargets: [] },
+      readOutcome: "ALLOW",
+    }),
+  );
+  assert.equal(networkAllowed.decision, "ALLOW");
+  const networkUnapproved = decideShellInvocation(
+    inputs({
+      commandRisk: "network",
+      riskClasses: ["network"],
+      network: { status: "open", entries: ["registry.npmjs.org:443"], unapprovedTargets: ["example.com:443"] },
+      readOutcome: "ALLOW",
+    }),
+  );
+  assert.equal(networkUnapproved.decision, "ASK");
+  assert.equal(networkUnapproved.reason, "SHELL_APPROVAL_REQUIRED");
+  assert.match(networkUnapproved.detail, /example\.com:443/);
+
+  // A per-command denied class in the same command line still denies even when
+  // a network command is scope-allowed.
+  const mixedDenied = decideShellInvocation(
+    inputs({
+      commandRisk: "network",
+      riskClasses: ["network", "privilege"],
+      network: { status: "open", entries: ["registry.npmjs.org:443"], unapprovedTargets: [] },
+      readOutcome: "ALLOW",
+    }),
+  );
+  assert.equal(mixedDenied.decision, "DENY");
+  assert.equal(mixedDenied.reason, "SHELL_COMMAND_DENIED");
 });
 
 test("strictest risk merging is monotone", () => {

@@ -27,8 +27,16 @@ import { classifyPathResource } from "../policy/resources.ts";
 import { evaluateEffectivePath } from "../policy/effective.ts";
 import { buildShellPlan, shellQuoteLiteral, type ShellPlan } from "../policy/shell-plan.ts";
 import {
+  composeNetworkScope,
+  extractNetworkTargets,
+  unapprovedNetworkTargets,
+  type ComposedNetworkScope,
+  type ShellNetworkTarget,
+} from "../policy/network.ts";
+import {
   decideShellInvocation,
   shellOutcomeContributions,
+  type ShellNetworkState,
   type ShellPolicyDecision,
   type ShellResourceOutcome,
 } from "../policy/shell-policy.ts";
@@ -104,6 +112,62 @@ export function environmentSha256(environment: Readonly<Record<string, string>>)
       .map((key) => `${key}=${environment[key]}`)
       .join("\n"),
   );
+}
+
+/** Canonical non-secret destination string used in bindings and prompts. */
+function canonicalDestination(target: ShellNetworkTarget): string {
+  return `${target.host}:${target.port}`;
+}
+
+/**
+ * The enforced network state of one invocation: the composed trusted/project
+ * scope plus the representable destinations of the plan (which are pinned as
+ * part of preparation and must be approved when they are not already
+ * covered). Canonical, non-secret, and identical to what the broker enforces.
+ * Exported for its pure regressions (the merge rules are policy, not wiring).
+ */
+export function networkStateOf(
+  scope: ComposedNetworkScope,
+  targets: readonly ShellNetworkTarget[],
+): { state: ShellNetworkState; scopeEntries: readonly { host: string; ports: readonly number[] }[] } {
+  if (scope.status !== "open") {
+    // Closed: a network-class command denies as in Goal 3; nothing is pinned.
+    return {
+      state: Object.freeze({ status: "closed" as const, entries: Object.freeze([]), unapprovedTargets: Object.freeze([]) }),
+      scopeEntries: Object.freeze([]),
+    };
+  }
+  const unapproved = unapprovedNetworkTargets(scope, targets);
+  const entries = scope.entries.flatMap((entry) => entry.ports.map((port) => `${entry.host}:${port}`));
+  /*
+   * Approved targets are merged per host before pinning: the broker keys
+   * destinations by host, so an approved port on an already-trusted host must
+   * extend that entry's port set instead of creating a second entry that the
+   * broker's map would overwrite.
+   */
+  const merged = new Map<string, number[]>();
+  for (const entry of scope.entries) {
+    const ports = merged.get(entry.host) ?? [];
+    ports.push(...entry.ports);
+    merged.set(entry.host, ports);
+  }
+  for (const target of unapproved) {
+    const ports = merged.get(target.host) ?? [];
+    if (!ports.includes(target.port)) {
+      ports.push(target.port);
+      merged.set(target.host, ports);
+    }
+  }
+  return {
+    state: Object.freeze({
+      status: "open" as const,
+      entries: Object.freeze(entries),
+      unapprovedTargets: Object.freeze(unapproved.map(canonicalDestination)),
+    }),
+    scopeEntries: Object.freeze(
+      [...merged].map(([host, ports]) => Object.freeze({ host, ports: Object.freeze([...new Set(ports)].sort((left, right) => left - right)) })),
+    ),
+  };
 }
 
 /**
@@ -235,6 +299,14 @@ export async function authorizeShellRoute(request: ShellRouteRequest): Promise<S
     resourceOutcomes.push(outcome);
   }
 
+  /*
+   * The composed network scope plus the plan's representable destinations:
+   * together the exact set the broker will pin and enforce, and the set the
+   * approval must show. With a closed scope nothing is pinned and a
+   * network-class command denies exactly as in Goal 3.
+   */
+  const network = networkStateOf(composeNetworkScope(loaded.user, loaded.project), plan.networkTargets);
+
   const decision = decideShellInvocation({
     readOutcome: contributions.read,
     mutationOutcome: contributions.mutation,
@@ -242,6 +314,8 @@ export async function authorizeShellRoute(request: ShellRouteRequest): Promise<S
     refusals,
     commandRisk: plan.risk,
     commandRiskReasons: plan.riskReasons,
+    riskClasses: plan.riskClasses,
+    network: network.state,
     resourceOutcomes,
   });
   if (decision.decision === "DENY") {
@@ -259,6 +333,7 @@ export async function authorizeShellRoute(request: ShellRouteRequest): Promise<S
       helperPath: request.services.helperPath,
       buildManifestPath: request.services.buildManifestPath,
       sealedInputs: plan.sealed.map((sealed) => sealed.logicalPath),
+      ...(network.scopeEntries.length > 0 ? { networkScope: network.scopeEntries } : {}),
       ...(request.services.runtimeBaseDirectory !== undefined
         ? { runtimeBaseDirectory: request.services.runtimeBaseDirectory }
         : {}),
@@ -282,6 +357,18 @@ export async function authorizeShellRoute(request: ShellRouteRequest): Promise<S
     resourceOutcomes: resourceOutcomes.map(
       (outcome) => `${outcome.kind}:${outcome.logicalPath}=${outcome.decision}(${outcome.reason})`,
     ),
+    networkScopeSha256: sha256(
+      JSON.stringify({
+        status: network.state.status,
+        entries: network.state.entries,
+        unapprovedTargets: network.state.unapprovedTargets,
+      }),
+    ),
+    networkDestinations: Object.freeze(
+      network.state.status === "open"
+        ? [...network.state.entries, ...network.state.unapprovedTargets]
+        : [],
+    ),
   };
 
   let grant: ShellApprovalGrant | undefined;
@@ -298,6 +385,7 @@ export async function authorizeShellRoute(request: ShellRouteRequest): Promise<S
           commandRisk: plan.risk,
           readOutcome: decision.readOutcome,
           mutationOutcome: decision.mutationOutcome,
+          networkDestinations: bindings.networkDestinations,
           projectionSummary: `${prepared.manifest.files} files, ${prepared.manifest.directories} directories, ${prepared.manifest.symlinks} symlinks, ${prepared.manifest.refusals.length} excluded objects`,
           sealedInputs: plan.sealed.map((sealed) => ({
             original: sealed.logicalPath,

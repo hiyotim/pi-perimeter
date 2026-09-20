@@ -24,6 +24,8 @@ function bindings(overrides: Partial<ShellApprovalBindings> = {}): ShellApproval
     environmentSha256: "e".repeat(64),
     sealedInputSha256: ["f".repeat(64)],
     resourceOutcomes: ["read:data.txt=ALLOW(WORKSPACE_READ)"],
+    networkScopeSha256: "0".repeat(64),
+    networkDestinations: [],
     ...overrides,
   };
 }
@@ -43,6 +45,7 @@ test("an approval prompt states the exact effects and boundaries", () => {
       commandRisk: "ordinary",
       readOutcome: "ALLOW",
       mutationOutcome: "ALLOW",
+      networkDestinations: [],
       projectionSummary: "10 files, 2 directories",
       sealedInputs: [{ original: "scripts/build.sh", sha256: "1".repeat(64) }],
     },
@@ -53,14 +56,36 @@ test("an approval prompt states the exact effects and boundaries", () => {
     "ordinary",
     "effective read outcome: ALLOW",
     "effective mutation outcome: ALLOW",
-    "closed networking",
+    "network scope: closed (no destinations approved",
     "no access to the original workspace",
     "deletions and renames",
     "expires in 60 seconds",
     "does not widen containment",
+    "permitted destinations can receive any data the command can read",
   ]) {
     assert.ok(prompt.message.includes(fragment), `prompt must state: ${fragment}`);
   }
+});
+
+test("an approval prompt states the enforced destinations when a scope exists", () => {
+  const prompt = shellApprovalPrompt({
+    bindings: bindings({ networkDestinations: ["registry.npmjs.org:443"] }),
+    presentation: {
+      command: "npm install ms",
+      workspaceRoot: "/ws",
+      cwd: "/ws/.runtime/staging",
+      commandRisk: "network",
+      readOutcome: "ALLOW",
+      mutationOutcome: "ALLOW",
+      networkDestinations: ["registry.npmjs.org:443"],
+      projectionSummary: "10 files, 2 directories",
+      sealedInputs: [],
+    },
+  });
+  assert.ok(prompt.message.includes("outbound TCP to exactly: registry.npmjs.org:443"));
+  assert.ok(prompt.message.includes("network scope: outbound TCP to exactly"));
+  assert.ok(prompt.message.includes("all other destinations fail closed"));
+  assert.ok(!prompt.message.includes("network scope: closed"));
 });
 
 test("a grant is usable exactly once and only for its exact bindings", async () => {
@@ -74,6 +99,7 @@ test("a grant is usable exactly once and only for its exact bindings", async () 
       commandRisk: "ordinary",
       readOutcome: "ASK",
       mutationOutcome: "ALLOW",
+      networkDestinations: [],
       projectionSummary: "1 file",
       sealedInputs: [],
     },
@@ -89,6 +115,43 @@ test("a grant is usable exactly once and only for its exact bindings", async () 
   assert.match(replay.ok === false ? replay.reason : "", /already consumed/);
 });
 
+test("the bound network scope distinguishes grants: a different destination set never consumes", async () => {
+  const approved = bindings({ networkDestinations: ["registry.npmjs.org:443"] });
+  const outcome = await requestShellApproval(grantingUI, {
+    bindings: approved,
+    presentation: {
+      command: "npm install ms",
+      workspaceRoot: "/ws",
+      cwd: "/ws/.runtime/staging",
+      commandRisk: "network",
+      readOutcome: "ALLOW",
+      mutationOutcome: "ALLOW",
+      networkDestinations: ["registry.npmjs.org:443"],
+      projectionSummary: "1 file",
+      sealedInputs: [],
+    },
+  });
+  assert.equal(outcome.status, "granted");
+  if (outcome.status !== "granted") throw new Error("unreachable");
+  const grant = outcome.grant;
+
+  // A different enforced scope is a different binding: the grant cannot
+  // authorize a run whose enforced destinations differ in any way.
+  for (const changed of [
+    bindings({ networkDestinations: ["registry.npmjs.org:443", "example.com:443"] }),
+    bindings({ networkDestinations: ["registry.npmjs.org:8443"] }),
+    bindings({ networkDestinations: [] }),
+    bindings({ networkScopeSha256: "1".repeat(64), networkDestinations: ["registry.npmjs.org:443"] }),
+  ]) {
+    const refused = consumeShellApproval(grant, changed, grant.grantedAtMs + 1);
+    assert.equal(refused.ok, false, JSON.stringify(changed.networkDestinations));
+    assert.match(refused.ok === false ? refused.reason : "", /binding changed/);
+  }
+  // The exact bindings still consume.
+  const exact = consumeShellApproval(grant, approved, grant.grantedAtMs + 1_000);
+  assert.equal(exact.ok, true);
+});
+
 test("every bound input change invalidates the grant", async () => {
   const approved = bindings();
   const outcome = await requestShellApproval(grantingUI, {
@@ -100,6 +163,7 @@ test("every bound input change invalidates the grant", async () => {
       commandRisk: "ordinary",
       readOutcome: "ASK",
       mutationOutcome: "ALLOW",
+      networkDestinations: [],
       projectionSummary: "1 file",
       sealedInputs: [],
     },
@@ -137,6 +201,7 @@ test("expiry, forged and absent grants fail closed", async () => {
       commandRisk: "ordinary",
       readOutcome: "ASK",
       mutationOutcome: "ALLOW",
+      networkDestinations: [],
       projectionSummary: "1 file",
       sealedInputs: [],
     },
@@ -169,6 +234,7 @@ test("missing UI, refusal, malformed responses and throws all fail closed", asyn
       commandRisk: "ordinary" as const,
       readOutcome: "ASK" as const,
       mutationOutcome: "ALLOW" as const,
+      networkDestinations: [],
       projectionSummary: "1 file",
       sealedInputs: [],
     },

@@ -70,6 +70,19 @@ export interface ShellResourceOutcome {
   readonly reason: string;
 }
 
+/**
+ * The composed network scope and the representable destinations that are not
+ * covered by it, both canonical and non-secret. `closed` means no destination
+ * is reachable; a network-class command then denies exactly as in Goal 3.
+ */
+export interface ShellNetworkState {
+  readonly status: "closed" | "open";
+  /** Canonical non-secret entries of the effective scope (`host:port`). */
+  readonly entries: readonly string[];
+  /** Canonical representable destinations the scope does not cover. */
+  readonly unapprovedTargets: readonly string[];
+}
+
 export interface ShellPolicyInputs {
   readonly readOutcome: AuthorizationOutcome;
   readonly mutationOutcome: AuthorizationOutcome;
@@ -78,6 +91,9 @@ export interface ShellPolicyInputs {
   readonly refusals: readonly { readonly code: string; readonly detail: string }[];
   readonly commandRisk: ShellCommandRisk;
   readonly commandRiskReasons: readonly string[];
+  /** Distinct per-command risk classes, in first-seen plan order. */
+  readonly riskClasses: readonly ShellCommandRisk[];
+  readonly network: ShellNetworkState;
   readonly resourceOutcomes: readonly ShellResourceOutcome[];
 }
 
@@ -107,6 +123,12 @@ function denied(reason: ShellPolicyReason, detail: string, inputs: ShellPolicyIn
  * Order of precedence: unsupported input, denied command class, denied
  * resource, invalid configuration or denied effective outcome, then `ASK`
  * (which always requires a single-use approval), then `ALLOW`.
+ *
+ * The `network` command class is denied only while the composed scope is
+ * closed; with an open scope it contributes an `ASK` exactly when the command
+ * names a representable destination the scope does not already cover, and the
+ * other denied classes keep denying regardless (a per-command class in a
+ * denied category can never hide behind a network-allowed command line).
  */
 export function decideShellInvocation(inputs: ShellPolicyInputs): ShellPolicyDecision {
   if (inputs.refusals.length > 0) {
@@ -114,7 +136,11 @@ export function decideShellInvocation(inputs: ShellPolicyInputs): ShellPolicyDec
     const extra = inputs.refusals.length > 1 ? ` (+${inputs.refusals.length - 1} more)` : "";
     return denied("SHELL_UNSUPPORTED_INPUT", `${first.code}: ${first.detail}${extra}`, inputs);
   }
-  if (isDeniedRisk(inputs.commandRisk)) {
+  const networkOpen = inputs.network.status === "open";
+  const deniedRiskClass = inputs.riskClasses.find(
+    (risk) => isDeniedRisk(risk) && !(risk === "network" && networkOpen),
+  );
+  if (deniedRiskClass !== undefined) {
     const reason = inputs.commandRiskReasons[0] ?? "command class is denied";
     return denied("SHELL_COMMAND_DENIED", reason, inputs);
   }
@@ -130,10 +156,15 @@ export function decideShellInvocation(inputs: ShellPolicyInputs): ShellPolicyDec
   if (inputs.configurationInvalid) {
     return denied("SHELL_CONFIGURATION_INVALID", "policy configuration is invalid", inputs);
   }
+  const commandRisk = inputs.riskClasses.some((risk) => risk === "unknown" || risk === "destructive")
+    ? "ASK"
+    : networkOpen && inputs.network.unapprovedTargets.length > 0
+      ? "ASK"
+      : "ALLOW";
   const merged = mergeAuthorizationOutcomes(
     inputs.readOutcome,
     inputs.mutationOutcome,
-    commandRiskOutcome(inputs.commandRisk),
+    commandRisk,
   );
   if (merged === "DENY") {
     return denied(
@@ -146,7 +177,7 @@ export function decideShellInvocation(inputs: ShellPolicyInputs): ShellPolicyDec
     return Object.freeze({
       decision: "ASK" as const,
       reason: "SHELL_APPROVAL_REQUIRED" as const,
-      detail: `single-use approval required (read=${inputs.readOutcome}, mutation=${inputs.mutationOutcome}, risk=${inputs.commandRisk})`,
+      detail: `single-use approval required (read=${inputs.readOutcome}, mutation=${inputs.mutationOutcome}, risk=${inputs.commandRisk}${networkDetail(inputs.network, networkOpen)})`,
       readOutcome: inputs.readOutcome,
       mutationOutcome: inputs.mutationOutcome,
       commandRisk: inputs.commandRisk,
@@ -160,6 +191,12 @@ export function decideShellInvocation(inputs: ShellPolicyInputs): ShellPolicyDec
     mutationOutcome: inputs.mutationOutcome,
     commandRisk: inputs.commandRisk,
   });
+}
+
+function networkDetail(network: ShellNetworkState, open: boolean): string {
+  if (network.unapprovedTargets.length > 0) return `, network approval for ${network.unapprovedTargets.join(", ")}`;
+  if (open) return ", network scope from trusted policy";
+  return "";
 }
 
 /** `ordinary` never forces an outcome; `unknown`/`destructive` require approval. */

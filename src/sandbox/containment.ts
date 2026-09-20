@@ -25,6 +25,14 @@ import { freezeProjection } from "./freeze.ts";
 import { establishTreeQuiescence, snapshotDeviation, snapshotProjection } from "./quiescence.ts";
 import { applySealedEdits, buildShellPlan, shellQuoteLiteral } from "../policy/shell-plan.ts";
 import { deriveToolchainRoot, generateSeatbeltProfile, type SeatbeltProfile } from "./seatbelt.ts";
+import {
+  NETWORK_BROKER_LIMITS,
+  openNetworkBroker,
+  pinDestination,
+  type NetworkBroker,
+  type NetworkBrokerScope,
+  type PinnedDestination,
+} from "./network-broker.ts";
 
 /** Pinned identity of the containment mechanism for the declared target. */
 const SANDBOX_EXEC_PATH = "/usr/bin/sandbox-exec";
@@ -39,6 +47,29 @@ export const SHELL_LIMITS = Object.freeze({
   maxTimeoutMs: 600_000,
   importTimeoutMs: 120_000,
 });
+
+/** A composed destination entry the host must pin before spawn. */
+export interface NetworkScopeEntry {
+  readonly host: string;
+  readonly ports: readonly number[];
+}
+
+/**
+ * The prepared network route: pinned addresses (resolved once, host-side, at
+ * preparation), the broker endpoint, and its non-secret scope description.
+ */
+export interface PreparedNetworkScope {
+  readonly brokerPort: number;
+  readonly entries: readonly {
+    readonly host: string;
+    readonly ports: readonly number[];
+    readonly addressCount: number;
+    readonly families: readonly string[];
+  }[];
+  /** Enables tunnel service; called only when the invocation starts. */
+  arm(): void;
+  stats(): { readonly tunnelsOpened: number; readonly tunnelsRefused: number; readonly tunnelsFailed: number; readonly bytesRelayed: number };
+}
 
 export interface PlatformIdentity {
   readonly platform: string;
@@ -159,8 +190,13 @@ export async function removeInvocationArtifacts(base: string): Promise<void> {
 }
 
 
-function buildEnvironment(toolchainRoot: string, homeRoot: string, tmpRoot: string): Record<string, string> {
-  return {
+function buildEnvironment(
+  toolchainRoot: string,
+  homeRoot: string,
+  tmpRoot: string,
+  brokerPort: number | undefined,
+): Record<string, string> {
+  const environment: Record<string, string> = {
     PATH: `${path.join(toolchainRoot, "bin")}:/usr/bin:/bin:/usr/sbin:/sbin`,
     HOME: homeRoot,
     TMPDIR: tmpRoot,
@@ -168,6 +204,26 @@ function buildEnvironment(toolchainRoot: string, homeRoot: string, tmpRoot: stri
     LC_ALL: "en_US.UTF-8",
     SHELL: "/bin/bash",
   };
+  if (brokerPort === undefined) return environment;
+  // The one network route: the per-invocation broker on IPv4 loopback.
+  // Constructed values (never inherited); their exact bytes are part of the
+  // environment hash in the approval binding.
+  const proxy = `http://127.0.0.1:${brokerPort}`;
+  for (const key of [
+    "HTTP_PROXY",
+    "http_proxy",
+    "HTTPS_PROXY",
+    "https_proxy",
+    "ALL_PROXY",
+    "all_proxy",
+  ]) {
+    environment[key] = proxy;
+  }
+  environment["NO_PROXY"] = "";
+  environment["no_proxy"] = "";
+  environment["npm_config_proxy"] = proxy;
+  environment["npm_config_https_proxy"] = proxy;
+  return environment;
 }
 
 async function createContainmentPaths(base: string): Promise<ContainmentPaths> {
@@ -210,6 +266,13 @@ export interface PrepareContainedOptions {
   readonly buildManifestPath: string;
   /** Logical projection paths whose bytes must be bound before execution. */
   readonly sealedInputs: readonly string[];
+  /**
+   * The composed network scope. Absent or empty: the invocation has no
+   * network route at all. Non-empty: the host pins every entry (resolution
+   * failures refuse the invocation), opens the broker, and the profile gains
+   * exactly its endpoint.
+   */
+  readonly networkScope?: readonly NetworkScopeEntry[];
   readonly runtimeBaseDirectory?: string;
 }
 
@@ -225,6 +288,8 @@ export interface PreparedContainedInvocation {
   readonly toolchainRoot: string;
   readonly environment: Readonly<Record<string, string>>;
   readonly sealedInputs: readonly SealedInputRecord[];
+  /** The prepared network route; undefined when the invocation has none. */
+  readonly network: PreparedNetworkScope | undefined;
   /** Entry text after sealed-input rewriting; the exact executed command. */
   readonly command: string;
   readonly rootFd: number;
@@ -321,15 +386,46 @@ export async function prepareContainedInvocation(
   const paths = await createContainmentPaths(base);
 
   let rootHandle: Awaited<ReturnType<typeof open>> | undefined;
+  let broker: NetworkBroker | undefined;
   let disposed = false;
   const dispose = async (): Promise<void> => {
     if (disposed) return;
     disposed = true;
+    if (broker !== undefined) await broker.close().catch(() => undefined);
     await rootHandle?.close().catch(() => undefined);
     await removeInvocationArtifacts(base);
   };
 
   try {
+    /*
+     * The network scope is pinned first: resolution happens host-side, once,
+     * before anything else. An unresolvable or non-public destination refuses
+     * the invocation (fail closed); a pinned scope is immutable for the run.
+     */
+    const scopeEntries = options.networkScope ?? [];
+    let network: PreparedNetworkScope | undefined;
+    if (scopeEntries.length > 0) {
+      const pinned: PinnedDestination[] = [];
+      for (const entry of scopeEntries) {
+        pinned.push(await pinDestination(entry.host, entry.ports));
+      }
+      broker = await openNetworkBroker(pinned);
+      network = Object.freeze({
+        brokerPort: broker.port,
+        entries: pinned.map((destination) =>
+          Object.freeze({
+            host: destination.host,
+            ports: destination.ports,
+            addressCount: destination.addresses.length,
+            families: Object.freeze([...new Set(destination.addresses.map((address) => address.family))].sort()),
+          }),
+        ),
+        arm: () => broker?.arm(),
+        stats: () =>
+          broker?.stats() ?? Object.freeze({ tunnelsOpened: 0, tunnelsRefused: 0, tunnelsFailed: 0, bytesRelayed: 0 }),
+      });
+    }
+
     const profileResult = generateSeatbeltProfile({
       stagingRoot: paths.staging,
       homeRoot: paths.home,
@@ -339,6 +435,7 @@ export async function prepareContainedInvocation(
       workspaceRoot: options.workspaceRoot,
       projectPolicyRoot: path.join(options.workspaceRoot, ".pi-warden"),
       protectedZones: options.protectedZones,
+      ...(network !== undefined ? { networkBrokerPort: network.brokerPort } : {}),
     });
     if (!profileResult.ok) {
       throw new ShellRefusal("PROFILE_GENERATION_FAILED", `${profileResult.code}: ${profileResult.detail}`);
@@ -381,8 +478,16 @@ export async function prepareContainedInvocation(
       helperPath: options.helperPath,
       buildManifestPath: options.buildManifestPath,
       toolchainRoot,
-      environment: Object.freeze(buildEnvironment(toolchainRoot, paths.home, paths.tmp)),
+      environment: Object.freeze(
+        buildEnvironment(
+          toolchainRoot,
+          paths.home,
+          paths.tmp,
+          network !== undefined ? network.brokerPort : undefined,
+        ),
+      ),
       sealedInputs: Object.freeze(sealed.records),
+      network,
       command,
       rootFd: rootHandle.fd,
       dispose,
@@ -447,6 +552,10 @@ export async function executePreparedInvocation(
     SHELL_LIMITS.maxTimeoutMs,
   );
   const manifest = prepared.manifest;
+  // The broker starts refusing until the invocation's authority is settled;
+  // arming it here (the grant has been consumed before this call) is the only
+  // moment a tunnel can open.
+  prepared.network?.arm();
 
   let censusWatch: ReturnType<typeof startCensusWatch> | undefined;
   const child = spawnContainedProcess({
@@ -690,6 +799,20 @@ export async function executePreparedInvocation(
   lines.push(
     `pi-warden: export ${exportApplied.length} effect(s) applied, ${exportRefusals.length} refused, ${removedInProjection.length} deletion/rename ignored after ${Date.now() - started} ms`,
   );
+  if (prepared.network === undefined) {
+    lines.push("pi-warden: network closed (no destination scope)");
+  } else {
+    const stats = prepared.network.stats();
+    const scope = prepared.network.entries
+      .map(
+        (entry) =>
+          `${entry.host} (ports ${entry.ports.join("/")} -> ${entry.addressCount} pinned address(es), ${entry.families.join("+") || "none"})`,
+      )
+      .join(", ");
+    lines.push(
+      `pi-warden: network scope enforced via broker port ${prepared.network.brokerPort}: ${scope}; tunnels ${stats.tunnelsOpened} opened, ${stats.tunnelsRefused} refused, ${stats.tunnelsFailed} failed, ${stats.bytesRelayed} bytes relayed`,
+    );
+  }
   if (!quiescence.quiescent) lines.push(`pi-warden: export refused: ${quiescence.detail}`);
   for (const refusal of exportRefusals.slice(0, 20)) {
     lines.push(`pi-warden: export refused ${refusal.relativePath} (${refusal.kind}): ${refusal.reason}`);

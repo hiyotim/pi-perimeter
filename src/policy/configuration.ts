@@ -1,4 +1,5 @@
 import type { AuthorizationOutcome } from "./authority.ts";
+import { validateNetworkPolicyValue, type NetworkPolicyValue } from "./network.ts";
 
 export type PolicyOperation = "read" | "write" | "edit";
 
@@ -24,6 +25,13 @@ const MAX_JSON_DEPTH = 32;
 export interface OperationPolicy {
   readonly version: 1;
   readonly operations: Readonly<Partial<Record<PolicyOperation, AuthorizationOutcome>>>;
+  /**
+   * Optional trusted network destination allowlist (Goal 4). Present only when
+   * the document declares it; project documents may carry one solely as a
+   * restriction (composition in `src/policy/network.ts` never lets it add a
+   * destination or widen a port set).
+   */
+  readonly network?: NetworkPolicyValue;
   readonly [operationPolicyBrand]: true;
 }
 
@@ -194,12 +202,25 @@ export function parseOperationPolicy(input: unknown): ConfigurationParseResult {
     return invalid(error instanceof DuplicateKeyError ? "DUPLICATE_KEY" : "MALFORMED_JSON");
   }
 
-  if (!(root instanceof Map) || root.size !== 2 || !root.has("version") || !root.has("operations")) {
+  const hasNetwork = root instanceof Map && root.has("network");
+  if (
+    !(root instanceof Map) ||
+    root.size !== (hasNetwork ? 3 : 2) ||
+    !root.has("version") ||
+    !root.has("operations")
+  ) {
     return invalid("INVALID_SCHEMA");
   }
   if (root.get("version") !== 1) return invalid("INVALID_SCHEMA");
   const rawOperations = root.get("operations");
   if (!(rawOperations instanceof Map)) return invalid("INVALID_SCHEMA");
+
+  let networkValue: NetworkPolicyValue | undefined;
+  if (hasNetwork) {
+    const validatedNetwork = validateNetworkPolicyValue(root.get("network"));
+    if (!validatedNetwork.ok) return invalid("INVALID_SCHEMA");
+    networkValue = validatedNetwork.value;
+  }
 
   const operations: Partial<Record<PolicyOperation, AuthorizationOutcome>> = Object.create(null);
   for (const [operation, outcome] of rawOperations) {
@@ -217,6 +238,7 @@ export function parseOperationPolicy(input: unknown): ConfigurationParseResult {
   const policy = Object.freeze({
     version: 1 as const,
     operations,
+    ...(networkValue !== undefined ? { network: networkValue } : {}),
     [operationPolicyBrand]: true as const,
   });
   issuedPolicies.add(policy);

@@ -17,6 +17,28 @@ import { test } from "node:test";
 
 const MANIFEST_PATH = "docs/shell-gate-hashes.json";
 
+/**
+ * Artifacts whose bytes Goal 4 (`20260919-restricted-networking-e2e-evidence`)
+ * deliberately changed with fresh evidence; their entries in this manifest are
+ * historical accepted bytes, not working-tree assertions. The Goal 4 audit
+ * records the old and new hashes, and docs/network-gate-hashes.json binds the
+ * current bytes.
+ */
+const CHANGED_IN_GOAL_4 = new Set<string>([
+  "src/gate/shell-runtime.ts",
+  "src/policy/shell-plan.ts",
+  "src/policy/shell-policy.ts",
+  "src/approvals/shell-approvals.ts",
+  "src/sandbox/errors.ts",
+  "src/sandbox/seatbelt.ts",
+  "src/sandbox/containment.ts",
+  "docs/SHELL-GATE.md",
+  "test/shell-policy.test.ts",
+  "test/shell-approvals.test.ts",
+  "test/seatbelt-profile.test.ts",
+  "test/shell-manifest.test.ts",
+]);
+
 const COVERED_FILES = [
   "package.json",
   "src/index.ts",
@@ -61,6 +83,7 @@ test("the Goal 3 artifact hash manifest matches the final working tree", async (
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if (CHANGED_IN_GOAL_4.has(file)) continue; // historical bytes; fresh evidence binds the current tree
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });
@@ -82,4 +105,27 @@ test("the manifest covers every Goal 3 source and test artifact", async () => {
     assert.ok(typeof manifest[file] === "string" && manifest[file].length === 64, `${file} must be recorded`);
   }
   assert.equal(Object.keys(manifest).length, COVERED_FILES.length);
+});
+
+test("the Goal 4 artifacts are split exactly right: changed here, new elsewhere", () => {
+  // The Goal 4-only artifacts (new files and artifacts outside this Goal 3
+  // manifest's scope) belong to docs/network-gate-hashes.json, not to this
+  // historical record.
+  const goal4Only = [
+    "src/policy/network.ts",
+    "src/sandbox/network-broker.ts",
+    "test/network-policy.test.ts",
+    "test/network-effects.test.ts",
+    "test/network-manifest.test.ts",
+    "docs/NETWORK-GATE.md",
+    "docs/NETWORK-GATE-AUDIT.md",
+    "docs/network-gate-hashes.json",
+  ];
+  for (const file of CHANGED_IN_GOAL_4) {
+    assert.ok(COVERED_FILES.includes(file as (typeof COVERED_FILES)[number]), `${file} must be in the Goal 3 manifest`);
+    assert.ok(!goal4Only.includes(file), `${file} cannot be both a changed Goal 3 artifact and a Goal 4-only one`);
+  }
+  for (const file of goal4Only) {
+    assert.ok(!COVERED_FILES.includes(file as (typeof COVERED_FILES)[number]), `${file} is Goal 4-only and must not be in the Goal 3 manifest`);
+  }
 });

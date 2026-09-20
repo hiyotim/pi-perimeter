@@ -8,7 +8,82 @@ Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c2
 
 ## Current checkpoint
 
-**GOALS 1–3 ACCEPTED; PHASES 1–3 COMPLETE WITHIN THEIR DOCUMENTED GUARANTEES. GOAL 4 SELECTED BY THE OWNER ON 2026-09-19; ITS IMPLEMENTATION HAS NOT BEGUN.**
+**GOALS 1–3 ACCEPTED; PHASES 1–3 COMPLETE WITHIN THEIR DOCUMENTED GUARANTEES. GOAL 4 (Task `20260919-restricted-networking-e2e-evidence`, baseline `e8cab0cc08b9de8e0d755067559f14ba893c1396`) IS IMPLEMENTED AND VERIFIED ON THE DECLARED TARGET, AWAITING FRESH INDEPENDENT REVIEW AND OWNER ACCEPTANCE. NOTHING IS COMMITTED OR PUSHED.**
+
+Goal 4 implementation status (executor record, 2026-09-19): the restricted
+network route is implemented on the accepted Goal 3 shell gate and exercised on
+the declared target (macOS 27.0, 26A428, arm64; `sandbox-exec` identity matches
+the pinned value; Pi `0.84.4`, Node `v26.8.1` re-verified). Design:
+
+- Enforcement vocabulary evidence: on the declared target the SBPL parser
+  rejects every destination-exact network form (probed: literal IPv4/IPv6,
+  hostnames, CIDR — only `*` and `localhost` hosts with an explicit port are
+  expressible), so destination identity cannot be a profile filter; the system
+  resolver additionally refuses sandboxed clients (child-originated DNS does
+  not exist even with Mach allowances granted).
+- Enforcement: a per-invocation network broker in the host process
+  (`src/sandbox/network-broker.ts`) pins the composed destination scope
+  (trusted allowlist entries plus invocation-approved representable
+  destinations), resolved once host-side at preparation with public-address
+  validation, and enforces exact host+port identity at tunnel-open time to the
+  pinned addresses. The generated Seatbelt profile gains exactly one network
+  rule — the broker endpoint, one TCP port on local addresses
+  (`src/sandbox/seatbelt.ts`; the profile language has no single-address
+  form) — and never a Mach rule. With an empty scope the enforcement profile
+  and the constructed environment are byte-identical to Goal 3 and every
+  reachable effect is unchanged; only the report and approval-prompt text carry
+  the Goal 4 wording.
+- Policy layer: `src/policy/network.ts` (pure destination validation, trusted/
+  project composition under strict monotonicity, https-URL target extraction,
+  approval-scope derivation), the optional `network` section in the same
+  version-1 schema (`src/policy/configuration.ts`), per-command risk classes
+  and the network decision paths (`src/policy/shell-policy.ts`,
+  `src/policy/shell-plan.ts`), invocation bindings carrying the bound network
+  scope (`src/approvals/shell-approvals.ts`), and the runtime wiring
+  (`src/gate/shell-runtime.ts`, `src/sandbox/containment.ts`).
+
+Artifacts:
+
+- Contract: [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md) — destination model,
+  composition, approvals, enforcement, guarantee wording N1–N7 and limitations.
+- Evidence: [docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md) — the
+  probe matrix, the end-to-end positive controls (a real dependency fetch
+  through the production adapter to the authorized destination set only),
+  the refusal/effect matrix, the eighteen adversarial mutation checks (all
+  bite), three independent review rounds with their findings and fixes, and
+  exact artifact identities with their Goal 3/Goal 1 provenance.
+- Manifest binding: [docs/network-gate-hashes.json](docs/network-gate-hashes.json),
+  SHA-256 `152c7fa25fe2b95ad5d61005e677eabf341ef269884653c879551ad14385b972`
+  (20 entries, including the amended shell gate contract), asserted by
+  `test/network-manifest.test.ts`. The Goal 3 and
+  Goal 2 manifests are unchanged and their tests now bind the preserved bytes;
+  changed artifacts received fresh identities.
+
+Fresh executor evidence recorded locally on macOS (declared target):
+`npm run check` PASS (typecheck plus 355/356 registered scenarios with the
+single inverted non-darwin skip; exact counts in the audit §5), `git diff
+--check` clean. Eighteen fail-open mutations (destination substitution, port check,
+profile rule, binding serialization, public-address filter, unapproved-ASK,
+closed-scope denial, proxy variables, `http://` extraction, project port
+union, embedded-IPv4 extraction, approved-port overwrite, broker duplicate
+merge, pre-arming service, IPv6 extraction) each make their affected
+registered suite fail. Three independent review rounds (the second and third
+on the DeepSeek flash model) found one blocking and eighteen non-blocking
+findings (round 1: two, round 2: eight, round 3: eight);
+all were fixed within the Goal with biting regressions or corrected claims,
+and the affected checks were repeated (docs/NETWORK-GATE-AUDIT.md §8). An ordinary dependency fetch (`npm install ms`) succeeded through
+the containment adapter (`runContainedShellCommand`, the evidence/test
+lifecycle checkpoint) with its registry traffic tunneled to
+`registry.npmjs.org:443` only. Goal 4 remains not owner-accepted; no commit and
+no push. The three independent review rounds and their resolutions are recorded in
+[docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md) §8. After the
+final-snapshot independent audit, the Goal 4 documentation was corrected
+without any source or test change (audit §8: finding total, §7 accepted-old
+hashes, contract §6.1 extraction wording, stale Goal 4 status lines in ROADMAP
+and STATE), and the corrected documents are re-bound in the manifest below.
+
+Accepted Goal 3 status is unchanged and bound as recorded below. The sections
+below record the accepted Goal 3 checkpoint and the historical authority.
 
 Implementation status (accepted 2026-09-19): the contained shell route is
 implemented (`src/policy/shell-*.ts`, `src/sandbox/**`,
@@ -189,7 +264,7 @@ On 2026-09-13 the owner authorized a planning-only replacement of the remaining 
 1. **Configuration authorization** — complete configuration loading, validation, source/operation association, and composition with accepted read/write/edit baselines. **ACCEPTED; UNENFORCED.** Task ID: `20260913-configuration-authorization`.
 2. **Pi file gates and scoped approvals** — **ACCEPTED on 2026-09-15; Phase 2 complete within the demonstrated contract and limitations.** Task ID: `20260915-pi-file-gates-scoped-approvals`. The fresh independent PASS covers the corrective-pass artifacts identified below; owner acceptance is the subsequent decision recorded in this transition.
 3. **Sandboxed shell with network closed** — **ACCEPTED on 2026-09-19 within the variant-B contract and declared limitations; Phase 3 complete.** Task ID: `20260915-sandboxed-shell-network-closed`. The implementation adds a bounded shell grammar and risk model, single-use fully bound shell approvals, a deny-default Seatbelt profile with closed networking, a native launcher that constructs the child descriptor envelope, per-object workspace projection with identity binding, and descriptor-bound export through the native helper. Evidence, accepted bytes and declared limitations are in [docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md) and the manifest bound above.
-4. **Restricted networking and end-to-end security evidence** — **SELECTED on 2026-09-19; implementation not begun.** Narrowly allowed connections and cross-layer verification build on the accepted Goal 3 boundary.
+4. **Restricted networking and end-to-end security evidence** — **SELECTED on 2026-09-19; implemented and verified on the declared target under Task `20260919-restricted-networking-e2e-evidence`, awaiting fresh independent review and owner acceptance.** Narrowly allowed connections and cross-layer verification build on the accepted Goal 3 boundary. The contract and evidence are [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md) and [docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md); nothing is committed or pushed.
 
 The Goal scopes, acceptance criteria, exclusions, and checkpoints are fixed in [ROADMAP.md](ROADMAP.md). Goal 2 covers all six supported file tools, scoped approvals, complete resource/effect mediation, enforcement-time identity, protected control-plane resources, unknown-tool/shell blocking, and package/compatibility verification in one cycle. Its concrete integration and approval design must be explicit before dependent code and reviewed with the resulting implementation. No permission-widening configuration or weakening of accepted policy/provenance contracts is authorized.
 

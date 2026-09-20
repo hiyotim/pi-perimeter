@@ -2,10 +2,12 @@
  * Shell approvals: one private, single-use, fully bound grant per contained
  * invocation.
  *
- * A shell grant authorizes execution inside the fixed containment only. It
- * cannot satisfy a `DENY`, cannot widen the profile, cannot add a network rule,
- * cannot be reused after any bound input changes, and does not authorize any
- * host write: export effects carry their own per-target authorization.
+ * A shell grant authorizes execution inside the fixed containment only, with
+ * the exact network scope bound into the grant (Goal 4). It cannot satisfy a
+ * `DENY`, cannot widen the profile, cannot add a destination beyond the bound
+ * scope, cannot be reused after any bound input changes, and does not
+ * authorize any host write: export effects carry their own per-target
+ * authorization.
  *
  * State is private in-memory only. It is never written into the workspace,
  * the repository, Pi session files, or any policy location, and it can never be
@@ -35,6 +37,13 @@ export interface ShellApprovalBindings {
   readonly sealedInputSha256: readonly string[];
   /** The static resource outcomes the invocation was checked against. */
   readonly resourceOutcomes: readonly string[];
+  /**
+   * Canonical non-secret network scope the invocation enforces: the trusted
+   * and approved destinations ("host:port" pairs). Empty when the route is
+   * closed; the broker endpoint itself is bound through the profile hash.
+   */
+  readonly networkScopeSha256: string;
+  readonly networkDestinations: readonly string[];
 }
 
 export interface ShellApprovalPresentation {
@@ -44,6 +53,8 @@ export interface ShellApprovalPresentation {
   readonly commandRisk: string;
   readonly readOutcome: string;
   readonly mutationOutcome: string;
+  /** Canonical destinations the invocation enforces; empty means closed. */
+  readonly networkDestinations: readonly string[];
   readonly projectionSummary: string;
   readonly sealedInputs: readonly { readonly original: string; readonly sha256: string }[];
 }
@@ -87,6 +98,8 @@ export function serializeShellBindings(bindings: ShellApprovalBindings): string 
     `env=${bindings.environmentSha256}`,
     `sealed=${bindings.sealedInputSha256.join(",")}`,
     `resources=${bindings.resourceOutcomes.join(",")}`,
+    `network=${bindings.networkScopeSha256}`,
+    `destinations=${bindings.networkDestinations.join(",")}`,
   ].join("\n");
 }
 
@@ -103,23 +116,33 @@ export function shellApprovalPrompt(request: ShellApprovalRequest): { title: str
       : presentation.sealedInputs
           .map((entry) => `${entry.original} (sealed sha256 ${entry.sha256.slice(0, 16)})`)
           .join(", ");
+  const network =
+    presentation.networkDestinations.length === 0
+      ? "closed (no destinations approved; no network rule in the profile)"
+      : [
+          `outbound TCP to exactly: ${presentation.networkDestinations.join(", ")}`,
+          "  (enforced at connection time by this invocation's network broker;",
+          "  redirects, proxies, rebinding and all other destinations fail closed)",
+        ].join("\n");
   const message = [
     "pi-warden shell approval required.",
     `command: ${presentation.command}`,
     `command risk class: ${presentation.commandRisk}`,
     `effective read outcome: ${presentation.readOutcome}`,
     `effective mutation outcome: ${presentation.mutationOutcome}`,
+    `network scope: ${network}`,
     `workspace: ${presentation.workspaceRoot}`,
     `contained cwd: ${presentation.cwd}`,
     `projection: ${presentation.projectionSummary}`,
     `bound script inputs: ${sealed}`,
-    "containment: deny-default Seatbelt profile, closed networking (no TCP/UDP/DNS/loopback/broker route),",
+    "containment: deny-default Seatbelt profile,",
     "  constructed environment, no access to the original workspace, credentials or control plane",
     "effects: the command runs against a private projection; only individually re-authorized",
     "  changes to existing files and new files/directories are exported back afterwards;",
     "  deletions and renames inside the projection have no host effect",
     `scope: this single contained invocation only, expires in ${SHELL_APPROVAL_TTL_MS / 1000} seconds`,
     "approval does not widen containment and cannot satisfy a DENY",
+    "permitted destinations can receive any data the command can read (projected workspace output)",
   ].join("\n");
   return { title: "pi-warden shell permission request", message };
 }

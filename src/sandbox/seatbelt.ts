@@ -48,6 +48,16 @@ export interface SeatbeltRoots {
   readonly projectPolicyRoot: string;
   /** Trusted protected control-plane zones. Denied read and write. */
   readonly protectedZones: readonly { readonly name: string; readonly canonicalRoot: string }[];
+  /**
+   * Port of this invocation's network broker. Absent (the default) means the
+   * invocation has no network scope and the profile gains no network rule at
+   * all, byte-identical to Goal 3. Defined means exactly one rule is emitted:
+   * `(allow network-outbound (remote tcp "localhost:<port>"))` — the broker
+   * endpoint: one TCP port on local addresses (the language has no
+   * single-address form), which the broker owns on 127.0.0.1
+   * ([docs/NETWORK-GATE.md](../../docs/NETWORK-GATE.md)).
+   */
+  readonly networkBrokerPort?: number;
 }
 
 export interface SeatbeltProfile {
@@ -332,6 +342,13 @@ export function generateSeatbeltProfile(roots: SeatbeltRoots): SeatbeltResult {
     if (failure !== undefined) return failure;
   }
 
+  if (roots.networkBrokerPort !== undefined) {
+    const port = roots.networkBrokerPort;
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      return { ok: false, code: "UNSAFE_PROFILE_PATH", detail: `network broker port is not a valid TCP port (${String(port)})` };
+    }
+  }
+
   // No silent omission: every classifier reason the accepted classifier can
   // emit must have exactly one rendered family.
   const rendered = new Set(PROFILE_FAMILIES.map((family) => family.reason));
@@ -378,6 +395,13 @@ export function generateSeatbeltProfile(roots: SeatbeltRoots): SeatbeltResult {
   builder.lines.push("(deny default)");
   builder.lines.push("(allow process*)");
   builder.lines.push('(allow sysctl-read (sysctl-name-prefix "hw.") (sysctl-name-prefix "kern."))');
+  if (roots.networkBrokerPort !== undefined) {
+    // The one network rule of the profile: this invocation's broker endpoint.
+    // Port-exact and local-address-scoped (the language cannot express a
+    // single loopback address); every other network operation is denied by the
+    // deny default. No mach-lookup, no UDP, no bind/listen rule exists.
+    builder.lines.push(`(allow network-outbound (remote tcp "localhost:${roots.networkBrokerPort}"))`);
+  }
   emitMetadata(builder, metadataLiterals);
   emitReads(builder, dataReads);
   emitWrites(builder, dataWrites);

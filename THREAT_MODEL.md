@@ -165,7 +165,27 @@ Shell text can conceal behavior through quoting, expansion, variables, functions
 
 ## Network threats
 
-Network access can exfiltrate files, environment variables, prompts, source code, or credentials. It can also reach loopback services, cloud metadata endpoints, Unix-socket bridges, DNS, proxies, or redirect chains. The planned policy starts restricted, permits known development endpoints narrowly, and asks for unknown destinations. Approval must be tied to the actual destination and session scope. OS-level enforcement is required because pre-execution command classification cannot prove eventual network behavior.
+Network access can exfiltrate files, environment variables, prompts, source code, or credentials. It can also reach loopback services, cloud metadata endpoints, Unix-socket bridges, DNS, proxies, or redirect chains. The policy starts restricted, permits known development endpoints narrowly, and asks for unknown representable destinations; an approval is tied to the actual destination set and session scope. OS-level enforcement is required because pre-execution command classification cannot prove eventual network behavior.
+
+**Implemented (Goal 4, awaiting owner acceptance; contract
+[docs/NETWORK-GATE.md](docs/NETWORK-GATE.md), evidence
+[docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md)).** On the declared
+target the OS profile language cannot express a destination-exact allowance,
+so the enforcement boundary is a per-invocation host-side broker: the Seatbelt
+profile grants exactly one TCP port on local addresses (the broker's endpoint),
+the broker pins the composed destination scope with host-side resolution and
+public-address validation, matches CONNECT targets by exact host and port at
+tunnel-open time, dials only the pinned addresses (no re-resolution), refuses
+to serve before the invocation is armed, and never opens a Mach or UDP route.
+Child-originated DNS does not exist on this route. Threat responses actually in
+force: metadata/loopback/private/link-local destinations refuse pinning;
+redirects, proxy overrides, rebinding and alternate encodings fail closed;
+`DENY` and protected-resource outcomes have no network-approval bypass;
+project configuration can only restrict the destination scope. Declared
+residuals: any permitted endpoint can receive child-readable data, the profile
+rule is port-exact but local-address-scoped, and a same-user host process can
+reach the broker endpoint while the invocation is armed (the accepted B3
+boundary). Everything in this section not marked implemented remains planned.
 
 ## Credential threats
 

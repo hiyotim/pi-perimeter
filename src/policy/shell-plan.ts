@@ -30,12 +30,15 @@ import {
   strictestShellRisk,
   type ShellCommandRisk,
 } from "./shell-commands.ts";
+import { extractNetworkTargets, type ShellNetworkTarget } from "./network.ts";
 
 export const SHELL_PLAN_LIMITS = Object.freeze({
   maxRecursionDepth: 8,
   maxCommands: 512,
   maxOperands: 256,
   maxSealedInputs: 32,
+  maxNetworkTargets: 64,
+  maxRiskClasses: 64,
 });
 
 export type ShellPlanRefusalCode =
@@ -85,6 +88,10 @@ export interface ShellPlan {
   readonly operands: readonly ShellOperand[];
   readonly sealed: readonly ShellSealedInput[];
   readonly sealedEdits: readonly ShellSealedEdit[];
+  /** Destinations statically representable in network-class commands. */
+  readonly networkTargets: readonly ShellNetworkTarget[];
+  /** Distinct per-command risk classes in first-seen order. */
+  readonly riskClasses: readonly ShellCommandRisk[];
   readonly refusals: readonly ShellPlanRefusal[];
 }
 
@@ -112,6 +119,8 @@ interface WalkState {
   readonly operands: ShellOperand[];
   readonly sealed: ShellSealedInput[];
   readonly sealedEdits: ShellSealedEdit[];
+  readonly networkTargets: ShellNetworkTarget[];
+  readonly riskClasses: ShellCommandRisk[];
   readonly riskReasons: string[];
   risk: ShellCommandRisk;
   commands: number;
@@ -415,11 +424,13 @@ function analyzeSimple(
   const lowered = basenameOf(name);
   const classification = classifyCommandName(name);
   noteRisk(state, classification.risk, `${name}: ${classification.reason}`);
+  let effectiveRisk = classification.risk;
   const argumentsAfterName = words.slice(1).map((word) => word.text);
   if (isDispatcherCommand(classification.lookedUp)) {
     const subcommandRisk = classifyCommandSubcommand(classification.lookedUp, argumentsAfterName);
     if (typeof subcommandRisk === "string") {
       noteRisk(state, subcommandRisk, `${name}: subcommand class`);
+      effectiveRisk = strictestShellRisk(effectiveRisk, subcommandRisk);
     } else if (subcommandRisk !== undefined) {
       refuse(state, "SHELL_UNSUPPORTED_COMMAND_FORM", subcommandRisk.refusal);
     }
@@ -427,10 +438,28 @@ function analyzeSimple(
   const secondWord = secondWordRisk(classification.lookedUp, argumentsAfterName);
   if (secondWord !== undefined) {
     noteRisk(state, secondWord, `${name} ${argumentsAfterName.filter((value) => !value.startsWith("-"))[1] ?? ""}: subcommand verb class`);
+    effectiveRisk = strictestShellRisk(effectiveRisk, secondWord);
   }
   const argumentRisk = argumentTriggeredRisk(classification.lookedUp, argumentsAfterName);
   if (argumentRisk !== undefined) {
     noteRisk(state, argumentRisk.risk, `${name}: ${argumentRisk.reason}`);
+    effectiveRisk = strictestShellRisk(effectiveRisk, argumentRisk.risk);
+  }
+  if (!state.riskClasses.includes(effectiveRisk)) {
+    if (state.riskClasses.length >= SHELL_PLAN_LIMITS.maxRiskClasses) {
+      refuse(state, "SHELL_PLAN_LIMIT", "command exceeds the risk-class budget");
+      return cwd;
+    }
+    state.riskClasses.push(effectiveRisk);
+  }
+  if (effectiveRisk === "network") {
+    if (state.networkTargets.length >= SHELL_PLAN_LIMITS.maxNetworkTargets) {
+      refuse(state, "SHELL_PLAN_LIMIT", "command exceeds the network-target budget");
+      return cwd;
+    }
+    for (const target of extractNetworkTargets(words.map((word) => word.text))) {
+      state.networkTargets.push(target);
+    }
   }
 
   if (lowered === "cd") {
@@ -585,6 +614,8 @@ export function buildShellPlan(command: string): ShellPlanResult {
     operands: [],
     sealed: [],
     sealedEdits: [],
+    networkTargets: [],
+    riskClasses: [],
     riskReasons: [],
     risk: "ordinary",
     commands: 0,
@@ -601,6 +632,8 @@ export function buildShellPlan(command: string): ShellPlanResult {
     operands: Object.freeze([...state.operands]),
     sealed: Object.freeze([...state.sealed]),
     sealedEdits: Object.freeze([...state.sealedEdits]),
+    networkTargets: Object.freeze([...state.networkTargets]),
+    riskClasses: Object.freeze([...state.riskClasses]),
     refusals: Object.freeze([...state.refusals]),
   });
   return { ok: true, plan };

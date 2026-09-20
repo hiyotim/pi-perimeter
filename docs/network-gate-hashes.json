@@ -1,0 +1,22 @@
+{
+  "docs/NETWORK-GATE-AUDIT.md": "983e496e24a1071cec0129029a3ef6371f4ac9ca4dd837e8d750c4101eebf9cd",
+  "docs/NETWORK-GATE.md": "8d8963ffe5f11cb69b94d86a3d9c8f29b1a397f649cae6c74ad904f5d61bdf3d",
+  "docs/SHELL-GATE.md": "e90308b01c61c184329be437cd0a9f737a8a357f40c94a1e9f95b074a36c93fa",
+  "src/approvals/shell-approvals.ts": "8c0da45562f18e78dc4fe5762749e99d44c8b23b6f9e8cb7b0c3e23af95bc64d",
+  "src/gate/shell-runtime.ts": "eb83cb348614660df65e09c860fabd6e0c74fcc6a6d68ea5fe1400272289b901",
+  "src/policy/configuration.ts": "84047de76ce47a010aff13f6fdc9abf44ea6238452c542294b70c714c5f54bd0",
+  "src/policy/network.ts": "684b6aa77d74786a44ff752c29dd0104204e543b5c683be579ac0b96bed2a64e",
+  "src/policy/shell-plan.ts": "6a26da7354435407e06be77fe6c2ada87922331188339441def612fffc2d583d",
+  "src/policy/shell-policy.ts": "f12ebcc1741998ee7f88a9cc4932a8eb4012803a8feb3d248ad04d9a3dc5880d",
+  "src/sandbox/containment.ts": "68967173c7e189cce97069e54708e73211677178668f49384d4497b5f494ccaf",
+  "src/sandbox/errors.ts": "9f1fce6f992cddbe7dec6e3e4399519ae1ff36f6deb969e4398509f97e131cbe",
+  "src/sandbox/network-broker.ts": "6d5a2b263c12d8b69730f3775ea2f9f4c000e705b88f1a4f38014d583d058d46",
+  "src/sandbox/seatbelt.ts": "155c8d2d891240b9c22d75cacd86dfa27a3808ca01c2b7ad43def1e2657e8d3a",
+  "test/network-effects.test.ts": "94b195ebeb6ad466624783f715639f5238c10ff49d6194c3df5200461313ef17",
+  "test/network-manifest.test.ts": "726a01f72ec783d0b269a1af6724e4e072bbb9b7d63dc8223195d83e042a5eca",
+  "test/network-policy.test.ts": "4fb0f832c66c80c369c646838214791cfc4d26369e08ef4cf43fab244e5cfd08",
+  "test/seatbelt-profile.test.ts": "cf143b3b44608a31f06c70c61d44cdbfaefb6617c0d58add7347e7f674d83647",
+  "test/shell-approvals.test.ts": "22906c4bd927f5f0edd26a5c803397e1342c79e9116c203b62e8723951379df6",
+  "test/shell-manifest.test.ts": "4ba50fa3770fd4e18d37bcd540d2b2bccb5700e92b2a2355fe7f0a4e822c99ea",
+  "test/shell-policy.test.ts": "967c6973cbe0027520ab3cb5a29057044be986bb53b6173fb7625b86c3902097"
+}

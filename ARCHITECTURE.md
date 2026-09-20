@@ -10,8 +10,12 @@ accepted within its documented contract. Goal 3 adds the contained shell route
 and is accepted within its documented target and variant-B limitations; its contract,
 declared target and bounded guarantees are in
 [docs/SHELL-GATE.md](docs/SHELL-GATE.md) and its evidence in
-[docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md). Sections below that still
-say "planned" describe work that Goal 4 or later would own.
+[docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md). Goal 4 adds the
+restricted network route under its own contract
+([docs/NETWORK-GATE.md](docs/NETWORK-GATE.md)); it is implemented and verified
+within its declared target, awaiting owner acceptance, with evidence in
+[docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md). Sections below that
+still say "planned" describe work that later Goals would own.
 
 ## Remaining implementation boundaries
 
@@ -142,9 +146,27 @@ running it with fewer roots.
 
 ## 9. Network policy
 
-**Planned.** Network access will be restricted by default for sandboxed processes. Known development endpoints may be allowlisted; unknown destinations require a scoped approval. The design must consider DNS, redirects, proxies, local services, alternate protocols, and common exfiltration paths.
+**Implemented under the Goal 4 contract, awaiting owner acceptance.** The
+contained route has no Seatbelt destination filter: on the declared target the
+profile parser rejects every destination-exact network form (only `*` and
+`localhost` hosts with an explicit port are expressible). Enforcement therefore
+binds destination identity in the host process: a per-invocation network
+broker pins the composed destination scope (trusted allowlist entries plus
+invocation-approved representable destinations, with host-side resolution
+frozen at preparation), opens exactly one IPv4-loopback listener, and the
+generated profile grants only that endpoint. A child CONNECT request is
+checked at tunnel-open time against the pinned host and port and dialed to the
+pinned addresses — never a fresh resolution, redirect target, or proxy
+service. Child-originated DNS does not exist (no resolver route is reachable
+by a sandboxed client on this target), and UDP, listening, Unix-domain and
+Mach routes stay kernel-denied. The full contract and its bounded guarantees
+are in [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md).
 
-Goal 3 proves closed networking before Goal 4 adds destination permissions. A network approval cannot widen filesystem policy, expose host credentials, or replace containment. Failure to establish destination identity or network enforcement blocks the connection.
+Goal 4 must not weaken the filesystem, approval, environment or export
+boundaries: a network approval cannot widen filesystem policy, expose host
+credentials, or replace containment, and with an empty scope the route is
+byte-identical to Goal 3's closed networking. Failure to pin a destination or
+to establish the broker blocks the invocation.
 
 ## 10. Environment sanitization
 

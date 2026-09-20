@@ -559,3 +559,24 @@ bounded only by the profile.
    descriptor limit, not to 255.
 6. `sandbox-exec` identity is pinned by SHA-256 in addition to the proposal's
    path/ownership checks.
+
+## 14. Goal 4 amendment (restricted networking, 2026-09-19)
+
+Goal 4 (`20260919-restricted-networking-e2e-evidence`) extends this contract
+with a per-invocation network route under its own contract
+([NETWORK-GATE.md](NETWORK-GATE.md)). The amendment is conditional and
+preserves every guarantee above:
+
+* With an **empty network scope** — the default, and the state whenever no
+  trusted allowlist or matching live approval applies — everything above holds
+  byte-identically: the profile gains no network rule, and G3's "networking is
+  closed" wording holds exactly as written.
+* With a **non-empty network scope**, §7's "no `network*` rule is ever
+  emitted" is superseded in exactly one way: the profile may gain a single
+  rule granting only that invocation's broker endpoint — one TCP port on
+  local addresses, since the profile language has no single-address form — and
+  §10's "an approval cannot add a network rule" is superseded by the bound
+  destination scope of NETWORK-GATE.md §5–§7. No `mach-lookup` rule exists in
+  either case. The acceptance evidence for the extended route lives in
+  [NETWORK-GATE-AUDIT.md](NETWORK-GATE-AUDIT.md); the Goal 3 evidence below
+  remains bound to the bytes of its accepted snapshot.

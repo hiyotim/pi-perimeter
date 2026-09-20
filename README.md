@@ -2,14 +2,15 @@
 
 `pi-warden` is an early lightweight security extension/package for [Pi](https://pi.dev/), focused on workspace-scoped authorization and OS-level containment without requiring Docker or a full virtual machine.
 
-> **Project status: Phases 1–3 accepted; Goal 4 selected, not yet implemented.**
+> **Project status: Phases 1–3 accepted; Goal 4 implemented and verified on the declared target, awaiting owner acceptance.**
 
 Goals 1–3 (bounded configuration authorization, Pi file gates with scoped
 approvals, and contained shell execution) are accepted within their documented
-contracts and limitations. Goal 3 is accepted on the declared macOS target;
-its exact evidence and limitations are recorded in
-[docs/SHELL-GATE.md](docs/SHELL-GATE.md) and
-[docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md). Nothing here is a general
+contracts and limitations. Goal 4 (restricted networking) is implemented on the
+declared macOS target under its own contract and is **not yet accepted**; its
+exact evidence and limitations are recorded in
+[docs/NETWORK-GATE.md](docs/NETWORK-GATE.md) and
+[docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md). Nothing here is a general
 security guarantee.
 
 ## Problem
@@ -66,14 +67,28 @@ a constructed environment, and its changes are exported back only after
 per-target re-authorization. The original workspace is never visible to the
 child. See [docs/SHELL-GATE.md](docs/SHELL-GATE.md).
 
+The Goal 4 implementation (not yet accepted) adds narrowly scoped outbound
+development connections to that same route: trusted-configuration destination
+allowlists and per-invocation approvals for representable destinations are
+enforced by a per-invocation network broker in the host process, and the
+generated Seatbelt profile grants exactly one route: one TCP port on local
+addresses, which the broker owns on 127.0.0.1 and refuses to serve until the
+invocation is armed. Destination identity is checked at tunnel-open time against
+the pinned resolution; redirects, rebinding, proxies, and every other
+destination fail closed, and child-originated DNS does not exist. With an
+empty scope the route is byte-identical to Goal 3. See
+[docs/NETWORK-GATE.md](docs/NETWORK-GATE.md).
+
 The project still does **not** provide:
 
 - shell execution on any platform other than the declared macOS target
   (Linux stays blocked, not merely unsupported);
-- network access of any kind from contained processes (Goal 4);
+- network access beyond the pinned destination scope of the Goal 4 contract,
+  and only through the per-invocation broker; permitted endpoints can receive
+  any data the contained process can read (declared endpoint exfiltration);
 - protection against an independent same-user host writer, including ordinary
-  tampering with the disposable projection, or mount isolation (declared,
-  unverified);
+  tampering with the disposable projection and the loopback broker endpoint,
+  or mount isolation (declared, unverified);
 - secret-content detection beyond path classification;
 - host delete or rename effects, or direct `create` for file tools on macOS;
 - audited security guarantees beyond the reviewed contracts above.
