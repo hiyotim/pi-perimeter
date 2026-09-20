@@ -8,7 +8,6 @@ coverage/
 .env.*
 !.env.example
 .conductor/
-.qwen/
 .opencode-permission-canary.txt
 
 # Native helper build artifacts (built explicitly by `npm run build:native`).
