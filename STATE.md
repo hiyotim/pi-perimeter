@@ -8,9 +8,9 @@ Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c2
 
 ## Continuation
 
-- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting`, `20260920-hosted-ci-reproducibility` and `20260920-compatibility-matrix` were accepted 2026-09-20; **no further Goal is selected**.
-- Review: **PASS** — the hosted-CI Goal's fresh independent review passed on the reviewed bytes at `1f6b1e7`, and the compatibility-matrix fresh review passed at `b81ae5d` with both prior findings closed.
-- Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the compatibility matrix reports verified rows only and commits to no support; the Phase 6 release gate, packaging/publication safeguards and release-candidate reviews remain open; the unscoped npm name `pi-warden` is taken by another maintainer, so publication under it is blocked; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin/main`.
+- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting`, `20260920-hosted-ci-reproducibility` and `20260920-compatibility-matrix` were accepted 2026-09-20, and the Phase 5 ledger reconciliation is implemented and reviewed with **owner acceptance pending**; no further Goal is selected.
+- Review: **PASS** — fresh independent reviews passed at `1f6b1e7` (hosted CI), `b81ae5d` (compatibility matrix) and `b9ba949` (ledger reconciliation); the reconciliation's first pass was a FAIL whose findings are fixed and closed.
+- Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the compatibility matrix reports verified rows only and commits to no support; the Phase 5 release gate is reconciled but not closed; the Phase 6 release gate, packaging/publication safeguards and release-candidate reviews remain open; the unscoped npm name `pi-warden` is taken by another maintainer, so publication under it is blocked; `20260920-private-vulnerability-reporting` is the one accepted item without a recorded independent review; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin/main`.
 - Next: none established — the next bounded Goal must be selected from [ROADMAP.md](ROADMAP.md) by the owner; do not self-select or advance a phase.
 
 ## Current checkpoint
@@ -576,6 +576,43 @@ rewriting published history.
   open; narrowing the range or verifying `0.86.1` needs its own decision.
 - The Class 1 `/proc/self/fd` runtime-evidence question stays open, and no Linux or
   Windows support follows from this Goal.
+
+## Phase 5 ledger reconciliation (2026-09-20)
+
+Task ID: `20260920-ledger-reconciliation`. Status: **implemented and
+independently reviewed; owner acceptance pending.** Documentation-only: no
+runtime, policy, approval, sandbox, network, test, budget, or manifest artifact
+changed, and no Goal or phase was advanced.
+
+- The six Phase 5 hardening checklist items were distributed across the owning
+  Goals; each is now ticked in [ROADMAP.md](ROADMAP.md) with the artifact that
+  demonstrates it (the bounded shell grammar and content binding in
+  [docs/SHELL-GATE.md](docs/SHELL-GATE.md) §8–§9; the shell grammar/plan/containment
+  suites; the Goal 2 corrective pass in [docs/FILE-GATE-AUDIT.md](docs/FILE-GATE-AUDIT.md)
+  plus the Goal 3 freeze/measure races in [docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md)
+  §20–22; the synthetic-Keychain probe; the adversarial suites enforced by the hosted
+  count budget; and the recorded reviewer passes).
+- The Phase 5 release gate is **not** closed. Whether its condition is met remains an
+  owner decision, and the residuals it would inherit are named in the ROADMAP entry.
+- Surfaced gap: `20260920-private-vulnerability-reporting` is the one accepted item
+  whose bytes carry no recorded independent review. That is stated in its own
+  acceptance record and now in the ROADMAP tick; obtaining one remains open.
+
+### Independent review
+
+Two reviewer passes ran in a separate context on model `z-ai/glm-5.3-flash`,
+read-only. The first returned **FAIL** on `e109a62` with two real overstatements —
+a Keychain citation naming a document that never states that boundary, and a
+blanket "every accepted Goal" claim that the private-vulnerability-reporting
+acceptance contradicts — plus one low ambiguity about implying that the
+darwin-only containment suites execute on the Linux runner. All three were fixed;
+the fresh pass on `b9ba949` returned **PASS** with every finding closed and no new
+findings. The reviewer verified each cited artifact itself rather than trusting
+this record.
+
+Hosted runs for both commits succeeded: `35532776558` for `e109a62` and
+`35533015720` for `b9ba949`. No budget or manifest change was needed, because this
+item adds no tests.
 
 ## Selected next Goal and planning decision
 
