@@ -20,10 +20,9 @@ verified platform rows and [ROADMAP.md](../ROADMAP.md) for the Phase 6 release g
 | Pi manifest | `pi.extensions` = `./src/index.ts` (a path, unchanged by the rename) |
 
 `package.json` carries `repository`, `homepage` and `bugs`, all pointing at
-`github.com/pi-warden/pi-warden` — the project's current location. The owner decided to
-move the repository to a personal account and rename it to `pi-perimeter`; those fields,
-and the published reporting route in [SECURITY.md](../SECURITY.md), must be updated in the
-same change as that move, not before it.
+`github.com/hiyotim/pi-perimeter` — the canonical location since the repository was
+transferred out of the `pi-warden` organization and renamed on 2026-09-20. The published
+reporting route in [SECURITY.md](../SECURITY.md) moved with it.
 
 ### Where the former name is retained, and why
 
@@ -51,7 +50,7 @@ longer contains one, so the list cannot rot silently.
 
 `files` ships `src`, `scripts`, `docs`, `README.md`, `LICENSE` and `package.json`. A dry
 run on 2026-09-20 (`npm pack --dry-run`) reported name `pi-perimeter`, version `0.0.0`,
-**81 files**, 325.8 kB packed and 1.1 MB unpacked. It was a dry run: no tarball was
+**82 files**, 327.0 kB packed and 1.1 MB unpacked. It was a dry run: no tarball was
 published, and any shasum or integrity value it printed belongs to that run, not to a
 release.
 
@@ -103,7 +102,10 @@ unauthorized:
 
 ## Outstanding
 
-- The repository move and rename are outstanding owner actions; until they happen, the
-  recorded URLs and the reporting route describe the current location truthfully.
+- The repository transfer completed on 2026-09-20: the canonical location is
+  `github.com/hiyotim/pi-perimeter`, the old `github.com/pi-warden/pi-warden` URL
+  redirects to it, and the reporting channel and its recorded advisory moved with the
+  repository. The `pi-warden` organization still exists and is no longer used by this
+  project; nothing here depends on it.
 - Nothing is published, no version exists, and no compatibility or security guarantee is
   created by this document.

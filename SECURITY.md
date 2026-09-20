@@ -60,7 +60,7 @@ A mature design requires all applicable controls. None should be described as a 
 
 Report suspected vulnerabilities privately through GitHub private vulnerability reporting:
 
-<https://github.com/pi-warden/pi-warden/security/advisories/new>
+<https://github.com/hiyotim/pi-perimeter/security/advisories/new>
 
 This is the only confidential intake route the project currently operates. The repository is public, so the route is publicly reachable; submitted reports are visible only to the repository's security managers and administrators (and to the reporter who filed the report) until maintainers publish an advisory. It is a reporting channel, not a service commitment: it promises no confidentiality beyond what GitHub private vulnerability reporting provides, and no particular acknowledgement, remediation, or disclosure timeline. Reports are handled on a best-effort basis.
 

@@ -43,6 +43,13 @@ const CHANGED_IN_PACKAGING = new Set<string>([
   "test/hash-manifest.test.ts",
 ]);
 
+/**
+ * Artifacts whose bytes the post-transfer pass changed: the repository locator in
+ * the evidence record and this declaration. Their entries here stay historical;
+ * docs/post-transfer-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_POST_TRANSFER = new Set<string>(["docs/CI-EVIDENCE.md", "test/ci-manifest.test.ts"]);
+
 const COVERED_FILES = [
   ".github/workflows/ci.yml",
   "scripts/assert-test-outcome.mjs",
@@ -59,6 +66,7 @@ test("the hosted-CI artifact hash manifest matches the final working tree", asyn
   for (const file of COVERED_FILES) {
     if (CHANGED_IN_COMPATIBILITY.has(file)) continue; // accepted hosted-CI bytes; the compatibility Goal binds the current ones
     if (CHANGED_IN_PACKAGING.has(file)) continue; // raised count; the packaging manifest binds the current bytes
+    if (CHANGED_IN_POST_TRANSFER.has(file)) continue; // moved canonical location; the post-transfer manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

@@ -1,0 +1,13 @@
+{
+  "SECURITY.md": "65de563110558277cbc9794ff4647d253e0e1edb0b75d128721e01b9ddf0a6a8",
+  "docs/CI-EVIDENCE.md": "7bf55f84c5cceca166149e1e958f31ddce235b8847bf9c1ddca77d86579dabfa",
+  "docs/PACKAGING.md": "68f11d42358d561346850a7eda20e653401c57fa04a5fe09a72c6e3584aaa638",
+  "docs/VULNERABILITY-REPORTING-AUDIT.md": "62bae7f75734a026e365837cd9bf49a422e068a50f7903be43707ddb7f5e2f8f",
+  "package.json": "dae7bbf85f016e90716dc1edee456c4cb1275012f0a8713853b6d2ac0f788d2c",
+  "test/ci-manifest.test.ts": "47894b7deaa80e1daa2695c24004ca643504937de7545ada07c857515421bd43",
+  "test/ci-test-budget.json": "9f8f25a19c33a859fb536a30f8cafd9cd00bf0304ed7779549726e5506062f00",
+  "test/compatibility-manifest.test.ts": "d78394cc8e474c980bc82cd4610ee910c20c6502180fdd6e2340db503701c2ce",
+  "test/packaging-identity.test.ts": "42f98512aed52a60022f070d68b68bf6d89fb98730cc68942320690258137b1b",
+  "test/packaging-manifest.test.ts": "5c0e76ce61d531db44f2fd6b2cad4175143d3fe37b15a063e22896ac980fa98c",
+  "test/post-transfer-manifest.test.ts": "7720af39c8ba74284416893c0cb6eb12039c9510309ddbfecaaa26b12ce49983"
+}

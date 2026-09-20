@@ -11,11 +11,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pi-warden/pi-warden.git"
+    "url": "git+https://github.com/hiyotim/pi-perimeter.git"
   },
-  "homepage": "https://github.com/pi-warden/pi-warden#readme",
+  "homepage": "https://github.com/hiyotim/pi-perimeter#readme",
   "bugs": {
-    "url": "https://github.com/pi-warden/pi-warden/issues"
+    "url": "https://github.com/hiyotim/pi-perimeter/issues"
   },
   "publishConfig": {
     "access": "public",

@@ -18,6 +18,23 @@ import { test } from "node:test";
 
 const MANIFEST_PATH = "docs/packaging-hashes.json";
 
+/**
+ * Artifacts whose bytes the post-transfer pass changed: the canonical URLs, the
+ * reporting route, the packaging document, the identity test and the manifest
+ * declarations. Their entries in the earlier manifests stay historical;
+ * docs/post-transfer-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_POST_TRANSFER = new Set<string>([
+  "package.json",
+  "SECURITY.md",
+  "docs/PACKAGING.md",
+  "test/ci-test-budget.json",
+  "test/packaging-identity.test.ts",
+  "test/packaging-manifest.test.ts",
+  "test/ci-manifest.test.ts",
+  "test/compatibility-manifest.test.ts",
+]);
+
 const COVERED_FILES = [
   "package.json",
   "package-lock.json",
@@ -76,6 +93,7 @@ test("the packaging artifact hash manifest matches the final working tree", asyn
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if (CHANGED_IN_POST_TRANSFER.has(file)) continue; // moved canonical location; the post-transfer manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

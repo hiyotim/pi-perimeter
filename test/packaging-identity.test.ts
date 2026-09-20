@@ -17,13 +17,13 @@ import { test } from "node:test";
 
 const OLD_NAME = /pi-warden|piwarden/i;
 const QUALIFIED =
-  /formerly|former name|other maintainer|another maintainer|npm:pi-warden|github\.com\/pi-warden|native\/piwarden-helper|PIWARDEN_/;
+  /formerly|former name|organization|other maintainer|another maintainer|npm:pi-warden|github\.com\/pi-warden|native\/piwarden-helper|PIWARDEN_/;
 const PACKAGE_NAME = "pi-perimeter";
 const REPOSITORY = {
   type: "git",
-  url: "git+https://github.com/pi-warden/pi-warden.git",
-  homepage: "https://github.com/pi-warden/pi-warden#readme",
-  bugs: "https://github.com/pi-warden/pi-warden/issues",
+  url: "git+https://github.com/hiyotim/pi-perimeter.git",
+  homepage: "https://github.com/hiyotim/pi-perimeter#readme",
+  bugs: "https://github.com/hiyotim/pi-perimeter/issues",
 };
 
 /** Directories that are not part of the repository's tracked content. */
@@ -51,6 +51,7 @@ const RETAINED: Record<string, string> = {
   "native/piwarden-helper": "runtime-identifier (compiled helper artifact)",
   "test/packaging-identity.test.ts": "declares the old-name pattern and the retention list",
   "test/packaging-manifest.test.ts": "declares the earlier-manifest change sets and reads the manifest verbose flag",
+  "test/post-transfer-manifest.test.ts": "records the moved repository and the earlier-manifest change sets",
   "scripts/assert-test-outcome.mjs": "runtime-identifier (assertion prefix)",
   "scripts/build-native.mjs": "runtime-identifier (helper binary)",
   "src/approvals/approvals.ts": "runtime-identifier",
