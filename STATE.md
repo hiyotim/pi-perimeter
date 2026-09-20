@@ -1,14 +1,54 @@
 # Project State
 
-Updated: 2026-09-19
+Updated: 2026-09-20
 Branch at planning update: `codex/operation-policy-contribution-contract`
-Current branch: `codex/mac-migration-snapshot` (Goal 3 acceptance and Goal 4 handoff preparation)
+Current branch: `codex/mac-migration-snapshot` (Goal 4 accepted; local commits not pushed)
 Goal 3 implementation start baseline: `b9060dad829a92d3699da3b689fe909446a1e810` (accepted Goal 2 corrective pass and Goal 3 research). The subsequent preparation commit changes only STATE, ROADMAP, and IMPLEMENTATION_HANDOFF. Historical Goal 1 planning baseline: `c10e8f384e678c41792937d340d716d25e592e28`.
 Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c276e2154e2910e6`
 
 ## Current checkpoint
 
-**GOALS 1–3 ACCEPTED; PHASES 1–3 COMPLETE WITHIN THEIR DOCUMENTED GUARANTEES. GOAL 4 (Task `20260919-restricted-networking-e2e-evidence`, baseline `e8cab0cc08b9de8e0d755067559f14ba893c1396`) IS IMPLEMENTED AND VERIFIED ON THE DECLARED TARGET, AWAITING FRESH INDEPENDENT REVIEW AND OWNER ACCEPTANCE. NOTHING IS COMMITTED OR PUSHED.**
+**GOALS 1–4 ACCEPTED; PHASES 1–4 COMPLETE WITHIN THEIR DOCUMENTED GUARANTEES AND DECLARED LIMITATIONS. GOAL 4 (Task `20260919-restricted-networking-e2e-evidence`) WAS IMPLEMENTED AND VERIFIED ON THE DECLARED TARGET, RECEIVED A FRESH INDEPENDENT REVIEW PASS ON 2026-09-20, AND WAS ACCEPTED BY THE OWNER ON 2026-09-20. THE IMPLEMENTATION IS COMMITTED LOCALLY AS `6e6c967eb2483d8d8502cd30456c55bd332cfb12` (`feat: implement restricted network gate with end-to-end evidence`) ON `codex/mac-migration-snapshot`; THE BRANCH IS AHEAD OF ORIGIN BY FOUR COMMITS AND NOTHING IS PUSHED, PUBLISHED, OR INSTALLED INTO A REAL PROFILE. NO NEW GOAL IS SELECTED.**
+
+Owner acceptance (2026-09-20): the owner authorized recording the Goal 4
+acceptance after the fresh independent review. Acceptance binds to
+[docs/network-gate-hashes.json](docs/network-gate-hashes.json), SHA-256
+`152c7fa25fe2b95ad5d61005e677eabf341ef269884653c879551ad14385b972` (20
+entries), whose assertions passed in the review, and to the Goal 3/Goal 2
+manifest checks over the preserved bytes. The implementation exists as local
+commit `6e6c967eb2483d8d8502cd30456c55bd332cfb12`; the earlier "nothing is
+committed" wording in this file described the pre-commit executor checkpoint
+and is superseded by this record. Push, publication, and real-profile
+installation remain unauthorized.
+
+Fresh independent review (2026-09-20, fresh context, exact HEAD
+`6e6c967eb2483d8d8502cd30456c55bd332cfb12`, read-only): **PASS, no blocking
+findings.** Reviewer-run evidence: all three hash manifests recomputed against
+the working tree (Goal 4 manifest 20/20 matched with the recorded manifest
+SHA-256; Goal 2 manifest 19/19; the Goal 3 manifest's twelve
+deliberately-changed entries verified against the explicit
+`CHANGED_IN_GOAL_4` split in `test/shell-manifest.test.ts`, which is itself
+test-enforced); `npm run check` PASS (typecheck plus 355/356 registered
+scenarios with the single declared non-darwin skip); `npm run test:manifest`
+PASS; `git diff --check` PASS. The adversarial review covered the broker
+CONNECT parsing (case-sensitive method, IPv6-bracket and userinfo refusal,
+port regex plus pinned-membership check), pinned-only dialing with no
+re-resolution, the `arm()` gate and dispose lifecycle, the numeric IPv4/IPv6
+address classification including embedded forms, profile rule emission
+(exactly one host-generated validated port rule; empty scope byte-identical
+to Goal 3), strict project-source monotonicity, the approval bindings
+(network scope, profile hash, environment hash; single-use consumption before
+`executePreparedInvocation`), and the one-directional destination extraction
+(a destination hidden from extraction is unreachable through the broker, so
+extraction misses fail closed). Non-blocking observations, recorded without
+code changes: leading-zero CONNECT port spellings normalize to the same
+pinned port (no authority widening); the NAT64 special case in
+`isPublicIPv6` does not require zero groups 2–5 (not exploitable on the
+declared route); broker idle timeouts destroy quiet tunnels (fail closed,
+reliability); STATE's pre-acceptance "nothing is committed" wording was
+stale relative to HEAD (superseded by this record). The declared §12
+limitations (relay surface, endpoint exfiltration, tool variance, stale
+pins, non-darwin targets) are unchanged and accurately bounded.
 
 Goal 4 implementation status (executor record, 2026-09-19): the restricted
 network route is implemented on the accepted Goal 3 shell gate and exercised on
@@ -264,7 +304,7 @@ On 2026-09-13 the owner authorized a planning-only replacement of the remaining 
 1. **Configuration authorization** — complete configuration loading, validation, source/operation association, and composition with accepted read/write/edit baselines. **ACCEPTED; UNENFORCED.** Task ID: `20260913-configuration-authorization`.
 2. **Pi file gates and scoped approvals** — **ACCEPTED on 2026-09-15; Phase 2 complete within the demonstrated contract and limitations.** Task ID: `20260915-pi-file-gates-scoped-approvals`. The fresh independent PASS covers the corrective-pass artifacts identified below; owner acceptance is the subsequent decision recorded in this transition.
 3. **Sandboxed shell with network closed** — **ACCEPTED on 2026-09-19 within the variant-B contract and declared limitations; Phase 3 complete.** Task ID: `20260915-sandboxed-shell-network-closed`. The implementation adds a bounded shell grammar and risk model, single-use fully bound shell approvals, a deny-default Seatbelt profile with closed networking, a native launcher that constructs the child descriptor envelope, per-object workspace projection with identity binding, and descriptor-bound export through the native helper. Evidence, accepted bytes and declared limitations are in [docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md) and the manifest bound above.
-4. **Restricted networking and end-to-end security evidence** — **SELECTED on 2026-09-19; implemented and verified on the declared target under Task `20260919-restricted-networking-e2e-evidence`, awaiting fresh independent review and owner acceptance.** Narrowly allowed connections and cross-layer verification build on the accepted Goal 3 boundary. The contract and evidence are [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md) and [docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md); nothing is committed or pushed.
+4. **Restricted networking and end-to-end security evidence** — **ACCEPTED on 2026-09-20; Phase 4 complete.** Task ID: `20260919-restricted-networking-e2e-evidence`. The implementation adds a per-invocation network broker with destination-exact pinned enforcement on the accepted Goal 3 closed-network shell route, the optional trusted `network` allowlist with strict project-source monotonicity, invocation-scoped destination approvals bound into the shell grant, and the end-to-end evidence. The fresh independent review PASS and the owner acceptance bind to [docs/network-gate-hashes.json](docs/network-gate-hashes.json), SHA-256 `152c7fa25fe2b95ad5d61005e677eabf341ef269884653c879551ad14385b972`; the implementation is local commit `6e6c967eb2483d8d8502cd30456c55bd332cfb12`, not pushed. Declared limitations (§12 of the contract) remain the acceptance boundary.
 
 The Goal scopes, acceptance criteria, exclusions, and checkpoints are fixed in [ROADMAP.md](ROADMAP.md). Goal 2 covers all six supported file tools, scoped approvals, complete resource/effect mediation, enforcement-time identity, protected control-plane resources, unknown-tool/shell blocking, and package/compatibility verification in one cycle. Its concrete integration and approval design must be explicit before dependent code and reviewed with the resulting implementation. No permission-widening configuration or weakening of accepted policy/provenance contracts is authorized.
 

@@ -4,7 +4,7 @@ This roadmap uses release gates, not dates. A phase is complete only when its li
 
 ## Remaining implementation plan
 
-Planning decision: 2026-09-13; acceptance/selection updates: 2026-09-15 and 2026-09-19; architecture approval: 2026-09-17. The four-Goal plan is unchanged. Goals 1–3 are accepted; Phases 1–3 are complete within their demonstrated guarantees. Goal 4 is selected and its implementation is complete and verified on the declared target (Task `20260919-restricted-networking-e2e-evidence`), awaiting fresh independent review and owner acceptance; nothing is committed or pushed. Goal 3 acceptance is bounded by the variant-B contract, target platform and limitations recorded in [STATE.md](STATE.md) and the shell gate audit; it does not add descendant-termination, atomic-tree-snapshot, B3 or mount-isolation guarantees. The phase checklist remains the acceptance ledger, not a second queue of implementation Goals.
+Planning decision: 2026-09-13; acceptance/selection updates: 2026-09-15, 2026-09-19, and 2026-09-20; architecture approval: 2026-09-17. The four-Goal plan is unchanged. Goals 1–4 are accepted; Phases 1–4 are complete within their demonstrated guarantees and declared limitations. Goal 4 was accepted by the owner on 2026-09-20 after a fresh independent review PASS binding to [docs/network-gate-hashes.json](docs/network-gate-hashes.json); its implementation is local commit `6e6c967eb2483d8d8502cd30456c55bd332cfb12` on `codex/mac-migration-snapshot`, not pushed. Goal 3 acceptance is bounded by the variant-B contract, target platform and limitations recorded in [STATE.md](STATE.md) and the shell gate audit; it does not add descendant-termination, atomic-tree-snapshot, B3 or mount-isolation guarantees. The phase checklist remains the acceptance ledger, not a second queue of implementation Goals.
 
 Each Goal has one technical outcome and includes its related contract decisions, implementation, regression tests, documentation, and verification. These are internal scope/checklist items, not separate Goals. Work proceeds through one implementation cycle, machine checks, an independent review of the final snapshot, and acceptance. Findings and their fixes stay within that Goal; relevant changed artifacts require fresh checks and review before acceptance. No PASS transfers to different source/test hashes. Review evidence must distinguish reviewer-run checks from executor-run checks.
 
@@ -85,7 +85,7 @@ Across all Goals, preserve the [security invariants](AGENTS.md), [trust boundari
 
 ### Goal 4: Restricted networking and end-to-end security evidence
 
-**Status:** selected by the owner on 2026-09-19; implemented and verified on the declared target under Task `20260919-restricted-networking-e2e-evidence`, awaiting fresh independent review and owner acceptance. The contract is [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md); evidence and artifact identities are in [docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md) and [docs/network-gate-hashes.json](docs/network-gate-hashes.json). No acceptance, commit, push, publication or real-profile installation has occurred.
+**Status:** **accepted by the owner on 2026-09-20; Phase 4 complete.** Task ID: `20260919-restricted-networking-e2e-evidence`. The accepted design is the per-invocation network broker on the Goal 3 closed-network shell route: destination-exact pinned enforcement (host-side resolution, public-address validation, no re-resolution at tunnel time), the optional trusted `network` allowlist with strict project-source monotonicity, invocation-scoped destination approvals bound into the single-use shell grant, and exactly one host-generated broker-endpoint rule in the Seatbelt profile. The fresh independent review PASS (2026-09-20, no blocking findings) and the owner acceptance bind to [docs/network-gate-hashes.json](docs/network-gate-hashes.json), SHA-256 `152c7fa25fe2b95ad5d61005e677eabf341ef269884653c879551ad14385b972`; evidence is in [docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md) against [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md). The implementation is local commit `6e6c967eb2483d8d8502cd30456c55bd332cfb12`; push, publication, and real-profile installation remain unauthorized. Declared limitations (§12: relay surface, endpoint exfiltration, tool variance, stale pins, non-darwin targets) are the acceptance boundary. The outcome and acceptance criteria below are retained as the accepted contract.
 
 **Outcome:** narrowly permitted development connections work without weakening the accepted filesystem, authorization, approval, or process boundaries.
 
@@ -115,7 +115,7 @@ The Phase 6 and Phase 7 gates below remain separate release checkpoints, not add
 
 ## Phase acceptance ledger
 
-The following phase checkboxes and release gates retain their acceptance meaning. Closure requires recorded acceptance evidence in STATE; the 2026-09-15 transitions close Phases 1 and 2, and the 2026-09-19 transition closes Phase 3 within the accepted contracts. Phase 4 and later release gates remain open.
+The following phase checkboxes and release gates retain their acceptance meaning. Closure requires recorded acceptance evidence in STATE; the 2026-09-15 transitions close Phases 1 and 2, the 2026-09-19 transition closes Phase 3 within the accepted contracts, and the 2026-09-20 transition closes Phase 4 within the Goal 4 contract and declared limitations. Phase 5 items are distributed across the owning Goals, and the later release gates remain open.
 
 ## Phase 0 — Foundation
 
@@ -140,7 +140,7 @@ The following phase checkboxes and release gates retain their acceptance meaning
 
 **Release gate:** a platform-independent policy core passes table-driven and adversarial tests using temporary fixtures, with no Pi or sandbox side effects.
 
-Current acceptance checkpoint and historical Goal evidence: [STATE.md](STATE.md). The pure policy core, bounded file gates/approvals, and contained shell route are accepted as Goals 1–3 within their documented guarantees. Goal 4 is implemented and verified on the declared target (Task `20260919-restricted-networking-e2e-evidence`) and awaits fresh independent review and owner acceptance; nothing is committed or pushed. Planning or completion of a scope item does not authorize implementation beyond the active checkpoint or further phase advancement.
+Current acceptance checkpoint and historical Goal evidence: [STATE.md](STATE.md). The pure policy core, bounded file gates/approvals, contained shell route, and restricted networking are accepted as Goals 1–4 within their documented guarantees and declared limitations. No new Goal is selected; the Phase 6 and Phase 7 release gates remain open and require their own evidence and explicit maintainer action. Planning or completion of a scope item does not authorize implementation beyond the active checkpoint or further phase advancement.
 
 ## Phase 2 — Pi Tool Gates
 
@@ -165,12 +165,12 @@ Current acceptance checkpoint and historical Goal evidence: [STATE.md](STATE.md)
 
 ## Phase 4 — Network
 
-- [ ] Restrict sandbox network access by default.
-- [ ] Define allowlisted development services.
-- [ ] Add destination- and session-scoped approval.
-- [ ] Test redirects, DNS, proxies, loopback, local services, and exfiltration cases.
+- [x] Restrict sandbox network access by default.
+- [x] Define allowlisted development services.
+- [x] Add destination- and session-scoped approval.
+- [x] Test redirects, DNS, proxies, loopback, local services, and exfiltration cases.
 
-**Release gate:** documented tests demonstrate the stated network policy on supported platforms, and no broader exfiltration-resistance claim is made.
+**Release gate:** documented tests demonstrate the stated network policy on supported platforms, and no broader exfiltration-resistance claim is made. (Closed on 2026-09-20 by the Goal 4 acceptance; session-scoped standing grants are deliberately not implemented — the trusted allowlist is the standing authority and everything else is per-invocation, per [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md) §6.4.)
 
 ## Phase 5 — Hardening
 
