@@ -1,69 +1,113 @@
 # Implementation Handoff
 
-Task ID: `20260920-private-vulnerability-reporting`
-Baseline: `6e6c967eb2483d8d8502cd30456c55bd332cfb12`; unstaged owner acceptance updates in `STATE.md` (SHA-256 `c7cf85c1062a88c33d5a2b8783ffe03ea6e02af79fac2fbf23880dabed8fadf3`) and `ROADMAP.md` (SHA-256 `6956e2d9a447d6e9f339e74b1908ba622328cf18852069c0753a8a3e87453a3e`), plus unrelated untracked `.commandcode/`; index empty.
+Task ID: `20260920-hosted-ci-reproducibility`
+Baseline: `2fa89b6b0ff37b4eef2624acaa8dafd198a38c5c` (the transition that consolidated `main` and pushed it); index empty; untracked `.commandcode/` only.
 Scope Gate: READY
 
 ## Goal
 
-Establish one verified private vulnerability-reporting channel and publish accurate, safe responsible-disclosure instructions for `pi-warden`, closing only that bounded Phase 6 checklist item.
+Make the hosted CI check meaningful and reproducible on a clean checkout, record its
+results as evidence, and correct the hosted-run wording, closing only the Phase 6
+checklist item "Add GitHub CI and reproducible checks".
 
 ## Context
 
-- Goals 1–4 and Phases 1–4 are owner-accepted within the guarantees and limitations recorded in `STATE.md` and `ROADMAP.md`.
-- `SECURITY.md` currently states that no private channel exists. `CONTRIBUTING.md` repeats that status, and `README.md` links to `SECURITY.md` for reporting policy.
-- Public beta, publication, installation, release acceptance, incident-response operations, and broader Phase 6 work remain separate gates.
-- The repository must not publish exploit details, credentials, tokens, reporter data, or private-channel secrets.
+- Goals 1–4 are accepted; the private vulnerability-reporting Phase 6 item is closed.
+  `main` is the single working line and is pushed to `origin`.
+- The workflow already exists (`.github/workflows/ci.yml`): `ubuntu-latest`, Actions
+  referenced by moving tags (`actions/checkout@v4`, `actions/setup-node@v4`), Node
+  `22.19.0`, `npm ci --ignore-scripts && npm run check`.
+- Hosted history is not what the documentation claims. Run `34985125954`
+  (2026-09-15T14:57Z, push of the Goal 2 snapshot `664871d`) **failed**: 209/210 tests
+  passed and test 69, "the Goal 2 artifact hash manifest matches the final working
+  tree", failed. That run was never recorded. Run `35523982904` (2026-09-20, push of
+  `2fa89b6`, current `main`) passed with 356 tests, 302 pass, 0 fail, 54 skipped.
+- Observed platform constraints (2026-09-20, local inspection):
+  `scripts/build-native.mjs` refuses any platform other than darwin;
+  `verifyPlatform` (`src/sandbox/containment.ts`) requires darwin, `arm64`, a Darwin
+  major equal to the declared target, and a pinned `/usr/bin/sandbox-exec` sha256.
+  A GitHub-hosted macOS runner therefore cannot satisfy the containment suite by
+  design, and 54 darwin-only tests are skipped on Linux.
+- `npm run check` is the only job step today; skipped and failed counts are printed but
+  not asserted, so a silently growing skip set can still show as green.
 
 ## Scope
 
-- Obtain the maintainer-selected private intake endpoint and its public-safe contact instructions before claiming that reporting is available.
-- Configure or enable that single channel only when the maintainer has explicitly authorized the external action and the channel can restrict report contents to intended maintainers.
-- Update `SECURITY.md` with the verified private reporting route, reporting scope, safe reproduction guidance using fake data, expected acknowledgement/process wording without unsupported response-time promises, and guidance for urgent or sensitive reports.
-- Update the existing disclosure references in `CONTRIBUTING.md` and, only if needed for an accurate discoverable link or status, `README.md`.
-- Preserve the existing accepted guarantees, limitations, and warning that permitted endpoints can receive projected workspace data.
+- Pin `actions/checkout` and `actions/setup-node` to immutable commit SHAs (with the
+  corresponding tagged release recorded in a comment), keep `permissions: contents:
+  read`, keep `npm ci --ignore-scripts`, and keep the Node version pinned.
+- Make test accounting explicit: record a declared per-platform skip budget and fail
+  the job when the observed pass/fail/skip counts deviate from it, so neither a new
+  skip nor a real failure can pass as green.
+- Record the hosted evidence: run identifier/URL, exact commit SHA, and per-run
+  pass/fail/skip counts, with hosted and executor-local evidence clearly separated,
+  bound to the reviewed bytes using the existing manifest convention or an explicit
+  statement why no new manifest is needed.
+- Correct the hosted-run wording in `STATE.md` and the affected audits so it states the
+  qualified truth instead of an unqualified "hosted GitHub Actions has not run".
+- Determine, on evidence, whether the hosted Linux run supplies the outstanding Goal 2
+  Class 1 (`/proc/self/fd`) execute-time runtime evidence, and record the answer.
 
 ## Out of Scope
 
-- Runtime, policy, approval, sandbox, network, test, build, package, CI, or dependency changes.
-- A second reporting channel, automated triage, incident-response tooling, encryption/key management, bug bounty, service-level or response-time commitments, legal safe-harbor policy, CVE issuance, release notes, publication, push, or real-profile installation.
-- Completing security/documentation review as a whole, the compatibility matrix, packaging safeguards, GitHub CI, public beta, Phase 6, or Phase 7.
-- Changing `STATE.md` or `ROADMAP.md`; their pre-existing acceptance updates are baseline work and must remain attributable to the owner.
+- A hosted macOS job that claims containment evidence. macOS containment evidence stays
+  executor-local. A refusal-path job is a separate explicit decision because it requires
+  new tests asserting refusal on a foreign darwin target.
+- Publication, npm packaging, the npm name collision, compatibility-matrix publication,
+  Phase 5 hardening, release or public-beta acceptance.
+- Runtime, policy, approval, sandbox, network behavior; new runtime dependencies;
+  weakening, rewriting, or relaxing any accepted guarantee.
 
 ## Risk Gates
 
-- Before enabling an external service or publishing contact details, the maintainer must supply or approve the exact private endpoint, authorized recipients, ownership, and public-safe wording. Do not invent an address, expose a personal contact, or claim confidentiality that the channel does not provide.
-- Before declaring the channel operational, send one explicitly authorized synthetic report containing no vulnerability, credential, exploit, or personal data and verify delivery to the intended restricted recipients. A documentation-only link check cannot substitute for delivery evidence.
+- Never add `continue-on-error`, `|| true`, `if: always()`, or any other masking
+  construct to make a job pass.
+- Never convert a real failure into a skip: every skip must correspond to a declared
+  platform condition and to the recorded budget for that platform.
+- Never present a green Linux run as Linux support, or as darwin containment evidence.
+- A real defect surfaced by the hosted run in accepted code stops this Goal and requires
+  an owner decision: fixing it changes accepted Goal 1–4 bytes and their evidence.
 
 ## Acceptance Criteria
 
-1. One maintainer-approved private reporting endpoint is operational, publicly discoverable from `SECURITY.md`, and restricted to the intended recipients.
-2. An authorized synthetic report with non-sensitive content is received through the documented route; the evidence records only safe metadata and does not expose the private report or recipient secrets.
-3. `SECURITY.md` accurately states what to report, what information helps investigation, how to use fake data, what must not be posted publicly, and what reporters should expect without promising confidentiality, remediation, disclosure, or response times beyond the channel's demonstrated behavior.
-4. `CONTRIBUTING.md` and any changed `README.md` references agree with `SECURITY.md`; no current text still claims that a private channel is unavailable.
-5. Existing Goal 1–4 guarantees and limitations are unchanged, and the change does not claim public-beta, release, publication, installation, or completion of any other Phase 6 item.
-6. Only the authorized disclosure documentation and unavoidable maintainer-approved external channel configuration differ from the baseline; the pre-existing `STATE.md`, `ROADMAP.md`, and `.commandcode/` state is preserved and separately attributable.
+1. A hosted run exists for the Goal's final commit, identified by URL/ID and exact SHA,
+   and the recorded outcome matches that run; no hosted run remains unrecorded.
+2. The workflow reproduces from a clean checkout with no local machine state: no
+   gitignored artifact, no secret, and no network use beyond what `npm ci` needs.
+3. Counts are asserted, not merely printed: the job fails when pass, fail, or skip
+   counts deviate from the recorded budget for that platform.
+4. Third-party Actions are pinned to immutable SHAs and permissions stay least-privilege.
+5. Documentation distinguishes hosted from local evidence, states the darwin limitation
+   with its cause, and no longer claims hosted CI "has not run" without qualification.
+6. No guarantee is added, widened, or weakened, and no platform support claim is added.
 
 ## Verification
 
-- For Criteria 1–2, inspect the channel's recipient/access configuration and perform the authorized non-sensitive synthetic delivery test; record only endpoint type, delivery result, date, and intended-recipient confirmation.
-- For Criteria 3–5, manually compare `SECURITY.md`, `CONTRIBUTING.md`, any changed `README.md`, `STATE.md`, and `ROADMAP.md`; verify links resolve and every guarantee/status statement matches the accepted checkpoint.
-- For Criterion 6, compare `git status --short` and the diff against the recorded baseline identities; confirm no source, test, package, build, configuration, manifest, accepted contract, or audit artifact changed.
-- Run `git diff --check` and inspect the complete documentation diff. Because this Goal is documentation/channel-only, do not attribute earlier runtime test or manifest results as fresh evidence.
-- Obtain an independent security/documentation review of the final instructions and safe verification record before owner acceptance.
+- Inspect the workflow diff and the new accounting script; run `npm run check` locally
+  and compare counts with the budget.
+- Retrieve every referenced hosted run (`gh run view`, `gh run view --log`) and record
+  run id, commit SHA, and counts; confirm the recorded numbers match the run output.
+- Check the skip budget against the code-level platform conditions in the tests that
+  declare them; a budget that cannot be derived from those conditions is a finding.
+- Run `git diff --check`, the manifest suites, and the package lifecycle suite.
+- Obtain an independent review of the workflow, the accounting mechanism, and every
+  evidence claim before owner acceptance.
 
 ## Constraints
 
-- Use no real credentials, vulnerabilities, exploit payloads, private reporter data, or sensitive user data in setup or verification.
-- Publish only the minimum contact information required to reach the approved channel. Keep recipient lists, service credentials, recovery material, and private reports outside repository-writable content.
-- State only demonstrated channel properties. Approval of an endpoint does not establish guaranteed confidentiality, anonymity, availability, response time, remediation, or coordinated-disclosure terms.
-- Preserve the separation between authorization, approval, containment, disclosure intake, and release acceptance.
-- Do not stage, commit, push, publish, or alter the owner acceptance baseline unless separately authorized.
+- No new runtime dependency, no secret, no privileged step.
+- Do not edit or delete tests to make CI pass; failure and skip changes require evidence.
+- Keep the change small and reviewable: one workflow, one accounting mechanism, one
+  evidence record.
+- Work on `main` as authorized; no additional topic branches. Do not publish, release,
+  or install into a real Pi profile.
 
 ## Escalate If
 
-- No maintainer-approved private endpoint or authorized recipient set is available.
-- The proposed service requires publishing personal contact data, storing secrets in the repository, granting repository-controlled content authority, or accepting unsupported confidentiality/response commitments.
-- A synthetic delivery test cannot be authorized or cannot confirm receipt by the intended restricted recipients.
-- The work requires a second channel, automation, dependency/configuration changes, legal policy, incident-response process, publication, or any broader Phase 6 outcome.
-- `STATE.md`, `ROADMAP.md`, or another baseline artifact changes materially before execution and ownership or attribution becomes ambiguous.
+- The hosted run exposes a defect in accepted code, or a fix would require touching
+  accepted Goal 1–4 bytes.
+- Producing macOS containment evidence would require changing the pinned target,
+  `sandbox-exec` identity, or an accepted guarantee.
+- Answering the Class 1 question would require an explicit Linux support claim.
+- A runner-image change alters the operating system under the declared target, or the
+  budget cannot be met without weakening a test.

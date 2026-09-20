@@ -343,6 +343,40 @@ release gate.
   outside this Goal's scope. The untracked `.commandcode/` directory is session
   tooling and stays untracked.
 
+## Repository transition to main and hosted-CI Goal selection (2026-09-20)
+
+Owner decision (2026-09-20): consolidate the working branch into `main`, push
+`main`, and continue all further work directly on `main` without additional topic
+branches. The branch `codex/mac-migration-snapshot` was fast-forwarded into
+`main` (`c10e8f3..2fa89b6`, ten commits) and pushed to `origin/main`
+(<https://github.com/pi-warden/pi-warden>) on 2026-09-20. The Goal 4 network
+gate, the Goal 3 shell gate, the Goal 2 corrective pass, their audits, and the
+accepted documentation transitions are therefore public on that remote. No npm
+publication, release, or real-profile installation is authorized by this
+transition. The local branch `codex/mac-migration-snapshot` still exists and
+points at the same commit.
+
+Owner decision (2026-09-20): select the next bounded Goal — **hosted CI and
+reproducibility evidence**, Task ID `20260920-hosted-ci-reproducibility`, closing
+only the Phase 6 checklist item "Add GitHub CI and reproducible checks". The
+npm name collision is recorded as a known blocker for the later packaging Goal
+and is deliberately not resolved here: `pi-warden` is already published on the
+public npm registry by another maintainer (latest `0.28.4`, registry metadata
+observed 2026-09-20), so this project cannot publish under that unscoped name.
+
+Hosted-run provenance correction (established 2026-09-20): one hosted run already
+exists and had never been recorded. Run `34985125954`
+(2026-09-15T14:57Z, triggered by the push of the Goal 2 snapshot commit
+`664871d`) **failed**: 209/210 tests passed and test 69, "the Goal 2 artifact
+hash manifest matches the final working tree", failed. Wording in this file,
+[docs/FILE-GATE-AUDIT.md](docs/FILE-GATE-AUDIT.md), and
+[docs/CONFIGURATION-AUTHORIZATION-AUDIT.md](docs/CONFIGURATION-AUTHORIZATION-AUDIT.md)
+that hosted GitHub Actions "has not run" is qualified by this record: no hosted
+run covers the accepted Goal 1–4 bytes, and the only recorded hosted execution is
+red on the Goal 2 snapshot. Establishing the current hosted state on a clean
+checkout is the first task of the selected Goal; no reproducibility claim may be
+made before that evidence exists.
+
 ## Selected next Goal and planning decision
 
 On 2026-09-13 the owner authorized a planning-only replacement of the remaining micro-Goal queue with these four implementation Goals:
