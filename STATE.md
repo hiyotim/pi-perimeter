@@ -295,7 +295,53 @@ Historical status text for the architecture approval follows.
 
 **GOAL 3 ARCHITECTURE APPROVED; IMPLEMENTATION AUTHORIZED, IMPLEMENTED AND VERIFIED, NOT ACCEPTED.** On 2026-09-17 the owner approved proceeding with the proposed isolated-workspace architecture, requested committing the existing work, and requested an autonomous implementation handoff. This supersedes the earlier proposal-only gate for the architecture below. The shell routes were blocked at the time of that approval and are now implemented behind the same authorization, containment and export lifecycle. Phase 3 remains unaccepted and Goal 4 remains unauthorized.
 
-This file is the canonical acceptance/checkpoint and Goal-selection record. [ROADMAP.md](ROADMAP.md) retains the four-Goal plan and phase/release gates; Goals 3-4 remain. [ARCHITECTURE.md](ARCHITECTURE.md) defines component and trust boundaries; earlier status wording there and in reviewed Goal 2 artifacts describes the pre-acceptance snapshot, while this record supplies the later owner decision. [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md) now authorizes the complete Goal 3 implementation and verification cycle within the approved architecture; final independent review and owner acceptance remain required. The older untracked `QWEN_TASK.md` is absent; do not recreate it or treat it as active instruction.
+This file is the canonical acceptance/checkpoint and Goal-selection record. [ROADMAP.md](ROADMAP.md) retains the four-Goal plan and phase/release gates; all four Goals are accepted and the Phase 6 and Phase 7 release gates remain open. [ARCHITECTURE.md](ARCHITECTURE.md) defines component and trust boundaries; earlier status wording there and in reviewed Goal 2 artifacts describes the pre-acceptance snapshot, while this record supplies the later owner decisions. [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md) currently holds the bounded Phase 6 private-vulnerability-reporting task; it is not authorization for a further Goal or phase advancement. The older untracked `QWEN_TASK.md` is absent; do not recreate it or treat it as active instruction.
+
+## Private vulnerability-reporting channel (Phase 6 checklist item)
+
+Task ID: `20260920-private-vulnerability-reporting`. **Implemented and accepted
+by the owner on 2026-09-20; the bounded Phase 6 checklist item "Define a private
+vulnerability-reporting channel" is closed.** This is not one of Goals 1–4. It
+adds no runtime, policy, approval, sandbox, network, test, build, package, CI,
+dependency, or manifest change, and it does not advance Phase 6 or close its
+release gate.
+
+- Channel: GitHub private vulnerability reporting for `pi-warden/pi-warden`,
+  documented at `https://github.com/pi-warden/pi-warden/security/advisories/new`
+  and discoverable from [SECURITY.md](SECURITY.md). Report visibility is limited
+  to the repository's security managers and administrators (and the reporter)
+  until an advisory is published; no confidentiality, acknowledgement,
+  remediation, availability, or response-time commitment beyond that is claimed.
+- Reviewed documentation bytes: [SECURITY.md](SECURITY.md) SHA-256
+  `7ca71e08f2d365c49760a8d94ce3852785ea7d6eb323ce4b089932c5cd23a6ca`,
+  [CONTRIBUTING.md](CONTRIBUTING.md) SHA-256
+  `c2b91b039aa9106052f479e8a43c9f816d54b9d12a3cb33f4221a8d6388a0860`, and
+  [docs/VULNERABILITY-REPORTING-AUDIT.md](docs/VULNERABILITY-REPORTING-AUDIT.md)
+  at its pre-acceptance revision SHA-256
+  `8dc512df1ee332629f3f4415a36448c42f6f0b503ab806db736d696b7e992707`. The
+  accepted revision of that record is
+  `01cc398864e68c1c61459a82967573c8eeba1b08d9dd753a04c259ebfed124da`; it differs
+  only by the added acceptance section and the corrected `.gitignore`
+  attribution. `README.md` needed no change; its existing link to `SECURITY.md`
+  remains accurate.
+- Verification evidence is executor-run and recorded in the audit: channel
+  configuration reads, the access-control comparison, and one authorized
+  synthetic report containing no vulnerability content delivered through the
+  documented route. **No independent-review artifact for these bytes exists in
+  the repository**, so the independent security/documentation review the handoff
+  requires before acceptance is not recorded here and no documented independent
+  PASS is claimed; the owner acceptance binds to the audited bytes above. A later
+  independent review of this channel and its instructions, recorded with
+  reviewer-run evidence, would strengthen the record.
+- Pre-transition anchors, unchanged by this Goal and matching the handoff pins
+  (the owner's Goal 4 acceptance updates): `STATE.md` SHA-256
+  `c7cf85c1062a88c33d5a2b8783ffe03ea6e02af79fac2fbf23880dabed8fadf3` and
+  `ROADMAP.md` SHA-256
+  `6956e2d9a447d6e9f339e74b1908ba622328cf18852069c0753a8a3e87453a3e`.
+- Attribution: the `.gitignore` change removing the stale `.qwen/` entry is an
+  owner working-tree change, confirmed by the owner on 2026-09-20, and lies
+  outside this Goal's scope. The untracked `.commandcode/` directory is session
+  tooling and stays untracked.
 
 ## Selected next Goal and planning decision
 

@@ -115,7 +115,7 @@ The Phase 6 and Phase 7 gates below remain separate release checkpoints, not add
 
 ## Phase acceptance ledger
 
-The following phase checkboxes and release gates retain their acceptance meaning. Closure requires recorded acceptance evidence in STATE; the 2026-09-15 transitions close Phases 1 and 2, the 2026-09-19 transition closes Phase 3 within the accepted contracts, and the 2026-09-20 transition closes Phase 4 within the Goal 4 contract and declared limitations. Phase 5 items are distributed across the owning Goals, and the later release gates remain open.
+The following phase checkboxes and release gates retain their acceptance meaning. Closure requires recorded acceptance evidence in STATE; the 2026-09-15 transitions close Phases 1 and 2, the 2026-09-19 transition closes Phase 3 within the accepted contracts, and the 2026-09-20 transition closes Phase 4 within the Goal 4 contract and declared limitations. The 2026-09-20 acceptance of `20260920-private-vulnerability-reporting` closes one Phase 6 checklist item without closing that phase's release gate or advancing the phase. Phase 5 items are distributed across the owning Goals, and the later release gates remain open.
 
 ## Phase 0 — Foundation
 
@@ -188,10 +188,10 @@ Current acceptance checkpoint and historical Goal evidence: [STATE.md](STATE.md)
 - [ ] Add GitHub CI and reproducible checks.
 - [ ] Publish a Pi, Node, macOS, and Linux compatibility matrix.
 - [ ] Prepare npm packaging and publication safeguards.
-- [ ] Define a private vulnerability-reporting channel.
+- [x] Define a private vulnerability-reporting channel. (Closed 2026-09-20 as the bounded Phase 6 item `20260920-private-vulnerability-reporting`; see [docs/VULNERABILITY-REPORTING-AUDIT.md](docs/VULNERABILITY-REPORTING-AUDIT.md) and [STATE.md](STATE.md).)
 - [ ] Complete security and documentation reviews.
 
-**Release gate:** installation, rollback, compatibility, disclosure, and known limitations are documented and tested; publication requires explicit maintainer action.
+**Release gate:** installation, rollback, compatibility, disclosure, and known limitations are documented and tested; publication requires explicit maintainer action. (The disclosure channel item alone is closed; GitHub CI and reproducible checks, the Pi/Node/macOS/Linux compatibility matrix, npm packaging and publication safeguards, and the release-candidate security/documentation reviews remain open, so this gate is not met and Phase 6 does not advance overall.)
 
 ## Phase 7 — v1.0
 
