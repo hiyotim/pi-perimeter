@@ -2,13 +2,20 @@
 
 Updated: 2026-09-20
 Branch at planning update: `codex/operation-policy-contribution-contract`
-Current branch: `codex/mac-migration-snapshot` (Goal 4 accepted; local commits not pushed)
+Current branch: `main` (`main` == `origin/main`, ahead/behind 0/0; the current local commits are pushed; `codex/mac-migration-snapshot` still exists but is no longer the working branch)
 Goal 3 implementation start baseline: `b9060dad829a92d3699da3b689fe909446a1e810` (accepted Goal 2 corrective pass and Goal 3 research). The subsequent preparation commit changes only STATE, ROADMAP, and IMPLEMENTATION_HANDOFF. Historical Goal 1 planning baseline: `c10e8f384e678c41792937d340d716d25e592e28`.
 Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c276e2154e2910e6`
 
+## Continuation
+
+- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting` and `20260920-hosted-ci-reproducibility` were accepted 2026-09-20; **no new Goal is selected**.
+- Review: **PASS** — the hosted-CI Goal's fresh independent review passed on the reviewed bytes at `1f6b1e7`.
+- Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the Phase 6 release gate, compatibility matrix, packaging/publication safeguards and release-candidate reviews remain open; the unscoped npm name `pi-warden` is taken by another maintainer, so publication under it is blocked; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin/main`.
+- Next: none established — the next bounded Goal must be selected from [ROADMAP.md](ROADMAP.md) by the owner; do not self-select or advance a phase.
+
 ## Current checkpoint
 
-**GOALS 1–4 ACCEPTED; PHASES 1–4 COMPLETE WITHIN THEIR DOCUMENTED GUARANTEES AND DECLARED LIMITATIONS. GOAL 4 (Task `20260919-restricted-networking-e2e-evidence`) WAS IMPLEMENTED AND VERIFIED ON THE DECLARED TARGET, RECEIVED A FRESH INDEPENDENT REVIEW PASS ON 2026-09-20, AND WAS ACCEPTED BY THE OWNER ON 2026-09-20. THE IMPLEMENTATION IS COMMITTED LOCALLY AS `6e6c967eb2483d8d8502cd30456c55bd332cfb12` (`feat: implement restricted network gate with end-to-end evidence`) ON `codex/mac-migration-snapshot`; THE BRANCH IS AHEAD OF ORIGIN BY FOUR COMMITS AND NOTHING IS PUSHED, PUBLISHED, OR INSTALLED INTO A REAL PROFILE. NO NEW GOAL IS SELECTED.**
+**GOALS 1–4 ACCEPTED; PHASES 1–4 COMPLETE WITHIN THEIR DOCUMENTED GUARANTEES AND DECLARED LIMITATIONS. GOAL 4 (Task `20260919-restricted-networking-e2e-evidence`) WAS IMPLEMENTED AND VERIFIED ON THE DECLARED TARGET, RECEIVED A FRESH INDEPENDENT REVIEW PASS ON 2026-09-20, AND WAS ACCEPTED BY THE OWNER ON 2026-09-20. THE IMPLEMENTATION IS COMMITTED AS `6e6c967eb2483d8d8502cd30456c55bd332cfb12` (`feat: implement restricted network gate with end-to-end evidence`) AND NOW SITS ON `main`, WHICH IS LEVEL WITH `origin/main` (AHEAD/BEHIND 0/0) AND PUSHED; NOTHING IS PUBLISHED OR INSTALLED INTO A REAL PROFILE. NO NEW GOAL IS SELECTED.**
 
 Owner acceptance (2026-09-20): the owner authorized recording the Goal 4
 acceptance after the fresh independent review. Acceptance binds to
@@ -18,8 +25,9 @@ entries), whose assertions passed in the review, and to the Goal 3/Goal 2
 manifest checks over the preserved bytes. The implementation exists as local
 commit `6e6c967eb2483d8d8502cd30456c55bd332cfb12`; the earlier "nothing is
 committed" wording in this file described the pre-commit executor checkpoint
-and is superseded by this record. Push, publication, and real-profile
-installation remain unauthorized.
+and is superseded by this record. At that acceptance, push, publication, and
+real-profile installation were not yet authorized; the later 2026-09-20 owner
+decision pushed `main` (see the repository transition below).
 
 Fresh independent review (2026-09-20, fresh context, exact HEAD
 `6e6c967eb2483d8d8502cd30456c55bd332cfb12`, read-only): **PASS, no blocking
@@ -287,7 +295,9 @@ platform skip, typecheck PASS, `git diff --check` PASS, and a fresh independent
 review PASS with no findings after the fallback removal. This decision accepts
 the declared variant-B boundary; it does not add descendant-termination,
 atomic-tree-snapshot, B3 same-user-writer, or mount-isolation guarantees.
-Publication, installation into a real Pi profile, and push remain unauthorized.
+At that transition, publication, installation into a real Pi profile, and push
+were not yet authorized; the later 2026-09-20 owner decision pushed `main` (see
+the repository transition below).
 Goal 4 is selected for a separate autonomous implementation handoff based on
 the accepted commit; no Goal 4 implementation is included in this snapshot.
 
@@ -377,13 +387,19 @@ red on the Goal 2 snapshot. Establishing the current hosted state on a clean
 checkout is the first task of the selected Goal; no reproducibility claim may be
 made before that evidence exists.
 
-## Hosted CI Goal: implementation and independent review (2026-09-20)
+## Hosted CI Goal: accepted (2026-09-20)
 
 Task ID: `20260920-hosted-ci-reproducibility`. Status: **implemented,
-hosted-verified, and independently reviewed; owner acceptance pending.** This
-record is the acceptance-transition record that
+hosted-verified, independently reviewed, and accepted by the owner on 2026-09-20;
+the Phase 6 checklist item "Add GitHub CI and reproducible checks" is closed.**
+This record is the acceptance-transition record that
 [docs/CI-EVIDENCE.md](docs/CI-EVIDENCE.md) §2 points at, and it carries the hosted
-run for the reviewed snapshot. Nothing is published, released, or installed.
+run for the reviewed snapshot. Acceptance binds to
+[docs/ci-hashes.json](docs/ci-hashes.json), SHA-256
+`796fcf2b8b7a928ab045e4e38ea886f3fb1afc67d618755bc125722796d52c1e`, and to the
+fresh independent review PASS of the reviewed bytes at `1f6b1e7`. Nothing is
+published, released, or installed, and the acceptance does not close the Phase 6
+release gate or advance any other Phase 6 item.
 
 ### What changed
 
@@ -484,7 +500,7 @@ On 2026-09-13 the owner authorized a planning-only replacement of the remaining 
 1. **Configuration authorization** — complete configuration loading, validation, source/operation association, and composition with accepted read/write/edit baselines. **ACCEPTED; UNENFORCED.** Task ID: `20260913-configuration-authorization`.
 2. **Pi file gates and scoped approvals** — **ACCEPTED on 2026-09-15; Phase 2 complete within the demonstrated contract and limitations.** Task ID: `20260915-pi-file-gates-scoped-approvals`. The fresh independent PASS covers the corrective-pass artifacts identified below; owner acceptance is the subsequent decision recorded in this transition.
 3. **Sandboxed shell with network closed** — **ACCEPTED on 2026-09-19 within the variant-B contract and declared limitations; Phase 3 complete.** Task ID: `20260915-sandboxed-shell-network-closed`. The implementation adds a bounded shell grammar and risk model, single-use fully bound shell approvals, a deny-default Seatbelt profile with closed networking, a native launcher that constructs the child descriptor envelope, per-object workspace projection with identity binding, and descriptor-bound export through the native helper. Evidence, accepted bytes and declared limitations are in [docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md) and the manifest bound above.
-4. **Restricted networking and end-to-end security evidence** — **ACCEPTED on 2026-09-20; Phase 4 complete.** Task ID: `20260919-restricted-networking-e2e-evidence`. The implementation adds a per-invocation network broker with destination-exact pinned enforcement on the accepted Goal 3 closed-network shell route, the optional trusted `network` allowlist with strict project-source monotonicity, invocation-scoped destination approvals bound into the shell grant, and the end-to-end evidence. The fresh independent review PASS and the owner acceptance bind to [docs/network-gate-hashes.json](docs/network-gate-hashes.json), SHA-256 `152c7fa25fe2b95ad5d61005e677eabf341ef269884653c879551ad14385b972`; the implementation is local commit `6e6c967eb2483d8d8502cd30456c55bd332cfb12`, not pushed. Declared limitations (§12 of the contract) remain the acceptance boundary.
+4. **Restricted networking and end-to-end security evidence** — **ACCEPTED on 2026-09-20; Phase 4 complete.** Task ID: `20260919-restricted-networking-e2e-evidence`. The implementation adds a per-invocation network broker with destination-exact pinned enforcement on the accepted Goal 3 closed-network shell route, the optional trusted `network` allowlist with strict project-source monotonicity, invocation-scoped destination approvals bound into the shell grant, and the end-to-end evidence. The fresh independent review PASS and the owner acceptance bind to [docs/network-gate-hashes.json](docs/network-gate-hashes.json), SHA-256 `152c7fa25fe2b95ad5d61005e677eabf341ef269884653c879551ad14385b972`; the implementation is commit `6e6c967eb2483d8d8502cd30456c55bd332cfb12`, since pushed to `origin/main` by the 2026-09-20 repository transition. Declared limitations (§12 of the contract) remain the acceptance boundary.
 
 The Goal scopes, acceptance criteria, exclusions, and checkpoints are fixed in [ROADMAP.md](ROADMAP.md). Goal 2 covers all six supported file tools, scoped approvals, complete resource/effect mediation, enforcement-time identity, protected control-plane resources, unknown-tool/shell blocking, and package/compatibility verification in one cycle. Its concrete integration and approval design must be explicit before dependent code and reviewed with the resulting implementation. No permission-widening configuration or weakening of accepted policy/provenance contracts is authorized.
 
