@@ -377,6 +377,106 @@ red on the Goal 2 snapshot. Establishing the current hosted state on a clean
 checkout is the first task of the selected Goal; no reproducibility claim may be
 made before that evidence exists.
 
+## Hosted CI Goal: implementation and independent review (2026-09-20)
+
+Task ID: `20260920-hosted-ci-reproducibility`. Status: **implemented,
+hosted-verified, and independently reviewed; owner acceptance pending.** This
+record is the acceptance-transition record that
+[docs/CI-EVIDENCE.md](docs/CI-EVIDENCE.md) §2 points at, and it carries the hosted
+run for the reviewed snapshot. Nothing is published, released, or installed.
+
+### What changed
+
+- `.github/workflows/ci.yml`: `actions/checkout` and `actions/setup-node` pinned to
+  the commits their release tags point at (`v7.0.1`, `v7.0.0`) with
+  `permissions: contents: read` kept; `workflow_dispatch` added; the check runs
+  under `set -o pipefail` so a failing suite cannot be masked by the log pipe;
+  a final step asserts the declared test counts.
+- `scripts/assert-test-outcome.mjs`, `test/ci-test-budget.json`,
+  `test/ci-budget.test.ts`, `test/ci-manifest.test.ts`, `docs/CI-EVIDENCE.md`,
+  `docs/ci-hashes.json`: exact per-platform count assertion (fail closed on a
+  missing, inconsistent, or undeclared summary and on a malformed budget), the
+  declared `linux` budget `tests 373, fail 0, skipped 54`, behavioral tests over
+  isolated temporary fixtures, and the evidence record.
+- `test/hash-manifest.test.ts`: carries `CHANGED_IN_HOSTED_CI =
+  {".github/workflows/ci.yml"}`, skips that historical entry, and asserts the split
+  is exact.
+
+### Accepted bytes changed
+
+| Artifact | Accepted bytes | Current bytes |
+| --- | --- | --- |
+| `.github/workflows/ci.yml` | `891d1c476016c632b77ee7b590afe867c046b6139102f4300b0ecbe5a63c3d63` (still recorded in `docs/file-gate-hashes.json`) | `64d7f1f01db02d2e341d45303b14cd34083216842b559d3fda4062b5d65acf55` |
+| `test/hash-manifest.test.ts` | `83d89f7a5ef5a2775fe3357a2fdfdcf9d2d8726c2423289a4502418535f12a03` | `5ce61ec3127c3bb7073cd92bc2abbc259515a936a339add5b9b83907230e26c3` |
+| `docs/file-gate-hashes.json` | unchanged | `9698efea51aaa47a47679fa0520d395cbcc3d5282e4e2b7131106a86da13fd1d` |
+
+The Goal 2 manifest keeps its historical entry for the workflow, per the
+`CHANGED_IN_GOAL_4` precedent; the current bytes are bound by
+[docs/ci-hashes.json](docs/ci-hashes.json), SHA-256
+`796fcf2b8b7a928ab045e4e38ea886f3fb1afc67d618755bc125722796d52c1e`, and enforced
+by `test/ci-manifest.test.ts`. The Goal 2 acceptance anchor `7aa0e786…` had
+already been superseded by Goal 3; the evidence record states that rather than
+silently replacing it.
+
+### Hosted evidence
+
+- Run `34985125954` (2026-09-15, `664871d`): failure, 209/210, the Goal 2 manifest
+  test. Previously unrecorded; this Goal records the correction.
+- Runs `35523982904` (`2fa89b6`), `35524137666` (`964b408`), `35524360355`
+  (`a507be4`), `35525006502` (`f8f7257`), `35525523512` (`1f6b1e7`): success.
+- The assertion step of run `35525523512` reported, on the hosted Linux runner:
+  `pi-warden CI count assertion passed for linux: tests 373, pass 319, fail 0,
+  skipped 54, todo 0, cancelled 0 (declared tests 373, fail 0, skipped 54)`. This is
+  executor-observed output from the hosted run, not reviewer evidence.
+
+### Independent review
+
+Three reviewer passes ran in a separate context on model `z-ai/glm-5.3-flash`,
+read-only, and each ran its own checks rather than trusting this record:
+
+1. Mechanism review on `f8f7257`: **PASS** with one medium finding (the budget used
+   a floor, so a test could disappear silently, and the docstring/evidence text
+   overstated the protection) and three low findings (`todo`/`cancelled` missing
+   from the arithmetic, missing malformed-budget and unreadable-log regressions,
+   and the undocumented coupling to Node 22's TAP shape). Reviewer-run evidence
+   included synthetic-log mutation checks and a deletion probe.
+2. Evidence review on `f8f7257`: **PASS** with one medium finding (the record's
+   present-tense claim that later runs "are recorded" in STATE before any such
+   record existed) and one low finding (the hosted-macOS sentence was broader than
+   the code). Reviewer-run evidence included `gh run view` checks of the run
+   history, skip-line counts, and hash recomputation.
+3. Fresh review of the fix delta on `1f6b1e7`: **PASS**, all five findings closed,
+   no new findings. This reviewer could not reach the network, so it verified the
+   manifest hashes and the delta itself but not the hosted runs; those remain
+   executor-observed as recorded above.
+
+An earlier reviewer pass on `f8f7257` stopped at its turn limit without a verdict
+and is therefore not evidence. Its partial observation about the skip composition
+was verified by the executor against the hosted log (network-effects 12,
+quiescence 16, seatbelt-profile 6, shell-containment 20) and corrected the record.
+All findings were fixed inside this Goal; because the fixes changed bytes, the
+fresh `1f6b1e7` review was obtained instead of transferring the earlier PASS.
+
+Executor-run local evidence for the reviewed snapshot: `npm run check` PASS
+(typecheck plus 373 tests, 372 pass, 0 fail, 1 declared platform skip) and
+`git diff --check` clean.
+
+### Declared limits
+
+- Hosted CI covers the platform-independent suite on Linux only. No macOS job is
+  added: the tests' skip predicates are their own `process.platform === "darwin"`
+  checks, while containment additionally requires the pinned Darwin major and
+  `sandbox-exec` identity, so a hosted runner cannot pass the containment suites.
+  Hosted CI supplies no containment evidence.
+- The assertion verifies counts, not test identities; a rename or a one-for-one
+  swap inside the same counts is not detected.
+- The outstanding Goal 2 follow-up (runtime evidence for the Class 1
+  `/proc/self/fd` execute-time path) is **not** closed here and no Linux or other
+  platform support claim is made; the record states the question instead.
+- One Phase 6 checklist item is closed by this Goal on acceptance; the Phase 6
+  release gate, the compatibility matrix, packaging, and the release-candidate
+  reviews remain open.
+
 ## Selected next Goal and planning decision
 
 On 2026-09-13 the owner authorized a planning-only replacement of the remaining micro-Goal queue with these four implementation Goals:
