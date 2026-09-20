@@ -9,8 +9,8 @@ Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c2
 ## Continuation
 
 - Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting`, `20260920-hosted-ci-reproducibility` and `20260920-compatibility-matrix` were accepted 2026-09-20, as was the Phase 5 ledger reconciliation; **no further Goal is selected**.
-- Review: **PASS** — fresh independent reviews passed at `1f6b1e7` (hosted CI), `b81ae5d` (compatibility matrix) and `b9ba949` (ledger reconciliation); the reconciliation's first pass was a FAIL whose findings are fixed and closed.
-- Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the compatibility matrix reports verified rows only and commits to no support; the Phase 5 release gate is reconciled but not closed; the Phase 6 release gate, packaging/publication safeguards and release-candidate reviews remain open; the unscoped npm name `pi-warden` is taken by another maintainer, so publication under it is blocked; `20260920-private-vulnerability-reporting` is the one accepted item without a recorded independent review; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin/main`.
+- Review: **PASS** — fresh independent reviews passed at `1f6b1e7` (hosted CI), `b81ae5d` (compatibility matrix), `b9ba949` (ledger reconciliation) and `9a99881` (the private-vulnerability-reporting item, closing the audit-trail gap); the reconciliation's first pass was a FAIL whose findings are fixed and closed. Every accepted item now has a recorded independent review.
+- Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the compatibility matrix reports verified rows only and commits to no support; the Phase 5 release gate is reconciled but not closed; the Phase 6 release gate, packaging/publication safeguards and release-candidate reviews remain open; the unscoped npm name `pi-warden` is taken by another maintainer, so publication under it is blocked; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin/main`.
 - Next: none established — the next bounded Goal must be selected from [ROADMAP.md](ROADMAP.md) by the owner; do not self-select or advance a phase.
 
 ## Current checkpoint
@@ -340,9 +340,9 @@ release gate.
   documented route. **No independent-review artifact for these bytes exists in
   the repository**, so the independent security/documentation review the handoff
   requires before acceptance is not recorded here and no documented independent
-  PASS is claimed; the owner acceptance binds to the audited bytes above. A later
-  independent review of this channel and its instructions, recorded with
-  reviewer-run evidence, would strengthen the record.
+  PASS is claimed; the owner acceptance binds to the audited bytes above. That gap
+  was closed later the same day by the review recorded below, which changed none of
+  the accepted bytes.
 - Pre-transition anchors, unchanged by this Goal and matching the handoff pins
   (the owner's Goal 4 acceptance updates): `STATE.md` SHA-256
   `c7cf85c1062a88c33d5a2b8783ffe03ea6e02af79fac2fbf23880dabed8fadf3` and
@@ -352,6 +352,32 @@ release gate.
   owner working-tree change, confirmed by the owner on 2026-09-20, and lies
   outside this Goal's scope. The untracked `.commandcode/` directory is session
   tooling and stays untracked.
+
+### Independent review (2026-09-20, closes the gap recorded above)
+
+A fresh independent reviewer pass ran in a separate context on model
+`z-ai/glm-5.3-flash`, read-only, against the current state of this item at commit
+`9a99881`. **Verdict: PASS, no blocking findings.**
+
+Reviewer-run evidence (live, not read from this record): `gh api` confirmed the
+repository is public with private vulnerability reporting `{"enabled":true}`; the
+advisory list contains exactly one entry whose `state`, `published_at`,
+`created_at` and summary match the audit field for field; collaborators and org
+members each number one, matching the intended-recipient claim; the same advisory
+returns `404` unauthenticated while the authenticated list returns it, matching
+the access-control comparison. The reviewer also re-derived the pinned bytes
+(`SECURITY.md` `7ca71e08…`, `CONTRIBUTING.md` `c2b91b03…`, the audit's accepted
+revision `01cc3988…`), grepped the whole repository for wording that still claims
+the channel is unavailable (none: `README.md`, `CONTRIBUTING.md`, `ROADMAP.md`,
+`STATE.md` and `docs/` all agree), and confirmed the disclosure scope matches the
+accepted Goals 1–4 limits without promising coverage the project lacks.
+
+It reported two cosmetic observations, recorded without any change: `ROADMAP.md`'s
+prospective phrasing inside the release-gate paragraph is made unambiguous by the
+status annotations on the checklist entry, and the audit's self-pinned
+pre-acceptance hash cannot be re-derived from `HEAD` by design (the accepted
+revision hash does verify). No accepted byte was changed by this review, so the
+original acceptance binding above remains intact.
 
 ## Repository transition to main and hosted-CI Goal selection (2026-09-20)
 
