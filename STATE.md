@@ -8,10 +8,10 @@ Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c2
 
 ## Continuation
 
-- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting`, `20260920-hosted-ci-reproducibility` and `20260920-compatibility-matrix` were accepted 2026-09-20, as was the Phase 5 ledger reconciliation; **no further Goal is selected**.
-- Review: **PASS** — fresh independent reviews passed at `1f6b1e7` (hosted CI), `b81ae5d` (compatibility matrix), `b9ba949` (ledger reconciliation) and `9a99881` (the private-vulnerability-reporting item, closing the audit-trail gap); the reconciliation's first pass was a FAIL whose findings are fixed and closed. Every accepted item now has a recorded independent review.
-- Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the compatibility matrix reports verified rows only and commits to no support; the Phase 5 release gate is reconciled but not closed; the Phase 6 release gate, packaging/publication safeguards and release-candidate reviews remain open; the unscoped npm name `pi-warden` is taken by another maintainer, so publication under it is blocked; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin/main`.
-- Next: none established — the next bounded Goal must be selected from [ROADMAP.md](ROADMAP.md) by the owner; do not self-select or advance a phase.
+- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting`, `20260920-hosted-ci-reproducibility` and `20260920-compatibility-matrix` were accepted 2026-09-20, as was the Phase 5 ledger reconciliation; `20260920-npm-packaging` is implemented and reviewed with **owner acceptance pending**, and the repository transfer to the renamed personal location is the outstanding owner action; **no further Goal is selected**.
+- Review: **PASS** — fresh independent reviews passed at `1f6b1e7` (hosted CI), `b81ae5d` (compatibility matrix), `b9ba949` (ledger reconciliation), `9a99881` (the private-vulnerability-reporting item, closing its audit-trail gap) and `abdbf8d` (packaging, after its `ea13956` medium finding was fixed); the reconciliation's first pass was a FAIL whose findings are fixed and closed. Every accepted item has a recorded independent review.
+- Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the compatibility matrix reports verified rows only; the Phase 5 release gate is reconciled but not closed; `pi-perimeter` is unpublished with `private: true`, its `repository`/`homepage`/`bugs` and the PVR route still name `github.com/pi-warden/pi-warden` until the transfer, and provenance is not wired up; the Phase 6 release gate, packaging/publication safeguards sign-off and release-candidate reviews remain open; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin/main`.
+- Next: owner acceptance of `20260920-npm-packaging`, then the owner's repository transfer, then the separate post-transfer pass (URLs, PVR route, local `origin`, hosted references, PVR re-check, local and hosted checks, fresh review); afterwards the next bounded Goal must be selected from [ROADMAP.md](ROADMAP.md) by the owner — do not self-select or advance a phase.
 
 ## Current checkpoint
 
@@ -639,6 +639,78 @@ this record.
 Hosted runs for both commits succeeded: `35532776558` for `e109a62` and
 `35533015720` for `b9ba949`. No budget or manifest change was needed, because this
 item adds no tests.
+
+## npm packaging Goal: implementation and independent review (2026-09-20)
+
+Task ID: `20260920-npm-packaging`. Status: **implemented, hosted-verified, and
+independently reviewed; owner acceptance pending.** Nothing is published, no version
+exists, and no release gate is closed.
+
+### What changed
+
+- **Distribution rename `pi-warden` → `pi-perimeter`** on the distribution surface
+  only: `package.json` name plus the lockfile root, `README.md`, `CONTRIBUTING.md`,
+  `AGENTS.md`, `SECURITY.md`, the `LICENSE` holder, the distribution row in
+  [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), and the package-lifecycle identity
+  assertions (tarball name, install paths, installed manifest).
+- **Publishable metadata and safeguards:** `repository`, `homepage`, `bugs`,
+  `publishConfig` (`access: public`, `provenance: true`), and
+  [docs/PACKAGING.md](docs/PACKAGING.md) — identity, where the former name is retained
+  and why, packaged contents, publication safeguards and the release checklist.
+  `private: true` stays, so npm refuses to publish; no lifecycle scripts exist; CI never
+  publishes; `native/` is out of `files`, so a locally compiled helper cannot enter the
+  tarball. The dry run reports 81 files, 325.8 kB packed and 1.1 MB unpacked.
+- **Boundary enforcement:** `test/packaging-identity.test.ts` fails on a new old-name
+  occurrence outside the declared retention list, on an existing declared file that lost
+  the name (absent build artifacts are tolerated), on an unqualified identity mention in
+  a distribution file, and on a reverted package identity. Runtime identifiers (the
+  helper binary, `PIWARDEN_*`, policy paths, reason prefixes) and the accepted,
+  hash-bound contracts and audits keep the former name deliberately; renaming those would
+  require re-verifying the containment and network evidence.
+- **Changed accepted bytes:** `package.json`, `README.md`,
+  `docs/COMPATIBILITY.md`, `test/ci-test-budget.json` (declared count 376 → 382),
+  `test/package-lifecycle.test.ts`, and five earlier manifest tests now carry
+  `CHANGED_IN_PACKAGING`. No earlier manifest was rewritten;
+  [docs/packaging-hashes.json](docs/packaging-hashes.json) binds the current bytes
+  (18 entries).
+
+### Hosted evidence
+
+Runs `35534062740` (`ea13956`) and `35534438438` (`abdbf8d`) succeeded with the
+assertion reporting `tests 382, pass 328, fail 0, skipped 54` on the hosted Linux
+runner. Run `35534002828` (`6a0ccf3`) failed because a clean checkout has no compiled
+helper and the identity scan treated a declared-but-absent build artifact as rot; the
+scan now tolerates absence, verified by running the suite with the artifacts moved
+aside. These are executor-observed results.
+
+### Independent review
+
+Two reviewer passes ran in a separate context on model `z-ai/glm-5.3-flash`,
+read-only, and both ran their own checks:
+
+1. Review of `ea13956`: **PASS** with one medium finding — the `files` allowlist
+   contained `native/`, so a locally built `native/piwarden-helper` and its build
+   manifest really entered the tarball, contradicting the documented guarantee. The
+   reviewer reproduced both defeat vectors of the identity test and confirmed no `src/`
+   change.
+2. Fresh review of the fix delta on `abdbf8d`: **PASS**, the finding closed for real
+   (`npm pack --dry-run` shows the C source but neither build artifact, despite both
+   existing on disk), no regression, with one low observation recorded without a change:
+   the document's packed size reads 325.8 kB while the dry run reproducibly prints
+   325.9 kB on the reviewer's run — gzip/version drift at 0.1 kB granularity, already
+   framed as a run snapshot.
+
+### Limits and outstanding owner action
+
+- Nothing is published; provenance is not wired up (it needs a release workflow with
+  `id-token: write`), and `peerDependencies: "*"` remains a declared, not a verified,
+  range.
+- The repository has **not** moved: `repository`, `homepage`, `bugs` and the reporting
+  route in `SECURITY.md` deliberately still describe `github.com/pi-warden/pi-warden`.
+  The owner will transfer it to a personal account renamed `pi-perimeter`; a separate
+  post-transfer pass must update those URLs, the PVR route, the local `origin`, any
+  remaining hosted references to the old owner/repo, re-check PVR, and re-run the local
+  and hosted checks with a fresh review.
 
 ## Selected next Goal and planning decision
 
