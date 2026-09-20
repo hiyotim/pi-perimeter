@@ -8,7 +8,7 @@ Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c2
 
 ## Continuation
 
-- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting`, `20260920-hosted-ci-reproducibility` and `20260920-compatibility-matrix` were accepted 2026-09-20, and the Phase 5 ledger reconciliation is implemented and reviewed with **owner acceptance pending**; no further Goal is selected.
+- Current: Goals 1–4 are accepted; the bounded Phase 6 items `20260920-private-vulnerability-reporting`, `20260920-hosted-ci-reproducibility` and `20260920-compatibility-matrix` were accepted 2026-09-20, as was the Phase 5 ledger reconciliation; **no further Goal is selected**.
 - Review: **PASS** — fresh independent reviews passed at `1f6b1e7` (hosted CI), `b81ae5d` (compatibility matrix) and `b9ba949` (ledger reconciliation); the reconciliation's first pass was a FAIL whose findings are fixed and closed.
 - Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the compatibility matrix reports verified rows only and commits to no support; the Phase 5 release gate is reconciled but not closed; the Phase 6 release gate, packaging/publication safeguards and release-candidate reviews remain open; the unscoped npm name `pi-warden` is taken by another maintainer, so publication under it is blocked; `20260920-private-vulnerability-reporting` is the one accepted item without a recorded independent review; nothing is published or installed into a real profile, while the repository content itself is pushed to `origin/main`.
 - Next: none established — the next bounded Goal must be selected from [ROADMAP.md](ROADMAP.md) by the owner; do not self-select or advance a phase.
@@ -577,12 +577,12 @@ rewriting published history.
 - The Class 1 `/proc/self/fd` runtime-evidence question stays open, and no Linux or
   Windows support follows from this Goal.
 
-## Phase 5 ledger reconciliation (2026-09-20)
+## Phase 5 ledger reconciliation: accepted (2026-09-20)
 
-Task ID: `20260920-ledger-reconciliation`. Status: **implemented and
-independently reviewed; owner acceptance pending.** Documentation-only: no
-runtime, policy, approval, sandbox, network, test, budget, or manifest artifact
-changed, and no Goal or phase was advanced.
+Task ID: `20260920-ledger-reconciliation`. Status: **accepted by the owner on
+2026-09-20.** Documentation-only: no runtime, policy, approval, sandbox, network,
+test, budget, or manifest artifact changed, and no Goal or phase was advanced. The
+Phase 5 release gate remains open and remains an owner decision.
 
 - The six Phase 5 hardening checklist items were distributed across the owning
   Goals; each is now ticked in [ROADMAP.md](ROADMAP.md) with the artifact that
