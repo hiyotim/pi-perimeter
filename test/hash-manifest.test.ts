@@ -17,6 +17,15 @@ import { test } from "node:test";
 
 const MANIFEST_PATH = "docs/file-gate-hashes.json";
 
+/**
+ * Artifacts whose bytes the hosted-CI Goal
+ * (`20260920-hosted-ci-reproducibility`) deliberately changed with fresh
+ * evidence; their entries in this manifest are historical accepted bytes, not
+ * working-tree assertions. docs/CI-EVIDENCE.md records the old and new hashes,
+ * and docs/ci-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_HOSTED_CI = new Set<string>([".github/workflows/ci.yml"]);
+
 const COVERED_FILES = [
   "package.json",
   ".github/workflows/ci.yml",
@@ -43,6 +52,7 @@ test("the Goal 2 artifact hash manifest matches the final working tree", async (
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if (CHANGED_IN_HOSTED_CI.has(file)) continue; // historical bytes; fresh evidence binds the current tree
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });
@@ -56,4 +66,30 @@ test("the Goal 2 artifact hash manifest matches the final working tree", async (
       .map((entry) => `${entry.file}: current ${entry.current} recorded ${entry.expected}`)
       .join("\n")}`,
   );
+});
+
+test("the hosted-CI Goal changed exactly the CI workflow in this manifest", () => {
+  // The hosted-CI Goal's own artifacts (the accounting script, its budget and
+  // tests, and the evidence record) are new files outside this Goal 2
+  // manifest's scope; docs/ci-hashes.json carries them.
+  const hostedCiOnly = [
+    "scripts/assert-test-outcome.mjs",
+    "test/ci-test-budget.json",
+    "test/ci-budget.test.ts",
+    "test/ci-manifest.test.ts",
+    "docs/CI-EVIDENCE.md",
+    "docs/ci-hashes.json",
+  ];
+  for (const file of CHANGED_IN_HOSTED_CI) {
+    assert.ok(
+      COVERED_FILES.includes(file as (typeof COVERED_FILES)[number]),
+      `${file} must be in the Goal 2 manifest`,
+    );
+  }
+  for (const file of hostedCiOnly) {
+    assert.ok(
+      !COVERED_FILES.includes(file as (typeof COVERED_FILES)[number]),
+      `${file} is hosted-CI-only and must not be in the Goal 2 manifest`,
+    );
+  }
 });

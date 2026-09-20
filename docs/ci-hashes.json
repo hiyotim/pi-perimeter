@@ -1,0 +1,9 @@
+{
+  ".github/workflows/ci.yml": "64d7f1f01db02d2e341d45303b14cd34083216842b559d3fda4062b5d65acf55",
+  "scripts/assert-test-outcome.mjs": "64173c7126b795140ad93cceda0f94c32f00010448d6a619bda947694f81b4f6",
+  "test/ci-test-budget.json": "d30e3d56a88c6c7eff19436e20f90c5bc839b8191f6e3b4918b9cf3463eb7cf4",
+  "test/ci-budget.test.ts": "1cd5ee5858466821fe2ce9249f65122b56628a637a3f89b15174d3fe1217e079",
+  "test/ci-manifest.test.ts": "4f3550f1d4d6e69e7e00dda9f0f130d3723bb819a559e44950adfbecbcad06ef",
+  "test/hash-manifest.test.ts": "5ce61ec3127c3bb7073cd92bc2abbc259515a936a339add5b9b83907230e26c3",
+  "docs/CI-EVIDENCE.md": "1edfefd6ad61441df51939d94090d2749939472e136fa12f172777288f7a446f"
+}
