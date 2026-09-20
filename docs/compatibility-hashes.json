@@ -1,7 +1,8 @@
 {
-  "docs/COMPATIBILITY.md": "aa13c7a19c133f60e25934783e5a542bb5137b4502bb59f9adc51483935f8b0b",
+  "docs/COMPATIBILITY.md": "329ac24619e125016fb29b6caabaa312171cc1a502eabb5e7a8073b1149e8ca1",
+  "docs/CI-EVIDENCE.md": "127f4ac1477e9c577302f5e26898a0318153bb55bcacd6fbdd3816b6471508f3",
   "README.md": "2cfc02a610041651513dc8d3f97479f82e1ef35d1b739c53770a66ec42a6a976",
   "test/ci-test-budget.json": "ea1e11ce5262337af8f9a26f6e8d32572ceb7ff47c130fbec2490364dc126049",
-  "test/ci-manifest.test.ts": "415f819d6d263b467c35b89d7c09bc24bfae05ec9b8585cd98c896abe847ad6d",
-  "test/compatibility-manifest.test.ts": "ce9f028031c727e1ae60e3467f83685261e513b73a3940063f181c726e03d21e"
+  "test/ci-manifest.test.ts": "3fc8de374f42f0726e9e3f8d03282b6db22c32a40a226f82e75fa3e34cd75012",
+  "test/compatibility-manifest.test.ts": "efab3681eeb3485ceee2dd02c58d3f15559d0688f12be497c1bde2abf954f3e0"
 }

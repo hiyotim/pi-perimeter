@@ -14,17 +14,19 @@ the current security status.
 - **Verified** — the exact combination was exercised, and the evidence that demonstrates
   it is named in the same row. A verified row proves the behavior of the suites and
   artifacts recorded there, not general compatibility.
-- **Unsupported (fail-closed)** — the code refuses this path by design; the refusal is
-  the intended behavior, not a missing feature of this matrix.
+- **Unsupported or refused** — excluded from the declared range, or refused by the code
+  by design. Where the exclusion is only declarative rather than enforced (for example
+  an `engines` floor), the cell says so. Either way the status is intended behavior, not
+  a missing feature of this matrix.
 - **Untested** — no evidence exists. Untested is not a claim of failure, and it is not a
   claim of support.
 
 ## Matrix
 
-| Dimension | Verified | Unsupported (fail-closed) | Untested |
+| Dimension | Verified | Unsupported or refused | Untested |
 | --- | --- | --- | --- |
 | Pi (`@earendil-works/pi-coding-agent`) | `0.84.4` | — | every other version, including the locally installed `0.86.1` |
-| Node | `26.8.1` (macOS target, full local suite) and `22.19.0` (hosted Linux CI, platform-independent suite) | below the declared `engines` floor `>=22.19.0` | every other version in `>=22.19.0` |
+| Node | `26.8.1` (macOS target, full local suite) and `22.19.0` (hosted Linux CI, platform-independent suite) | below the declared `engines` floor `>=22.19.0` (declared only, not enforced at runtime) | every other version in `>=22.19.0` |
 | OS / architecture | macOS 27.0 (build `26A428`), arm64 | any other Darwin major, any other architecture, and Linux for the shell and file-gate routes | Linux for the platform-independent policy suite (exercised, not a support claim); Windows in every respect |
 | Distribution | none | installing `npm:pi-warden` installs another maintainer's package | a future scoped or renamed package |
 
@@ -62,8 +64,12 @@ declared count assertion pass on the platform-independent suites; the run identi
 counts are recorded in [docs/CI-EVIDENCE.md](CI-EVIDENCE.md). That run is a check of the
 policy suites, not containment evidence, and it is not a Linux support claim.
 
-**Unsupported (fail-closed):** Node below the declared floor `>=22.19.0`, which
-`engines` states.
+**Below the declared floor:** `engines` states `>=22.19.0`. That declaration is
+advisory, not enforced: npm warns unless the consumer enables `engine-strict`, and Node
+itself does not check it at runtime. No runtime version check exists in this code, so an
+older Node is unsupported by declaration rather than refused — unlike every other
+refusal in this matrix, which is backed by a mechanism (`verifyPlatform`,
+`scripts/build-native.mjs`, or a test's own platform condition).
 
 **Untested:** `22.19.0 < version ≠ 26.8.1` — the declared floor is broader than what has
 been exercised, and no evidence covers the versions between.

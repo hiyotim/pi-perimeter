@@ -86,10 +86,13 @@ green. The declaration is exact rather than a floor, because a floor would let a
 silently disappear as long as the total stayed above it; every change to the collected
 set or the skip set therefore needs an explicit budget update and review.
 
-The current `linux` budget is `tests 373, fail 0, skipped 54`. The hosted runs listed
-above reported 369 collected tests because they ran before this Goal's review fixes
-added four regression tests in `test/ci-budget.test.ts`; the exact-count rule means that
-change had to be declared, which is the intended behaviour.
+The `linux` budget was `tests 373, fail 0, skipped 54` while this Goal's runs above were
+recorded; the compatibility-matrix Goal later raised it to `tests 376, fail 0, skipped 54`
+because it added three tests, and `docs/compatibility-hashes.json` binds that revision
+while this file's entry in `docs/ci-hashes.json` stays historical. The earlier runs
+reported 369 collected tests because they predate four further regression tests added by
+this Goal's review fixes; the exact-count rule means each such change has to be declared,
+which is the intended behaviour.
 The assertion is coupled to Node's TAP reporter, which the pinned CI Node (22.19.0)
 selects for a piped, non-TTY stdout; a different summary shape (for example the `ℹ`
 lines a newer Node prints locally) refuses the run instead of guessing, so the assertion

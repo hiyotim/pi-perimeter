@@ -29,6 +29,7 @@ const MANIFEST_PATH = "docs/ci-hashes.json";
 const CHANGED_IN_COMPATIBILITY = new Set<string>([
   "test/ci-test-budget.json",
   "test/ci-manifest.test.ts",
+  "docs/CI-EVIDENCE.md",
 ]);
 
 const COVERED_FILES = [

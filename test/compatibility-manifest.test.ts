@@ -20,6 +20,7 @@ const MANIFEST_PATH = "docs/compatibility-hashes.json";
 
 const COVERED_FILES = [
   "docs/COMPATIBILITY.md",
+  "docs/CI-EVIDENCE.md",
   "README.md",
   "test/ci-test-budget.json",
   "test/ci-manifest.test.ts",
@@ -52,10 +53,10 @@ test("the compatibility manifest records every artifact with its hosted-CI prove
     assert.ok(typeof manifest[file] === "string" && manifest[file].length === 64, `${file} must be recorded`);
   }
   assert.equal(Object.keys(manifest).length, COVERED_FILES.length);
-  // The two artifacts this Goal changed inside the hosted-CI manifest must carry
-  // a fresh identity, so the historical entries there cannot be mistaken for the
+  // The artifacts this Goal changed inside the hosted-CI manifest must carry a
+  // fresh identity, so the historical entries there cannot be mistaken for the
   // working tree, and the hosted-CI suite must declare them changed.
-  for (const file of ["test/ci-test-budget.json", "test/ci-manifest.test.ts"]) {
+  for (const file of ["test/ci-test-budget.json", "test/ci-manifest.test.ts", "docs/CI-EVIDENCE.md"]) {
     assert.notEqual(
       hostedCi[file],
       manifest[file],
