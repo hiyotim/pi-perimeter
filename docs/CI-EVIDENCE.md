@@ -31,9 +31,12 @@ No secret is required and no network access beyond the npm registry fetch perfor
 | 34985125954 | `664871d` (Goal 2 snapshot) | push `codex/mac-migration-snapshot` | **failure**: 209/210, test 69, "the Goal 2 artifact hash manifest matches the final working tree" |
 | 35523982904 | `2fa89b6` (`main` consolidation) | push `main` | success: tests 356, pass 302, fail 0, skipped 54 |
 | 35524137666 | `964b408` (Goal selection record) | push `main` | success, same counts |
+| 35524360355 | `a507be4` (this Goal's implementation) | push `main` | success: tests 369, pass 315, fail 0, skipped 54, and the count assertion reported `tests 369, pass 315, fail 0, skipped 54` for `linux` |
 
 The 2026-09-15 failure had never been recorded; `STATE.md` now records the correction.
-The runs for this Goal's own commits are recorded in `STATE.md` with the acceptance.
+The hosted runs for this Goal's later documentation-only commits are recorded in
+`STATE.md` with the acceptance, because recording them here would change the bytes this
+manifest binds.
 
 ## 3. Declared platform limits
 
@@ -48,10 +51,12 @@ Therefore:
 - Hosted CI cannot supply containment evidence on any platform. The Goal 3 and Goal 4
   containment evidence stays executor-local and is recorded in `docs/SHELL-GATE-AUDIT.md`
   and `docs/NETWORK-GATE-AUDIT.md`.
-- The 54 tests skipped in the hosted Linux run are exactly the darwin-only suites
-  (containment, projection, export, quiescence, seatbelt profile, network effects). They
-  are skipped by their own declared platform conditions; the workflow does not exclude
-  or disable them.
+- The 54 tests skipped in the hosted Linux run are exactly the tests carrying a
+  declared non-darwin platform condition: `network-effects.test.ts` 12,
+  `quiescence.test.ts` 16, `seatbelt-profile.test.ts` 6, `shell-containment.test.ts` 20
+  (as reported by run 35524360355). They are skipped by their own declared conditions;
+  the workflow neither excludes nor disables them. `projection.test.ts` and
+  `export.test.ts` carry no platform condition and do run on Linux.
 - No Linux (or other platform) support claim is made. The hosted Linux run does execute
   the platform-independent suites, including `src/gate/bound-execution.ts`, which selects
   the descriptor-relative execution path (`/proc/self/fd`) when

@@ -5,5 +5,5 @@
   "test/ci-budget.test.ts": "1cd5ee5858466821fe2ce9249f65122b56628a637a3f89b15174d3fe1217e079",
   "test/ci-manifest.test.ts": "4f3550f1d4d6e69e7e00dda9f0f130d3723bb819a559e44950adfbecbcad06ef",
   "test/hash-manifest.test.ts": "5ce61ec3127c3bb7073cd92bc2abbc259515a936a339add5b9b83907230e26c3",
-  "docs/CI-EVIDENCE.md": "1edfefd6ad61441df51939d94090d2749939472e136fa12f172777288f7a446f"
+  "docs/CI-EVIDENCE.md": "658c3b00af2dde2bb4a73c526215619b8d650a721b67040cabdbee5d71759277"
 }
