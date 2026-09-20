@@ -1,188 +1,69 @@
 # Implementation Handoff
 
-Task ID: `20260919-restricted-networking-e2e-evidence`
-Baseline: `e8cab0cc08b9de8e0d755067559f14ba893c1396`
+Task ID: `20260920-private-vulnerability-reporting`
+Baseline: `6e6c967eb2483d8d8502cd30456c55bd332cfb12`; unstaged owner acceptance updates in `STATE.md` (SHA-256 `c7cf85c1062a88c33d5a2b8783ffe03ea6e02af79fac2fbf23880dabed8fadf3`) and `ROADMAP.md` (SHA-256 `6956e2d9a447d6e9f339e74b1908ba622328cf18852069c0753a8a3e87453a3e`), plus unrelated untracked `.commandcode/`; index empty.
+Scope Gate: READY
 
 ## Goal
 
-Complete Goal 4: permit narrowly scoped outbound development connections from
-the accepted contained shell route, with destination/session-bound authority
-and end-to-end evidence that network access does not weaken accepted policy,
-approval, filesystem, environment, containment, or export boundaries.
+Establish one verified private vulnerability-reporting channel and publish accurate, safe responsible-disclosure instructions for `pi-warden`, closing only that bounded Phase 6 checklist item.
 
 ## Context
 
-- Goals 1–3 and Phases 1–3 are accepted. Goal 3's exact source/test identities,
-  contract, evidence and limitations are in `docs/shell-gate-hashes.json`,
-  `docs/SHELL-GATE.md`, `docs/SHELL-GATE-AUDIT.md`, and `STATE.md`.
-- The accepted target remains macOS 27.0 (26A428), arm64. Other platforms and
-  OS builds are unsupported until separately authorized and evidenced.
-- The current Seatbelt profile is deny-default and emits no network or Mach
-  allowance. Network command classes are hard-denied, shell approvals cannot
-  widen the profile, proxy variables are absent, and model `bash` plus user
-  `!`/`!!` share one controlled lifecycle.
-- Goal 3's variant-B boundary remains unchanged: complete descendant
-  termination, an atomic tree snapshot, protection from independent same-user
-  host writers (B3), and mount isolation are not guaranteed.
-- Opening one endpoint is an exfiltration capability: an authorized endpoint
-  may receive any child-readable projected data. Do not claim broader
-  exfiltration resistance.
+- Goals 1–4 and Phases 1–4 are owner-accepted within the guarantees and limitations recorded in `STATE.md` and `ROADMAP.md`.
+- `SECURITY.md` currently states that no private channel exists. `CONTRIBUTING.md` repeats that status, and `README.md` links to `SECURITY.md` for reporting policy.
+- Public beta, publication, installation, release acceptance, incident-response operations, and broader Phase 6 work remain separate gates.
+- The repository must not publish exploit details, credentials, tokens, reporter data, or private-channel secrets.
 
 ## Scope
 
-- Before dependent implementation, write an explicit network contract and
-  threat/enforcement model defining the supported destination identity,
-  protocols, address families, ports, resolution lifecycle, redirects,
-  proxies, approval scope, expiry/revocation, and failure behavior. Evidence,
-  not command parsing, must establish that the chosen target can enforce it.
-- Initial production capability is outbound client TCP to an exact authorized
-  destination set. Inbound/listen, UDP, Unix-domain sockets, Mach/broker
-  routes, loopback, private/link-local/metadata destinations, and arbitrary
-  child-originated DNS remain unavailable unless the contract supplies a
-  separately reviewed, equally narrow enforcement rule. Unsupported or
-  ambiguous forms fail closed.
-- Add the minimum trusted-host network policy needed for fixed development
-  allowlists and one-invocation/session-scoped approvals. Repository-controlled
-  data may request or further restrict access but must never add a destination,
-  approve itself, persist a grant, or weaken trusted global policy.
-- Bind every grant to the displayed destination identity and actual enforced
-  connection scope, the current runtime/session, containment identity and
-  relevant policy state. Reuse is allowed only when explicitly represented by
-  that scope; mismatch, timeout, refusal, malformed UI, replay, revocation or
-  missing enforcement blocks before network bytes can flow.
-- Extend the existing shell policy, approval, containment and gate layers only
-  as needed. Preserve the one route for model `bash` and user `!`/`!!`; there
-  must be no second spawn path, host-side network escape, or unrestricted
-  fallback.
-- Cover redirects, DNS changes/rebinding, IPv4/IPv6, shared-address ambiguity,
-  explicit and environment proxies, alternate command encodings, nested
-  interpreters, subprocesses, and direct socket use. A redirect or later
-  resolution cannot inherit authority for a different destination.
-- Preserve the constructed environment and protected filesystem/control-plane
-  zones. This Goal does not introduce provider credentials, credential brokers,
-  host agent sockets, general secret discovery, host delete/rename, or broader
-  file-tool capability.
-- Add isolated regression/effect tests, a network-gate contract, audit and exact
-  artifact manifest. Update current architecture, threat model, user-facing
-  limitations, compatibility/status and release evidence to match only the
-  demonstrated behavior.
+- Obtain the maintainer-selected private intake endpoint and its public-safe contact instructions before claiming that reporting is available.
+- Configure or enable that single channel only when the maintainer has explicitly authorized the external action and the channel can restrict report contents to intended maintainers.
+- Update `SECURITY.md` with the verified private reporting route, reporting scope, safe reproduction guidance using fake data, expected acknowledgement/process wording without unsupported response-time promises, and guidance for urgent or sensitive reports.
+- Update the existing disclosure references in `CONTRIBUTING.md` and, only if needed for an accurate discoverable link or status, `README.md`.
+- Preserve the existing accepted guarantees, limitations, and warning that permitted endpoints can receive projected workspace data.
+
+## Out of Scope
+
+- Runtime, policy, approval, sandbox, network, test, build, package, CI, or dependency changes.
+- A second reporting channel, automated triage, incident-response tooling, encryption/key management, bug bounty, service-level or response-time commitments, legal safe-harbor policy, CVE issuance, release notes, publication, push, or real-profile installation.
+- Completing security/documentation review as a whole, the compatibility matrix, packaging safeguards, GitHub CI, public beta, Phase 6, or Phase 7.
+- Changing `STATE.md` or `ROADMAP.md`; their pre-existing acceptance updates are baseline work and must remain attributable to the owner.
+
+## Risk Gates
+
+- Before enabling an external service or publishing contact details, the maintainer must supply or approve the exact private endpoint, authorized recipients, ownership, and public-safe wording. Do not invent an address, expose a personal contact, or claim confidentiality that the channel does not provide.
+- Before declaring the channel operational, send one explicitly authorized synthetic report containing no vulnerability, credential, exploit, or personal data and verify delivery to the intended restricted recipients. A documentation-only link check cannot substitute for delivery evidence.
 
 ## Acceptance Criteria
 
-1. With no applicable trusted allowlist or matching live approval, networking
-   remains closed exactly as in Goal 3. Unsupported platform, stale identity,
-   policy/enforcement setup failure, and partial initialization all fail closed
-   without spawning an unrestricted child.
-2. At least one ordinary dependency-fetch or source-fetch development workflow
-   succeeds through the production adapter on the declared target and only to
-   the exact authorized destination set. Positive controls show the fixture or
-   service is actually reachable.
-3. A fixed trusted destination follows documented policy. An unknown but
-   representable destination requires an accurate, narrowly scoped approval;
-   `DENY` and protected-resource outcomes have no approval bypass. Project
-   configuration cannot make either case more permissive.
-4. Approval does not transfer across host/address identity, port, protocol,
-   runtime, session, policy/profile identity, redirect target, expiry,
-   revocation or replay. No network bytes are sent before the matching authority
-   and enforcement are both active.
-5. Actual-effect tests prove that unapproved external endpoints, DNS exfiltration,
-   redirects, proxy tunneling, rebinding, alternate IP families, loopback,
-   local/private/link-local/metadata services, UDP, listening sockets,
-   Unix-domain sockets and Mach/broker routes cannot escape the accepted scope.
-   Parser or source inspection alone is not evidence.
-6. Allowed connections do not expose host credentials or environment, reveal
-   excluded/protected files, grant access to the original workspace, weaken
-   per-target export authorization, lower a `DENY`, or change Goal 3's captured
-   bytes and cleanup guarantees.
-7. Malicious-repository end-to-end cases combine project configuration,
-   symlinks, scripts, nested processes, misleading commands and network attempts
-   across file tools and both shell entry routes. Each claimed boundary has a
-   biting regression or an explicitly bounded limitation.
-8. Network status and approval surfaces show non-secret canonical scope,
-   containment state and refusal reasons without logging payloads, secrets or
-   credentials. Documentation states that permitted endpoints can receive
-   projected workspace data.
-9. All changed accepted artifacts receive new identities and fresh checks.
-   Complete relevant suites pass on the declared target, and a fresh independent
-   security review of the final snapshot has no unresolved blocking finding.
-10. Finish implemented and verified, awaiting owner acceptance. Do not mark
-    Goal 4 or Phase 4 accepted, publish, install into a real Pi profile, commit,
-    push, or begin a later release Goal.
+1. One maintainer-approved private reporting endpoint is operational, publicly discoverable from `SECURITY.md`, and restricted to the intended recipients.
+2. An authorized synthetic report with non-sensitive content is received through the documented route; the evidence records only safe metadata and does not expose the private report or recipient secrets.
+3. `SECURITY.md` accurately states what to report, what information helps investigation, how to use fake data, what must not be posted publicly, and what reporters should expect without promising confidentiality, remediation, disclosure, or response times beyond the channel's demonstrated behavior.
+4. `CONTRIBUTING.md` and any changed `README.md` references agree with `SECURITY.md`; no current text still claims that a private channel is unavailable.
+5. Existing Goal 1–4 guarantees and limitations are unchanged, and the change does not claim public-beta, release, publication, installation, or completion of any other Phase 6 item.
+6. Only the authorized disclosure documentation and unavoidable maintainer-approved external channel configuration differ from the baseline; the pre-existing `STATE.md`, `ROADMAP.md`, and `.commandcode/` state is preserved and separately attributable.
 
 ## Verification
 
-- Confirm clean ancestry from the Baseline, current status, and the accepted
-  Goal 2/3 manifests before edits. Preserve the `mac-local-before-migration`
-  stash.
-- Re-check the installed/current supported Pi API and record the actual hooks,
-  versions and behavior used by both shell entry routes. Historical API notes
-  are not sufficient.
-- Run focused pure-policy, parsing, approval/profile-generation and failure-path
-  tests while developing. Use only temporary synthetic fixtures and fake data;
-  never read real credentials.
-- On macOS 27.0 (26A428), arm64, exercise the production binary/profile and
-  actual socket effects with working positive controls. Include the authorized
-  workflow plus the negative cases in Acceptance Criteria 4–7, descendants,
-  cancellation, timeout, crash and cleanup.
-- Re-run the accepted closed-network controls with no capability and verify
-  Goal 2 file gates plus Goal 3 import, environment, containment, quiescence,
-  freeze and export regressions remain intact.
-- Run the repository-supported native build, targeted containment/package
-  checks, `npm run check`, manifest tests and `git diff --check`. Record exact
-  counts, platform skips, toolchain/OS identities and artifact hashes; a skip on
-  the declared target blocks acceptance evidence.
-- Perform adversarial mutation/probe checks where a passing test could otherwise
-  be non-biting, especially destination substitution, redirect/proxy bypass,
-  approval binding and fail-open paths.
-- Obtain a fresh independent review after the final implementation and evidence
-  snapshot. Fix findings within this Goal and repeat only the affected checks
-  and review before the final full verification.
+- For Criteria 1–2, inspect the channel's recipient/access configuration and perform the authorized non-sensitive synthetic delivery test; record only endpoint type, delivery result, date, and intended-recipient confirmation.
+- For Criteria 3–5, manually compare `SECURITY.md`, `CONTRIBUTING.md`, any changed `README.md`, `STATE.md`, and `ROADMAP.md`; verify links resolve and every guarantee/status statement matches the accepted checkpoint.
+- For Criterion 6, compare `git status --short` and the diff against the recorded baseline identities; confirm no source, test, package, build, configuration, manifest, accepted contract, or audit artifact changed.
+- Run `git diff --check` and inspect the complete documentation diff. Because this Goal is documentation/channel-only, do not attribute earlier runtime test or manifest results as fresh evidence.
+- Obtain an independent security/documentation review of the final instructions and safe verification record before owner acceptance.
 
 ## Constraints
 
-- Preserve all accepted authorization ordering (`ALLOW < ASK < DENY`), trusted
-  configuration authority, protected-resource rules, approval separation,
-  original-workspace isolation, constructed environment, descriptor envelope,
-  controlled export and fail-closed behavior.
-- A hostname, parsed command, URL string, DNS answer or approval prompt is not
-  by itself an enforcement boundary. Do not claim destination binding beyond
-  the identity actually constrained at connection time.
-- Keep security-critical code and runtime dependencies small and auditable. No
-  new runtime dependency, privileged daemon/helper, system extension, packet
-  filter/global proxy change, elevated setup, new containment class or broader
-  platform support is authorized by this handoff.
-- Do not put policy authority or durable approval state in repository-writable
-  files or child-writable invocation roots. Do not make network availability a
-  condition that weakens filesystem or export checks.
-- Do not use real credentials, host credential stores, SSH agents, cloud tokens
-  or a user's actual service accounts in implementation or tests.
-- Historical audits remain historical. Changed bytes require new evidence; do
-  not transfer Goal 3 PASS claims to Goal 4 artifacts.
-- Public beta/v1 acceptance, publication, real-profile installation, commit and
-  push remain separate owner actions.
-
-## Execution Notes
-
-Establish the enforceable network contract and target-platform effect evidence
-before writing dependent policy or approval code. Then complete the smallest
-coherent implementation, regressions, documentation, manifest, full checks and
-fresh independent review. Routine design choices and review fixes inside this
-contract are autonomous; do not stop at an experiment, partial component or
-initial test pass.
+- Use no real credentials, vulnerabilities, exploit payloads, private reporter data, or sensitive user data in setup or verification.
+- Publish only the minimum contact information required to reach the approved channel. Keep recipient lists, service credentials, recovery material, and private reports outside repository-writable content.
+- State only demonstrated channel properties. Approval of an endpoint does not establish guaranteed confidentiality, anonymity, availability, response time, remediation, or coordinated-disclosure terms.
+- Preserve the separation between authorization, approval, containment, disclosure intake, and release acceptance.
+- Do not stage, commit, push, publish, or alter the owner acceptance baseline unless separately authorized.
 
 ## Escalate If
 
-Stop and report before proceeding if implementation would require:
-
-- changing this Goal or its Acceptance Criteria;
-- weakening an accepted Goal 1–3 invariant or changing the variant-B boundary;
-- permitting a destination without enforceable connection-time identity, or
-  the declared target cannot enforce the required scope against redirects,
-  DNS/proxy indirection and descendants;
-- a new runtime dependency, privileged component, global OS/network setting,
-  credential injection, different containment class or broader platform claim;
-- widening the initial protocol/local-network scope above;
-- an unapproved public/external contract, destructive migration, publication,
-  real-profile installation, commit or push;
-- proceeding from a materially changed or ambiguous baseline; or
-- unavailable declared-target or independent-review evidence.
+- No maintainer-approved private endpoint or authorized recipient set is available.
+- The proposed service requires publishing personal contact data, storing secrets in the repository, granting repository-controlled content authority, or accepting unsupported confidentiality/response commitments.
+- A synthetic delivery test cannot be authorized or cannot confirm receipt by the intended restricted recipients.
+- The work requires a second channel, automation, dependency/configuration changes, legal policy, incident-response process, publication, or any broader Phase 6 outcome.
+- `STATE.md`, `ROADMAP.md`, or another baseline artifact changes materially before execution and ownership or attribution becomes ambiguous.
