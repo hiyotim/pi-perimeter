@@ -14,7 +14,7 @@
   "test/hash-manifest.test.ts": "367098bf384e3f8bce9dafd3b0c7e41fbb91eed4ff65d324e2b60ecdf18df9a3",
   "test/network-manifest.test.ts": "6cfb051ac4e6d5b5b4da8566d5b3fb7f4ca15e89c537f208e43c758feede7116",
   "test/package-lifecycle.test.ts": "f3a129911eabf93405101bbf5e0aa373b2e2a8412f12e591753fc9dc5279c4ea",
-  "test/packaging-identity.test.ts": "e01b44a2fabfbcf2f216efd5401eedba14150453e1e42b45c1ad14d48766dd76",
+  "test/packaging-identity.test.ts": "ade2657f0b09b2032d0a949dc263333afc9bb7be060855715f5aab2196be89fc",
   "test/packaging-manifest.test.ts": "10d4b52714ea6fccb112e1df6a58cf7446cb0e726309d8902229a799c1682145",
   "test/shell-manifest.test.ts": "3db38d7f77530f67e88322974cec82a43c8706ac091a110bf2c1a2441ed8eb8f"
 }

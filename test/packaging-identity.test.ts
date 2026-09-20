@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { test } from "node:test";
 
@@ -202,7 +202,9 @@ test("the former name appears only where the retention list declares it", () => 
   }
   const declared = new Set(Object.keys(RETAINED));
   const undeclared = [...observed].filter((file) => !declared.has(file)).sort();
-  const stale = [...declared].filter((file) => !observed.has(file)).sort();
+  // A declared build artifact (the compiled helper and its manifest) is absent in a
+  // clean checkout; absence is not rot, so only an existing file can go stale.
+  const stale = [...declared].filter((file) => existsSync(file) && !observed.has(file)).sort();
   assert.deepEqual(
     undeclared,
     [],
