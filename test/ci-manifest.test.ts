@@ -60,6 +60,16 @@ const CHANGED_IN_RELEASE_REVIEW: Record<string, true> = {
   "test/ci-test-budget.json": true,
   "test/ci-manifest.test.ts": true,
 };
+/**
+ * Artifacts whose bytes the v1-guarantee-stabilization Goal
+ * (`20260922-stabilize-guarantees`) changed: the raised declared test count
+ * and this declaration. Their entries here stay historical;
+ * docs/v1-guarantees-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_V1_GUARANTEES: Record<string, true> = {
+  "test/ci-test-budget.json": true,
+  "test/ci-manifest.test.ts": true,
+};
 
 const COVERED_FILES = [
   ".github/workflows/ci.yml",
@@ -79,6 +89,7 @@ test("the hosted-CI artifact hash manifest matches the final working tree", asyn
     if (CHANGED_IN_PACKAGING.has(file)) continue; // raised count; the packaging manifest binds the current bytes
     if (CHANGED_IN_POST_TRANSFER.has(file)) continue; // moved canonical location; the post-transfer manifest binds the current bytes
     if (CHANGED_IN_RELEASE_REVIEW[file] === true) continue; // reviewed wording; the release-review manifest binds the current bytes
+    if (CHANGED_IN_V1_GUARANTEES[file] === true) continue; // stabilized wording; the v1-guarantees manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

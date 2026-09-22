@@ -1,0 +1,12 @@
+{
+  "docs/V1-GUARANTEES.md": "5792845f63cc65a56bbb2de0cea85d1245d6e53c22b0c3d7e62fbb2456362326",
+  "docs/V1-GUARANTEES-AUDIT.md": "79bc57692fdf4b07bb511e98c805c31a66880178a793935e924776b532231729",
+  "test/ci-test-budget.json": "10809bbf36faa96ef86f8385db5683a2aec6b8d7a8fd495ddbe196e353588d7d",
+  "test/packaging-identity.test.ts": "d79aebf9bd33806ae1f3b24ffaf8fee6c2ffe66a9d4bb48160592248a763123a",
+  "test/ci-manifest.test.ts": "832b5d872686d72c36ad86cc4bd64e1a422136d31dff202dc443eacf3882a537",
+  "test/compatibility-manifest.test.ts": "2d86f25af13df3c96e5ff67a624ca7e629d59b9d818fdddb76b47aee8ca7338a",
+  "test/packaging-manifest.test.ts": "7d8503e3fefb77039137f492513c17b62793fe4f43728eb70cfc3ef98ae60431",
+  "test/post-transfer-manifest.test.ts": "9e962777efb8870c08e59da1a5b17e0fc0023d89ae87a6e0859985203dd136f6",
+  "test/release-review-manifest.test.ts": "1a0e3a781dd47a7a0f68fd276e309934567b518fa85105ea8823f5bcc3bc47ae",
+  "test/v1-guarantees-manifest.test.ts": "dccca41adf57e1573d6eec6e0e2241aa4c631e8c7783b72393b9e78ae68cadb6"
+}

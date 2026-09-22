@@ -5,86 +5,83 @@ import path from "node:path";
 import { test } from "node:test";
 
 /**
- * Deterministic hash manifest for the release-candidate review Goal
- * (`20260922-release-candidate-reviews`).
+ * Deterministic hash manifest for the v1.0 guarantee-stabilization Goal
+ * (`20260922-stabilize-guarantees`).
  *
  * This Goal changes only documentation wording plus the review audit below;
  * no runtime, policy, approval, sandbox, network, dependency, packaging, or
  * CI behavior changes. Every entry lists the sha256 of the final file; the
  * test recomputes hashes each run and fails until the manifest matches the
- * working tree, so the reviewed wording and any reviewer verdict are tied to
- * exact bytes. Earlier manifests keep their historical entries, declared
- * through each suite's own `CHANGED_IN_RELEASE_REVIEW` record. To refresh
+ * working tree, so the stabilized wording and any reviewer verdict are tied
+ * to exact bytes. Earlier manifests keep their historical entries, declared
+ * through each suite's own `CHANGED_IN_V1_GUARANTEES` record. To refresh
  * the manifest after a verified intentional change, replace each entry with
  * the hash printed in the failure diff.
  */
 
-const MANIFEST_PATH = "docs/release-review-hashes.json";
+const MANIFEST_PATH = "docs/v1-guarantees-hashes.json";
 
 const COVERED_FILES = [
-  "README.md",
-  "SECURITY.md",
-  "ARCHITECTURE.md",
-  "THREAT_MODEL.md",
-  "docs/COMPATIBILITY.md",
-  "docs/RELEASE-REVIEW-AUDIT.md",
+  "docs/V1-GUARANTEES.md",
+  "docs/V1-GUARANTEES-AUDIT.md",
   "test/ci-test-budget.json",
   "test/packaging-identity.test.ts",
-  "test/packaging-manifest.test.ts",
-  "test/compatibility-manifest.test.ts",
-  "test/post-transfer-manifest.test.ts",
   "test/ci-manifest.test.ts",
+  "test/compatibility-manifest.test.ts",
+  "test/packaging-manifest.test.ts",
+  "test/post-transfer-manifest.test.ts",
   "test/release-review-manifest.test.ts",
+  "test/v1-guarantees-manifest.test.ts",
 ] as const;
 
 /** Artifacts this Goal also changed inside an earlier manifest. */
 const SHARED_WITH_EARLIER_MANIFESTS: Record<string, string[]> = {
-  "README.md": ["docs/packaging-hashes.json", "docs/compatibility-hashes.json"],
-  "SECURITY.md": ["docs/packaging-hashes.json", "docs/post-transfer-hashes.json"],
-  "docs/COMPATIBILITY.md": ["docs/packaging-hashes.json", "docs/compatibility-hashes.json"],
   "test/ci-test-budget.json": [
     "docs/ci-hashes.json",
     "docs/compatibility-hashes.json",
     "docs/packaging-hashes.json",
     "docs/post-transfer-hashes.json",
+    "docs/release-review-hashes.json",
   ],
-  "test/packaging-manifest.test.ts": ["docs/packaging-hashes.json", "docs/post-transfer-hashes.json"],
-  "test/packaging-identity.test.ts": ["docs/packaging-hashes.json", "docs/post-transfer-hashes.json"],
+  "test/packaging-identity.test.ts": ["docs/packaging-hashes.json", "docs/post-transfer-hashes.json", "docs/release-review-hashes.json"],
+  "test/packaging-manifest.test.ts": [
+    "docs/packaging-hashes.json",
+    "docs/post-transfer-hashes.json",
+    "docs/release-review-hashes.json",
+  ],
   "test/compatibility-manifest.test.ts": [
     "docs/compatibility-hashes.json",
     "docs/packaging-hashes.json",
     "docs/post-transfer-hashes.json",
+    "docs/release-review-hashes.json",
   ],
-  "test/post-transfer-manifest.test.ts": ["docs/post-transfer-hashes.json"],
   "test/ci-manifest.test.ts": [
     "docs/ci-hashes.json",
     "docs/compatibility-hashes.json",
     "docs/packaging-hashes.json",
     "docs/post-transfer-hashes.json",
+    "docs/release-review-hashes.json",
   ],
+  "test/post-transfer-manifest.test.ts": ["docs/post-transfer-hashes.json", "docs/release-review-hashes.json"],
+  "test/release-review-manifest.test.ts": ["docs/release-review-hashes.json"],
 };
 
-/** The declared change record each earlier manifest must carry, exactly. */
-const DECLARED_CHANGE_RECORDS: Record<string, string[]> = {
+/** The declared change set each earlier manifest must carry, exactly. */
+const DECLARED_CHANGE_SETS: Record<string, string[]> = {
+  "test/ci-manifest.test.ts": ["test/ci-test-budget.json", "test/ci-manifest.test.ts"],
+  "test/compatibility-manifest.test.ts": [
+    "test/ci-test-budget.json",
+    "test/ci-manifest.test.ts",
+    "test/compatibility-manifest.test.ts",
+  ],
   "test/packaging-manifest.test.ts": [
-    "README.md",
-    "SECURITY.md",
-    "docs/COMPATIBILITY.md",
     "test/ci-test-budget.json",
     "test/packaging-identity.test.ts",
     "test/packaging-manifest.test.ts",
     "test/ci-manifest.test.ts",
     "test/compatibility-manifest.test.ts",
   ],
-  "test/compatibility-manifest.test.ts": [
-    "docs/COMPATIBILITY.md",
-    "README.md",
-    "test/ci-test-budget.json",
-    "test/ci-manifest.test.ts",
-    "test/compatibility-manifest.test.ts",
-  ],
   "test/post-transfer-manifest.test.ts": [
-    "SECURITY.md",
     "test/ci-test-budget.json",
     "test/packaging-identity.test.ts",
     "test/packaging-manifest.test.ts",
@@ -92,29 +89,21 @@ const DECLARED_CHANGE_RECORDS: Record<string, string[]> = {
     "test/compatibility-manifest.test.ts",
     "test/post-transfer-manifest.test.ts",
   ],
-  "test/ci-manifest.test.ts": ["test/ci-test-budget.json", "test/ci-manifest.test.ts"],
-};
-/**
- * Artifacts whose bytes the v1-guarantee-stabilization Goal
- * (`20260922-stabilize-guarantees`) changed: the raised declared test count,
- * the retention-list entry, and this declaration. Their entries here stay
- * historical; docs/v1-guarantees-hashes.json binds the current bytes.
- */
-const CHANGED_IN_V1_GUARANTEES: Record<string, true> = {
-  "test/ci-test-budget.json": true,
-  "test/packaging-identity.test.ts": true,
-  "test/packaging-manifest.test.ts": true,
-  "test/compatibility-manifest.test.ts": true,
-  "test/post-transfer-manifest.test.ts": true,
-  "test/ci-manifest.test.ts": true,
-  "test/release-review-manifest.test.ts": true,
+  "test/release-review-manifest.test.ts": [
+    "test/ci-test-budget.json",
+    "test/packaging-identity.test.ts",
+    "test/packaging-manifest.test.ts",
+    "test/compatibility-manifest.test.ts",
+    "test/post-transfer-manifest.test.ts",
+    "test/ci-manifest.test.ts",
+    "test/release-review-manifest.test.ts",
+  ],
 };
 
-test("the release-review artifact hash manifest matches the final working tree", async () => {
+test("the v1-guarantees artifact hash manifest matches the final working tree", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
-    if (CHANGED_IN_V1_GUARANTEES[file] === true) continue; // stabilized wording; the v1-guarantees manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });
@@ -130,12 +119,14 @@ test("the release-review artifact hash manifest matches the final working tree",
   );
 });
 
-test("the release-review manifest supersedes exactly the earlier entries it covers", async () => {
+test("the v1-guarantees manifest records every artifact of this Goal", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   for (const file of COVERED_FILES) {
     assert.ok(typeof manifest[file] === "string" && manifest[file].length === 64, `${file} must be recorded`);
   }
   assert.equal(Object.keys(manifest).length, COVERED_FILES.length);
+  // Every artifact this Goal shares with an earlier manifest must carry a fresh
+  // identity there, so the historical entries cannot be mistaken for the tree.
   for (const [file, earlier] of Object.entries(SHARED_WITH_EARLIER_MANIFESTS)) {
     assert.ok(
       COVERED_FILES.includes(file as (typeof COVERED_FILES)[number]),
@@ -146,17 +137,17 @@ test("the release-review manifest supersedes exactly the earlier entries it cove
       assert.notEqual(
         previous[file],
         manifest[file],
-        `${file} must have a fresh identity after the release-review change (${earlierPath})`,
+        `${file} must have a fresh identity after its v1-guarantees change (${earlierPath})`,
       );
     }
   }
 });
 
-test("every earlier manifest declares exactly the release-review changes it covers", async () => {
-  for (const [file, expected] of Object.entries(DECLARED_CHANGE_RECORDS)) {
+test("every earlier manifest declares exactly the v1-guarantees changes it covers", async () => {
+  for (const [file, expected] of Object.entries(DECLARED_CHANGE_SETS)) {
     const source = await readFile(file, "utf8");
-    const declaration = /CHANGED_IN_RELEASE_REVIEW: Record<string, true> = \{([\s\S]*?)\};/.exec(source);
-    assert.ok(declaration, `${file} must declare its release-review change record`);
+    const declaration = /CHANGED_IN_V1_GUARANTEES: Record<string, true> = \{([\s\S]*?)\};/.exec(source);
+    assert.ok(declaration, `${file} must declare its v1-guarantees change record`);
     const declared = [...declaration[1]!.matchAll(/"([^"]+)": true/g)].map((match) => match[1]!).sort();
     assert.deepEqual(declared, [...expected].sort(), `${file} must declare exactly the covered changes`);
   }

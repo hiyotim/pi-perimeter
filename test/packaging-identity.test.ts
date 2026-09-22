@@ -105,6 +105,7 @@ const RETAINED: Record<string, string> = {
   "docs/VULNERABILITY-REPORTING-AUDIT.md": "evidence-bound (records the reporting route)",
   "docs/RELEASE-REVIEW-AUDIT.md": "evidence-bound (this Goal's audit; records the former-name finding)",
   "test/release-review-manifest.test.ts": "declares the old-name pattern retention and the earlier-manifest change records",
+  "test/v1-guarantees-manifest.test.ts": "runtime-identifier (reads the shared harness verbose flag)",
   "THREAT_MODEL.md": "outside the rename surface (current document, stable anchors)",
   "docs/CONFIGURATION-AUTHORIZATION.md": "outside the rename surface (stable anchors)",
   "docs/MONOTONIC-POLICY-AUTHORITY.md": "outside the rename surface (stable anchors)",
