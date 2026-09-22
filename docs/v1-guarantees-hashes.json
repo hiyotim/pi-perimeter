@@ -1,6 +1,6 @@
 {
   "docs/V1-GUARANTEES.md": "5792845f63cc65a56bbb2de0cea85d1245d6e53c22b0c3d7e62fbb2456362326",
-  "docs/V1-GUARANTEES-AUDIT.md": "79bc57692fdf4b07bb511e98c805c31a66880178a793935e924776b532231729",
+  "docs/V1-GUARANTEES-AUDIT.md": "53f3517c7de78c256bcbb77bea23f70fe620dfa89ea46b68d8a2a03f82d1f42b",
   "test/ci-test-budget.json": "10809bbf36faa96ef86f8385db5683a2aec6b8d7a8fd495ddbe196e353588d7d",
   "test/packaging-identity.test.ts": "d79aebf9bd33806ae1f3b24ffaf8fee6c2ffe66a9d4bb48160592248a763123a",
   "test/ci-manifest.test.ts": "832b5d872686d72c36ad86cc4bd64e1a422136d31dff202dc443eacf3882a537",

@@ -164,6 +164,25 @@ one non-blocking observation fixed inside this Goal — the
 `docs/release-review-hashes.json`), asserting 22 of 23 stale-overlap
 pairs (fixed here: the self pair added, asserting all 23).
 
+## Independent review round 4, delta (PASS, no blocking findings)
+Scope: the "Hosted run for the final commit (executor-observed)" lines
+plus the refreshed `docs/V1-GUARANTEES-AUDIT.md` entry in
+`docs/v1-guarantees-hashes.json` only. Reviewer-run (not executor):
+`shasum -a 256` of `docs/V1-GUARANTEES-AUDIT.md` re-derived and equal to
+the manifest entry, the other nine entries re-derived and matching, only
+that one entry differing from round 3; `git diff --check` exit 0;
+`npx tsc --noEmit` exit 0; `test/v1-guarantees-manifest.test.ts` 3/3;
+`test/packaging-identity.test.ts` 3/3. Run `35740981632` re-derived via
+`gh` (not trusted): status `completed`, conclusion `success`, event
+`push`, branch `main`, workflow `CI`, `headSha`
+`24da69fe1dd51f7bb66db1001dce3fc1fe7a6d2b` matching local `HEAD`, job
+`106790351413` (`check`) 29s, job log `# tests 391`, `# pass 337`,
+`# fail 0`, `# skipped 54` with the count-assertion step passing against
+the `linux` budget; 391 − 54 = 337 holds, skips stay 54. No former-name
+literal in the new lines, no wording change outside the run-id section,
+no scope creep, no new platform/publication/installation claim. Verdict:
+PASS with no blocking findings.
+
 ## Checks (executor-run)
 
 - `npm run check`: typecheck PASS; 391 tests / 390 pass / 0 fail / 1
@@ -184,13 +203,13 @@ pairs (fixed here: the self pair added, asserting all 23).
 
 ## Hosted run for the final commit (executor-observed)
 
-- Run: _recorded after push; `gh run view` output pasted here._
-- Assertion: expected `tests 391, pass 337, fail 0, skipped 54`
-  (391 − 54 = 337 pass on Linux) against the declared `linux` budget.
+- Run `35740981632` (commit `24da69fe1dd51f7bb66db1001dce3fc1fe7a6d2b`, branch `main`, event `push`, workflow `CI`): `gh run view` reports status `completed`, conclusion `success`; job `106790351413` (`check`) succeeded in 29s. The run's `headSha` matches local `HEAD` `24da69fe1dd51f7bb66db1001dce3fc1fe7a6d2b`.
+- Assertion (executor-observed from the job log): `# tests 391`, `# pass 337`, `# fail 0`, `# skipped 54`, and the CI count-assertion step passed for linux: `tests 391, pass 337, fail 0, skipped 54, todo 0, cancelled 0 (declared tests 391, fail 0, skipped 54)` against the declared `linux` budget.
   The pass figure is arithmetic from the two declared counts, not a new
   claim: hosted skips stay 54 (no containment suite touched), fail stays
   0, and the collected set grows by exactly the 3 new manifest-suite
   tests.
+
 ## Limits
 
 - Stabilization only: closes no other Phase 7 item, no Phase 7 gate, and
