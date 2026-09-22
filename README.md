@@ -93,10 +93,13 @@ The project still does **not** provide:
 ## Platform
 
 - Declared containment target: macOS 27.0 (26A428) on Apple Silicon, arm64.
-- Other macOS versions, other architectures and Linux are unsupported and
-  fail closed; a passing self-test does not widen this table. Linux remains
-  blocked even for the file gates, which have no recorded runtime evidence
-  there. Windows is unsupported in every respect.
+- Other macOS versions and other architectures are unsupported and fail closed;
+  a passing self-test does not widen this table. The shell route is blocked off
+  the declared target by `verifyPlatform`. Linux is not a support claim anywhere:
+  the file gates execute there (the Class 1 descriptor-relative path runs on
+  Linux, the platform-independent suites run in hosted Linux CI), but Goal 2
+  recorded no Linux runtime execution against the accepted bytes and the Class 1
+  runtime-evidence question stays open. Windows is unsupported in every respect.
 - Every row, the exact version behind it, and the evidence for it:
   [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 

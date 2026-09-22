@@ -43,6 +43,20 @@ const CHANGED_IN_POST_TRANSFER = new Set<string>([
   "test/compatibility-manifest.test.ts",
 ]);
 
+/**
+ * Artifacts whose bytes the release-candidate review Goal
+ * (`20260922-release-candidate-reviews`) changed: corrected Linux wording plus
+ * the raised declared test count and this declaration. Their entries here stay
+ * historical; docs/release-review-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_RELEASE_REVIEW: Record<string, true> = {
+  "docs/COMPATIBILITY.md": true,
+  "README.md": true,
+  "test/ci-test-budget.json": true,
+  "test/ci-manifest.test.ts": true,
+  "test/compatibility-manifest.test.ts": true,
+};
+
 const COVERED_FILES = [
   "docs/COMPATIBILITY.md",
   "docs/CI-EVIDENCE.md",
@@ -58,6 +72,7 @@ test("the compatibility-matrix artifact hash manifest matches the final working 
   for (const file of COVERED_FILES) {
     if (CHANGED_IN_PACKAGING.has(file)) continue; // accepted matrix bytes; the packaging manifest binds the current ones
     if (CHANGED_IN_POST_TRANSFER.has(file)) continue; // moved canonical location; the post-transfer manifest binds the current bytes
+    if (CHANGED_IN_RELEASE_REVIEW[file] === true) continue; // reviewed wording; the release-review manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

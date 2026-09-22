@@ -2,7 +2,7 @@
 
 ## Status
 
-This is the incremental threat model for `pi-warden`. All responses in this document are **planned** unless explicitly marked otherwise. Phase 1A implements path canonicalization and workspace containment, and Phase 1B implements path-only resource classification, but no Pi tool currently enforces either result.
+This is the incremental threat model for `pi-perimeter` (formerly `pi-warden`). All responses in this document are **planned** unless explicitly marked otherwise. Phase 1A implements path canonicalization and workspace containment, and Phase 1B implements path-only resource classification, but no Pi tool currently enforces either result.
 
 The decision vocabulary is:
 
@@ -167,7 +167,7 @@ Shell text can conceal behavior through quoting, expansion, variables, functions
 
 Network access can exfiltrate files, environment variables, prompts, source code, or credentials. It can also reach loopback services, cloud metadata endpoints, Unix-socket bridges, DNS, proxies, or redirect chains. The policy starts restricted, permits known development endpoints narrowly, and asks for unknown representable destinations; an approval is tied to the actual destination set and session scope. OS-level enforcement is required because pre-execution command classification cannot prove eventual network behavior.
 
-**Implemented (Goal 4, awaiting owner acceptance; contract
+**Implemented (Goal 4, accepted 2026-09-20; contract
 [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md), evidence
 [docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md)).** On the declared
 target the OS profile language cannot express a destination-exact allowance,

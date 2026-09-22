@@ -1,0 +1,15 @@
+{
+  "ARCHITECTURE.md": "4532a68ea739c85f588b17a5589c92c5fc377bb3909a21ab90be63de61ed0510",
+  "README.md": "23bb2821b5a9e9d7707483517984f35d63fb90f4d34c3582105ad81476dfc5c2",
+  "SECURITY.md": "ff4b32a8a0ba0923d9c35ce1ead55064884a886b5620718a2941834a47a8aca7",
+  "THREAT_MODEL.md": "168d3a25e1ff8b724da9cf499067832625ab91d7afb54c99290955cfb66c5fb4",
+  "docs/COMPATIBILITY.md": "518d021428d8f2bd5629dd4bbad89df78ee3fbb39769feaedadf6bfffed21286",
+  "docs/RELEASE-REVIEW-AUDIT.md": "6bf77e7dcc5038534bfac46242d9b9f9224db8a00f997127e07f24d2f57982b9",
+  "test/ci-manifest.test.ts": "e4c7f7f85197ea9dcd0902b47150c4e789ac9826e310676085542c51785e93f2",
+  "test/ci-test-budget.json": "7310f7610ee5facdc439f9c76b01a938a8fd5b5e9b82b2ace327f3895b7cdda5",
+  "test/compatibility-manifest.test.ts": "6246bfd7228e00ac2777241ac53acbfc98238f0341c0a31bef905502c64dd444",
+  "test/packaging-identity.test.ts": "b0ad9935b208f3b7fa802465f9c59df300a1ba6cd5bdfa10d8b73c29b89ab38e",
+  "test/packaging-manifest.test.ts": "a0f59ac7bc4529cd3bd22d40ad8aa52c33c3e7f1504defa4f9624414e102d347",
+  "test/post-transfer-manifest.test.ts": "cc4e8432449cf3eaf1660b94f8f225e3425cfffae43fd236fce25c480707b297",
+  "test/release-review-manifest.test.ts": "0afab722e0a581cbd8bee8b94fc7e7069cad5fcbc8eee40bd5e02ec754ec616b"
+}

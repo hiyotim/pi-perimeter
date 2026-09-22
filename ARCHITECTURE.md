@@ -8,12 +8,10 @@ decisions, pairwise/N-ary authorization composition, and bounded configuration
 authorization are accepted unenforced primitives; the Goal 2 file gate is
 accepted within its documented contract. Goal 3 adds the contained shell route
 and is accepted within its documented target and variant-B limitations; its contract,
-declared target and bounded guarantees are in
-[docs/SHELL-GATE.md](docs/SHELL-GATE.md) and its evidence in
-[docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md). Goal 4 adds the
-restricted network route under its own contract
-([docs/NETWORK-GATE.md](docs/NETWORK-GATE.md)); it is implemented and verified
-within its declared target, awaiting owner acceptance, with evidence in
+declared target and bounded guarantees are in [docs/SHELL-GATE.md](docs/SHELL-GATE.md)
+and its evidence in [docs/SHELL-GATE-AUDIT.md](docs/SHELL-GATE-AUDIT.md). Goal 4 adds the
+restricted network route under its own contract ([docs/NETWORK-GATE.md](docs/NETWORK-GATE.md)),
+accepted within its declared target and limitations on 2026-09-20, with evidence in
 [docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md). Sections below that
 still say "planned" describe work that later Goals would own.
 
@@ -60,8 +58,7 @@ The Pi host process and sandboxed operations are different trust zones. Provider
 
 ## 1. Pi integration
 
-**Planned.** A thin extension entry point will connect Pi lifecycle and tool events to the central policy model. It must cover `read`, `write`, `edit`, `grep`, `find`, `ls`, `bash`, and `user_bash`. Coverage must be re-checked whenever Pi adds or changes model-facing tools.
-
+**Implemented for the six supported file tools plus the contained shell routes; planned for any future tool.** A thin extension entry point connects Pi lifecycle and tool events to the central policy model. It covers `read`, `write`, `edit`, `grep`, `find`, `ls`, `bash`, and `user_bash`. Coverage must be re-checked whenever Pi adds or changes model-facing tools.
 Pi hooks are authorization interception points, but hook execution in the host process is not OS isolation. Where interception cannot reliably cover a tool, the integration layer must replace or route that tool through controlled operations, or fail closed.
 
 ## 2. Path normalization
@@ -146,7 +143,7 @@ running it with fewer roots.
 
 ## 9. Network policy
 
-**Implemented under the Goal 4 contract, awaiting owner acceptance.** The
+**Implemented under the Goal 4 contract, accepted 2026-09-20.** The
 contained route has no Seatbelt destination filter: on the declared target the
 profile parser rejects every destination-exact network form (only `*` and
 `localhost` hosts with an explicit port are expressible). Enforcement therefore

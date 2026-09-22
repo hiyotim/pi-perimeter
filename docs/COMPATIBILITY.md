@@ -27,7 +27,7 @@ the current security status.
 | --- | --- | --- | --- |
 | Pi (`@earendil-works/pi-coding-agent`) | `0.84.4` | — | every other version, including the locally installed `0.86.1` |
 | Node | `26.8.1` (macOS target, full local suite) and `22.19.0` (hosted Linux CI, platform-independent suite) | below the declared `engines` floor `>=22.19.0` (declared only, not enforced at runtime) | every other version in `>=22.19.0` |
-| OS / architecture | macOS 27.0 (build `26A428`), arm64 | any other Darwin major, any other architecture, and Linux for the shell and file-gate routes | Linux for the platform-independent policy suite (exercised, not a support claim); Windows in every respect |
+| OS / architecture | macOS 27.0 (build `26A428`), arm64 | any other Darwin major, any other architecture, the shell route off the declared target, and Windows in every respect | Linux file-gate runtime evidence (Class 1 question open); platform-independent policy suite on hosted Linux CI (exercised, not a support claim); Windows in every respect |
 | Distribution | none | installing `npm:pi-warden` installs another maintainer's package | publishing `pi-perimeter` |
 
 ## Pi
@@ -84,16 +84,18 @@ were exercised here ([docs/SHELL-GATE.md](SHELL-GATE.md),
 [docs/NETWORK-GATE.md](NETWORK-GATE.md), and their audits).
 
 **Unsupported (fail-closed):** every other Darwin major, every architecture other than
-`arm64`, and Linux for the shell and file-gate routes. `verifyPlatform` refuses a
-non-matching platform instead of approximating the target, and the native helper build
+`arm64`, and the shell route off the declared target. `verifyPlatform` refuses a
+non-matching shell platform instead of approximating the target, and the native helper build
 refuses every non-darwin platform ([docs/SHELL-GATE.md](SHELL-GATE.md) §declared target).
 Passing a check on one target never extends these rows.
 
-**Linux:** the shell route and the file gates are blocked there; Goal 2 recorded that the
-Class 1 runtime path (`/proc/self/fd` descriptor-relative execution) has no runtime
-evidence, and the hosted Linux runs since then exercise the platform-independent suites
-without changing that claim ([docs/CI-EVIDENCE.md](CI-EVIDENCE.md) §3). Linux is
-therefore an explicit unsupported entry, not a pending implementation commitment.
+**Linux:** the shell route is blocked there by `verifyPlatform`; the file gates
+execute there (Class 1 descriptor-relative execution is the Linux path), but
+Goal 2 recorded no Linux runtime execution against the accepted bytes, and the
+Class 1 runtime-evidence question stays open ([docs/CI-EVIDENCE.md](CI-EVIDENCE.md)
+§3). The hosted Linux runs exercise the platform-independent suites without
+making any platform support claim. Linux is therefore explicitly not a support
+claim, not a pending implementation commitment.
 
 **Windows:** no evidence in any dimension. The native helper refuses non-darwin
 platforms, and the darwin-only suites declare their own platform conditions rather than

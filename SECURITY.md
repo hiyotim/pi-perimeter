@@ -33,9 +33,8 @@ threat-model limits. Within those limits the project provides:
 
 Do not trust the current code to:
 
-- contain shell commands or create files directly on any platform other than
-  the declared macOS target — those paths stay blocked, and Linux stays blocked
-  even for the file gates;
+- contain shell commands on any platform other than the declared macOS target
+  (the shell route stays blocked there);
 - reach destinations outside the pinned scope, or prevent exfiltration to an
   allowed endpoint: an allowed endpoint can receive any data the contained
   process can read;
