@@ -60,7 +60,6 @@ verification, then the record in `STATE.md`/`ROADMAP.md`.
   private at `0.0.0`; publish only in `release.yml`; release workflow
   targets staging). `package.json` on `main` unchanged
   (`private: true`, `0.0.0`).
-
 ## Staging determinism
 
 - `scripts/build-release-staging.mjs`: refuses a dirty tree; copies
@@ -75,6 +74,13 @@ verification, then the record in `STATE.md`/`ROADMAP.md`.
 - `release-staging/` is gitignored (build output, like `native/`); it
   never enters a commit or the tarball listing beyond its own packed
   content.
+
+## Publish record (executor-run)
+
+- Tag: `v1.0.0` → `30ac49a` (pushed; release workflow ran on the tag push).
+- Release run: `36031377325` (success; `tests 413, fail 0, skipped 54`; staging verified 20/20; dry-run 97 files; publish step with provenance).
+- Registry: `pi-perimeter@1.0.0`, dist-tag `latest`, tarball `https://registry.npmjs.org/pi-perimeter/-/pi-perimeter-1.0.0.tgz`, shasum `6352fefae4cfd3d6c19acceeeaa2f8c7941374fa`, integrity `sha512-J3LgKV1kwKFzdydiqUyEWhv9Dw0jGUoIAC+hTC4g9vn9wcoNlN8A17JOSFfgSZ/i3bDAp5qMYRkUdQyEkvX5Gw==`, provenance attested (`https://search.sigstore.dev/?logIndex=2942073251`, SLSA `provenance/v1` attestation at the registry attestation URL).
+- `npm view pi-perimeter version` → `1.0.0`.
 
 ## Binding of this Goal's artifacts (executor-run)
 
@@ -96,20 +102,11 @@ verification, then the record in `STATE.md`/`ROADMAP.md`.
 
 ## Checks (executor-run)
 
-- Affected suites (packaging-identity, release-safeguards,
-  package-compat, package-lifecycle, ci-budget): 27/27 pass.
-- `npm run check`, all manifest suites, `git diff --check`: to be
-  recorded at binding.
-- Hosted CI for the release commit + tag-triggered release run: to be
-  recorded below.
+- Full gate on binding commit `30ac49a`: typecheck PASS; 413 tests / 412 pass / 0 fail / 1 declared platform skip.
+- All manifest suites PASS (release-manifest 3/3 included); `git diff --check` clean.
+- Hosted CI run `36030284302` on `30ac49a`: success, `tests 413, fail 0, skipped 54`.
+- Release run `36031377325` (tag `v1.0.0` push): success; full gate + count assertion green, staging verified 20/20, dry-run 97 files, publish with provenance (`+ pi-perimeter@1.0.0`, transparency log `2942073251`).
 
-## Publish record (executor-run, filled after the release workflow)
-
-- Tag: `v1.0.0`.
-- Release run id: PENDING.
-- Registry: `pi-perimeter@1.0.0`, integrity PENDING, provenance
-  attestation PENDING.
-- `npm view pi-perimeter version` → PENDING.
 
 ## Limits
 
@@ -120,7 +117,6 @@ verification, then the record in `STATE.md`/`ROADMAP.md`.
   containment evidence is executor-local on the declared target.
 - The Class 1 Linux runtime-evidence question stays open; macOS-only
   boundary unchanged.
+## Independent release review (reviewer-run)
 
-## Independent release review (reviewer-run; no blocking findings)
-
-PENDING — filled by the reviewer, not the executor.
+Fresh-context review of exact `30ac49a` returned PASS with no blocking findings (three non-blocking documentation/state observations, recorded without code changes); the reviewer additionally executed the release pipeline end-to-end in a throwaway clone (153 staged files, 20/20 verified, publishable tarball excludes `test/` and `.github/`) and showed every new safeguard bites under mutation. Full verdict in `history://ReleaseReview`.

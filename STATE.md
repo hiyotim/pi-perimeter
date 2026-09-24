@@ -10,10 +10,14 @@ Result (2026-09-24): step 3 snapshot ready for authorized commit+push — Task I
 
 ## Continuation
 
-- Current: Phase 7 gate closed 2026-09-24, macOS-only v1.0; release Goal pending.
-- Review: Steps 1–4 accepted, each with fresh PASS; no blocking findings.
-- Limits: macOS-only; Linux/Windows unsupported; unpublished, uninstalled.
-- Next: Release Goal (version, provenance, publish) pending npm auth.
+- Current: pi-perimeter@1.0.0 published 2026-09-24; binding ca0fb1c3…, tag v1.0.0, run 36031377325.
+- Review: Release review PASS, no blocking findings.
+- Limits: macOS-only; Linux/Windows unsupported; installed nowhere as evidence.
+- Next: No further Goal selected; v1.x work needs a new roadmap decision.
+
+## Release acceptance (pi-perimeter@1.0.0, macOS-only, 2026-09-24)
+
+Task ID: `20260924-release-v1`. **Accepted by the owner on 2026-09-24; `pi-perimeter@1.0.0` is the controlled published distribution (macOS-only v1.0).** Acceptance binds to [docs/release-hashes.json](docs/release-hashes.json), SHA-256 `ca0fb1c322fb873c85d1f556c6978175411344911cd6bc594dc7d2725ef72ded` (20 entries), tag `v1.0.0` on `30ac49a`, and release run `36031377325` (success; `tests 413, fail 0, skipped 54`; staging verified 20/20; publish with provenance). Registry identity: `pi-perimeter@1.0.0`, dist-tag `latest`, tarball `https://registry.npmjs.org/pi-perimeter/-/pi-perimeter-1.0.0.tgz`, shasum `6352fefae4cfd3d6c19acceeeaa2f8c7941374fa`, integrity `sha512-J3LgKV1kwKFzdydiqUyEWhv9Dw0jGUoIAC+hTC4g9vn9wcoNlN8A17JOSFfgSZ/i3bDAp5qMYRkUdQyEkvX5Gw==`, provenance attested (transparency log `2942073251`, SLSA `provenance/v1`). Review: fresh release review PASS with no blocking findings; local `npm run check` 413/412/0/1, all manifest suites PASS, `git diff --check` clean. Scope: P17/PACKAGING revision + staging safeguards + binding only; source tree stays `private: true` at `0.0.0`; P1–P16, P18, R1–R11 untouched; old acceptances keep their historical bytes. No installation into a real Pi profile was performed as evidence.
 
 ## Phase 7 gate closure (macOS-only v1.0, 2026-09-24)
 
