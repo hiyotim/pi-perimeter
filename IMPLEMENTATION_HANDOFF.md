@@ -2,7 +2,7 @@
 
 Task ID: `20260924-unknowns-bound`
 Baseline: `5da9e22efe4026d2940779879c90e8ae37fc6933` (index empty; working tree clean)
-Scope Gate: READY
+Scope Gate: HISTORICAL (step 3 committed as 82a5c4b; review + owner acceptance pending)
 
 ## Goal
 
