@@ -10,10 +10,14 @@ Result (2026-09-24): step 3 snapshot ready for authorized commit+push — Task I
 
 ## Continuation
 
-- Current: Step 4 accepted 2026-09-24; binding 32cb0399…, commit 6202286, run 36023554431 green.
-- Review: Final-bytes PASS + delta PASS 2026-09-24, no blocking findings.
-- Limits: Linux-only CI, no containment evidence; unpublished, uninstalled.
-- Next: Owner decides Phase 7 gate and publication; no further Goal selected.
+- Current: Phase 7 gate closed 2026-09-24, macOS-only v1.0; release Goal pending.
+- Review: Steps 1–4 accepted, each with fresh PASS; no blocking findings.
+- Limits: macOS-only; Linux/Windows unsupported; unpublished, uninstalled.
+- Next: Release Goal (version, provenance, publish) pending npm auth.
+
+## Phase 7 gate closure (macOS-only v1.0, 2026-09-24)
+
+**Owner decision: the Phase 7 release gate is closed as a macOS-only v1.0.** The supported platform is exactly the declared target (macOS 27.0 26A428, arm64, pinned `sandbox-exec` identity, Pi `0.84.4`, Node `26.8.1`); Linux and Windows are explicitly unsupported — R4 (Class 1 Linux runtime evidence) stays open with no runtime execution recorded, and no Linux or Windows support claim is made now or implied later without its own evidence and decision. Evidence: steps 1–4 acceptances with their bindings (`2d59ca09…`/`24da69f`, `8a42fd59…`/`c01b53d`, `2b7ad6b5…`/`82a5c4b`, `32cb0399…`/`6202286`), each with fresh review PASS and green hosted run. `private: true`, unpublished, uninstalled. Publication is a separate maintainer decision and is not authorized here.
 
 ## Phase 7 step 4 acceptance (2026-09-24)
 
