@@ -103,16 +103,12 @@ approximating them.
 
 ## Distribution
 
-**Verified: none.** There is no installation path: `README.md` states installation is not
-available, and nothing in this repository has been published or installed into a real Pi
-profile.
+**Verified: `pi-perimeter@1.0.0`** (macOS-only v1.0, 2026-09-24). Published from the deterministic staging artifact; the source tree on `main` stays `private: true` and unpublished. Installation is supported on the declared containment target only; nothing has been installed into a real Pi profile as evidence.
 
 **Blocked:** the unscoped npm name `pi-warden` — this project's former name — is already
 published by another maintainer, so it can never be used here, and installing
-`npm:pi-warden` installs that other project. The publishable identity is now
-`pi-perimeter`; nothing under it has been published, no version has been released, and
-there is no installation path. See [docs/PACKAGING.md](PACKAGING.md) for the identity,
-the publication safeguards and the release checklist.
+`npm:pi-warden` installs that other project. See [docs/PACKAGING.md](PACKAGING.md) for the identity,
+the publication safeguards and the release record.
 
 ## Not claimed
 
@@ -137,4 +133,4 @@ the publication safeguards and the release checklist.
 | Node `22.19.0` on hosted Linux CI | [docs/CI-EVIDENCE.md](CI-EVIDENCE.md) (run identifiers and counts) |
 | Declared containment target | [docs/SHELL-GATE.md](SHELL-GATE.md) declared-target table; `src/sandbox/containment.ts` |
 | Platform refusal behavior | `src/sandbox/containment.ts` (`verifyPlatform`), `scripts/build-native.mjs` |
-| No installation path | [README.md](../README.md) "Installation" |
+| Controlled published distribution | [PACKAGING.md](PACKAGING.md), [RELEASE-AUDIT.md](RELEASE-AUDIT.md), `docs/release-hashes.json` |

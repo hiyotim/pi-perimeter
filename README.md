@@ -2,7 +2,7 @@
 
 `pi-perimeter` (formerly `pi-warden`) is an early lightweight security extension/package for [Pi](https://pi.dev/), focused on workspace-scoped authorization and OS-level containment without requiring Docker or a full virtual machine.
 
-> **Project status: Goals 1–4 accepted; no public beta, no release, and no installation path.**
+> **Project status: Goals 1–4 accepted; Phase 7 gate closed as macOS-only v1.0; `pi-perimeter@1.0.0` published.**
 
 Goals 1–4 (bounded configuration authorization, Pi file gates with scoped
 approvals, contained shell execution, and restricted networking) are accepted
@@ -105,14 +105,14 @@ The project still does **not** provide:
 
 ## Installation
 
-**Not available yet.**
+`pi-perimeter@1.0.0` (macOS-only v1.0) is published on npm. Supported installation is the declared containment target only (macOS 27.0 arm64, Pi `0.84.4`); every other platform or peer version is outside the demonstrated guarantees — see [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 
 The package identity is `pi-perimeter` (formerly `pi-warden`); the unscoped npm
 name `pi-warden` belongs to another maintainer, so installing `npm:pi-warden`
 installs a different project. The publishable identity, publication safeguards
-and release checklist are in [docs/PACKAGING.md](docs/PACKAGING.md).
+and release record are in [docs/PACKAGING.md](docs/PACKAGING.md).
 
-Do not install or rely on this package as a security control.
+Do not rely on this package as a security control beyond the stabilized P1–P18 boundary.
 
 ## Security notice
 

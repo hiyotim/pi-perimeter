@@ -2,12 +2,12 @@
 
 ## Current status
 
-`pi-perimeter` (formerly `pi-warden`) is in **Pre-alpha**. Goals 1–4 — bounded configuration
+`pi-perimeter` (formerly `pi-warden`) is at **v1.0.0 (macOS-only)**. Goals 1–4 — bounded configuration
 authorization, Pi file gates with scoped approvals, contained shell execution,
 and restricted networking — are implemented, verified on the declared macOS
 target, and accepted within their documented contracts and declared
-limitations. There is no public beta, no release, and no supported installation
-path.
+limitations. Phase 7 gate is closed as macOS-only v1.0; `pi-perimeter@1.0.0`
+is the controlled published distribution (see [docs/PACKAGING.md](docs/PACKAGING.md)).
 
 Do not rely on it as a general-purpose security boundary. It is neither a
 virtual machine nor a Docker wrapper and is not a general malware-containment

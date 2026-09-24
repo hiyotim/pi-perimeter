@@ -154,8 +154,7 @@ function oldNameLines(file: string): string[] {
   }
   return content.split("\n").filter((line) => OLD_NAME.test(line));
 }
-
-test("the publishable identity is pi-perimeter and stays unpublished by default", () => {
+test("the publishable identity is pi-perimeter and the source tree stays unpublished", () => {
   const pkg = JSON.parse(readFileSync("package.json", "utf8")) as Record<string, unknown>;
   const lock = JSON.parse(readFileSync("package-lock.json", "utf8")) as {
     name: string;
@@ -164,7 +163,7 @@ test("the publishable identity is pi-perimeter and stays unpublished by default"
   assert.equal(pkg["name"], PACKAGE_NAME, "the package name is the renamed identity");
   assert.equal(lock.name, PACKAGE_NAME, "the lockfile root name follows the package name");
   assert.equal(lock.packages[""]?.name, PACKAGE_NAME, "the lockfile package entry follows too");
-  assert.equal(pkg["private"], true, "private: true blocks an accidental npm publish");
+  assert.equal(pkg["private"], true, "private: true on source blocks a source-tree npm publish; the publishable manifest exists only in staging");
   assert.deepEqual(
     { type: (pkg["repository"] as { type: string }).type, url: (pkg["repository"] as { url: string }).url },
     { type: REPOSITORY.type, url: REPOSITORY.url },
@@ -186,7 +185,7 @@ test("the publishable identity is pi-perimeter and stays unpublished by default"
   assert.deepEqual(pi.extensions, ["./src/index.ts"], "the Pi manifest entry is unchanged by the rename");
   assert.ok(readdirSync("src").includes("index.ts"), "the Pi manifest entry path exists");
 });
-test("the distribution carries no lifecycle script and no CI publish step", () => {
+test("no lifecycle script exists and publish tooling lives only in the release path", () => {
   const pkg = JSON.parse(readFileSync("package.json", "utf8")) as {
     scripts?: Record<string, string>;
     publishConfig?: Record<string, unknown>;
@@ -194,9 +193,9 @@ test("the distribution carries no lifecycle script and no CI publish step", () =
   for (const name of Object.keys(pkg.scripts ?? {})) {
     assert.ok(!/^pre|^post/.test(name), `no pre/post lifecycle script may exist (found ${name})`);
   }
-  assert.equal(pkg.publishConfig?.["provenance"], true, "provenance stays declared but unwired: no CI release job exists to use it");
+  assert.equal(pkg.publishConfig?.["provenance"], true, "provenance stays declared; only the release workflow may use it");
   const workflow = readFileSync(".github/workflows/ci.yml", "utf8");
-  assert.ok(!/npm publish|NPM_TOKEN|NODE_AUTH_TOKEN|--provenance|id-token\s*:\s*write/.test(workflow), "CI must never publish");
+  assert.ok(!/npm publish|NPM_TOKEN|NODE_AUTH_TOKEN|--provenance|id-token\s*:\s*write/.test(workflow), "the ordinary CI workflow must never publish");
   const tarball = readFileSync("test/package-lifecycle.test.ts", "utf8");
   assert.ok(!/--provenance/.test(tarball), "the lifecycle evidence installs the local tarball without provenance");
 });

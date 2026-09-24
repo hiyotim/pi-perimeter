@@ -1,7 +1,6 @@
 # Packaging
 
-Task ID: `20260920-npm-packaging`. Status: **identity renamed to `pi-perimeter`;
-nothing is published, no version is released, and no release gate is closed.**
+Task ID: `20260920-npm-packaging` (identity), release `20260924-release-v1` (Task ID in [RELEASE-AUDIT.md](RELEASE-AUDIT.md)). Status: **`pi-perimeter@1.0.0` published from the deterministic staging artifact; the source tree on `main` stays `private: true` and unpublished.**
 
 This document owns the publishable identity, the packaged contents, the publication
 safeguards and the release checklist. See [COMPATIBILITY.md](COMPATIBILITY.md) for the
@@ -13,7 +12,7 @@ verified platform rows and [ROADMAP.md](../ROADMAP.md) for the Phase 6 release g
 | --- | --- |
 | Package name | `pi-perimeter` |
 | Former name | `pi-warden` — already published on npm by another maintainer, so it can never be used here; installing `npm:pi-warden` installs that other project |
-| Version | `0.0.0` (never released) |
+| Version | `1.0.0` (published 2026-09-24; source tree carries no release version — the staging artifact sets it) |
 | License | MIT (`LICENSE`, "pi-perimeter contributors") |
 | Node floor | `engines.node` `>=22.19.0`; verified versions are in [COMPATIBILITY.md](COMPATIBILITY.md) |
 | Pi peer | `peerDependencies["@earendil-works/pi-coding-agent"] = "*"` — a declared range, **not** a verified one; `0.84.4` is the only verified version |
@@ -67,38 +66,23 @@ Notes on the contents:
 
 ## Publication safeguards
 
-- `private: true` is set. npm refuses to publish a private package, so an accidental
-  `npm publish` fails by construction; removing the flag is a release-gate decision, not
-  a packaging detail.
-- No `pre*`/`post*` lifecycle scripts exist, so installing a published tarball would run
-  no package code beyond the extension itself.
-- CI never publishes: `.github/workflows/ci.yml` typechecks, runs the suite and asserts the
-  declared counts, and nothing else.
-- `publishConfig` declares `access: public` and `provenance: true` as the intended release
-  settings. It is inert while the package is private.
-- Provenance is not yet achievable here: it requires publishing from CI with
-  `id-token: write` and `npm publish --provenance`, which this repository deliberately does
-  not wire up before the release decision.
-- Account-level controls (npm 2FA, trusted publishing, ownership of the name) are
-  maintainer actions outside this repository.
+- `private: true` stays set on `main`. npm refuses to publish the source tree by construction; the publishable manifest exists only inside the deterministic staging artifact built by the release workflow. Removing the flag from source is never authorized.
+- No `pre*`/`post*` lifecycle scripts exist, so installing the published tarball runs no package code beyond the extension itself.
+- Ordinary CI never publishes: `.github/workflows/ci.yml` typechecks, runs the suite and asserts the declared counts, and nothing else; `test/release-safeguards.test.ts` fails if any `npm publish`, token reference, `--provenance`, or `id-token: write` appears in any workflow other than `.github/workflows/release.yml`.
+- Only the dedicated release workflow (`.github/workflows/release.yml`, tag-triggered) may publish: it rebuilds the staging artifact deterministically, verifies its bytes against `docs/release-hashes.json`, and runs `npm publish --provenance` with the scoped `NPM_TOKEN` secret there and nowhere else.
+- `publishConfig` declares `access: public` and `provenance: true` as the release settings. Provenance is attested by the CI publish run.
+- Account-level controls (npm 2FA, trusted publishing, ownership of the name) are maintainer actions outside this repository.
 
 ## Release checklist
 
-Run only after an explicit release decision; every step is currently unsatisfied or
-unauthorized:
+Run only after an explicit release decision; every step is recorded in [RELEASE-AUDIT.md](RELEASE-AUDIT.md):
 
-1. Close the Phase 6 release-gate items, including the release-candidate security and
-   documentation reviews recorded in [ROADMAP.md](../ROADMAP.md).
-2. Complete the repository move, then update `repository`, `homepage`, `bugs` and the
-   reporting route together with it.
-3. Re-check `npm pack --dry-run` against this document, and read the packaged README and
-   `SECURITY.md` as a consumer would.
-4. Choose the version and dist-tag (currently `0.0.0`), and only then remove `private:
-   true`.
-5. Publish from CI with provenance and a scoped token — never from a developer machine —
-   and confirm the attested artifact identity.
-6. Record the published name, version, integrity and provenance attestation in
-   [STATE.md](../STATE.md), and re-bind the hash manifests to the released bytes.
+1. Phase 7 gate closed (macOS-only v1.0, 2026-09-24).
+2. Repository at its canonical location (`repository`, `homepage`, `bugs`, reporting route).
+3. `npm pack --dry-run` of the staging artifact matches this document; the packaged README and `SECURITY.md` read as a consumer would.
+4. Version `1.0.0`, dist-tag `latest`; `private: true` stays on source, removed only inside staging.
+5. Publish from the release workflow with provenance and the scoped token — never from a developer machine — and confirm the attested artifact identity.
+6. Record the published name, version, integrity and provenance attestation in [STATE.md](../STATE.md), bound by `docs/release-hashes.json`.
 
 ## Outstanding
 
@@ -107,5 +91,4 @@ unauthorized:
   redirects to it, and the reporting channel and its recorded advisory moved with the
   repository. The `pi-warden` organization still exists and is no longer used by this
   project; nothing here depends on it.
-- Nothing is published, no version exists, and no compatibility or security guarantee is
-  created by this document.
+- `pi-perimeter@1.0.0` is published (macOS-only v1.0); no compatibility or security guarantee beyond the stabilized P1–P18/R1–R11 boundary is created by this document.

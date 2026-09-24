@@ -294,18 +294,24 @@ sections, evidence index); `src/sandbox/containment.ts`
 (`verifyPlatform`), `scripts/build-native.mjs`;
 suite `test/package-compat.test.ts`.
 
-**P17. Unpublished distribution with inert safeguards.** The publishable
-identity is `pi-perimeter` at `0.0.0`, unpublished. `private: true`
-blocks accidental publish; no `pre*`/`post*` lifecycle scripts exist; CI
-never publishes; provenance is unwired by design until a release
-decision; the build-output directory never enters the tarball; the
-contracts and audits ship as the documented limitations. There is no
-installation path and no supported installation.
-Boundary: the repository as distributed; publication and provenance are
-separate explicit maintainer decisions that have not been taken.
+**P17. Controlled published distribution with staging safeguards.** The publishable
+identity is `pi-perimeter` at `1.0.0`, published from the deterministic staging
+artifact described below. The source tree stays unpublished by construction:
+`package.json` on `main` carries `private: true`, so a source-tree publish is
+refused; no `pre*`/`post*` lifecycle scripts exist; the ordinary CI workflow
+never publishes; only the dedicated release workflow (tag-triggered, provenance
+attestation, scoped token) may run `npm publish`, and only against the staging
+artifact; the build-output directory never enters the tarball; the contracts
+and audits ship as the documented limitations. Staging rule: the release
+workflow copies the exact release-commit tree into an isolated staging
+directory, and only there sets the publishable manifest (`version: 1.0.0`,
+`private` removed); the source manifest is never mutated. There is no other
+installation path and no other supported installation.
+Boundary: the staging artifact of the release commit; publication and provenance
+attestation are the release evidence recorded in [STATE.md](../STATE.md).
 Evidence: [PACKAGING.md](PACKAGING.md); suites
-`test/packaging-identity.test.ts`, `test/package-lifecycle.test.ts`;
-`docs/packaging-hashes.json`.
+`test/packaging-identity.test.ts`, `test/package-lifecycle.test.ts`,
+`test/release-manifest.test.ts`; `docs/release-hashes.json`.
 
 **P18. Counted, platform-tagged regression evidence.** `npm run check`
 (typecheck plus the full suite) is the local gate: 388 tests / 387 pass /

@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22.19.0
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci --ignore-scripts
+      - name: Typecheck and run the test suite
+        shell: bash
+        run: |
+          set -o pipefail
+          npm run check 2>&1 | tee "$RUNNER_TEMP/check.log"
+      - name: Assert the declared test outcome
+        run: node scripts/assert-test-outcome.mjs "$RUNNER_TEMP/check.log" test/ci-test-budget.json linux
+      - name: Build the deterministic staging artifact
+        shell: bash
+        run: node scripts/build-release-staging.mjs
+      - name: Verify the staging bytes against the release manifest
+        run: node scripts/verify-release-staging.mjs
+      - name: Dry-run pack of the staging artifact
+        shell: bash
+        working-directory: release-staging
+        run: npm pack --dry-run
+      - name: Publish the staging artifact with provenance
+        working-directory: release-staging
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
