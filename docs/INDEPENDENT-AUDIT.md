@@ -239,6 +239,9 @@ none exists, and refactors/non-biting tests are out of scope):
 - Hosted run `35994073510` (`8443215`, success, tests 407 / pass 353 /
   fail 0 / skipped 54) green against budget tests 407 / fail 0 /
   skipped 54.
+- Hosted run `35994514371` (`e9ff633`, success, tests 407 / pass 353 /
+  fail 0 / skipped 54) green against budget tests 407 / fail 0 /
+  skipped 54.
 - Post-binding corrections: `d44cfa3` corrected the stale in-doc
   manifest SHA (`de7443fa…` → `c829dcdd…`, the true value at the time)
   and recomputed the doc entry (`e35f42…`); `671e624` then removed the
@@ -251,9 +254,11 @@ none exists, and refactors/non-biting tests are out of scope):
   (`d44cfa3`, success, tests 407 / fail 0 / skipped 54) and
   `35993521475` (`671e624`, success, tests 407 / pass 353 / fail 0 /
   skipped 54) green against budget tests 407 / fail 0 / skipped 54.
-  Post-`671e624`, this fix records run `35994073510` for `8443215`;
-  final snapshot = HEAD `8443215`; no file-level SHA of
-  `docs/independent-audit-hashes.json` is quoted here.
+  Post-`671e624` corrections are chained above through `8443215`; the
+  final snapshot is HEAD at owner acceptance (see `git log`; file-level
+  SHA of `docs/independent-audit-hashes.json` bound in STATE.md at
+  acceptance); no file-level SHA of `docs/independent-audit-hashes.json`
+  is quoted here.
 
 ## Limits
 
