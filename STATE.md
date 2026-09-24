@@ -10,10 +10,14 @@ Result (2026-09-24): step 3 snapshot ready for authorized commit+push — Task I
 
 ## Continuation
 
-- Current: Step 4 accepted 2026-09-24; binding 32cb0399…, commit PENDING, run PENDING.
+- Current: Step 4 accepted 2026-09-24; binding 32cb0399…, commit 6202286, run 36023554431 green.
 - Review: Final-bytes PASS + delta PASS 2026-09-24, no blocking findings.
 - Limits: Linux-only CI, no containment evidence; unpublished, uninstalled.
-- Next: Ship fix commit, record commit+run, tick Phase 7 item.
+- Next: Owner decides Phase 7 gate and publication; no further Goal selected.
+
+## Phase 7 step 4 acceptance (2026-09-24)
+
+Task ID: `20260924-v1-independent-audit`. **Accepted by the owner on 2026-09-24; the Phase 7 checklist item "Complete an independent audit appropriate to the claimed boundary" is closed.** Acceptance binds to [docs/independent-audit-hashes.json](docs/independent-audit-hashes.json), SHA-256 `32cb0399a29b71d7f8b4716f25afdd8f9583d81990fcf748236c5e60ba57070f` (12 entries), commit `6202286b3a9cc569ba2806ef52cea1c327a78991` on `main` (pushed), and hosted run `36023554431` (success; `tests 407, fail 0, skipped 54`). Audit: two fresh-context audits of `b1bab75` (P1–P18 HOLD, R1–R11 stand, 7 non-blocking findings, none open-bypass) plus fresh final-bytes review and delta review of the citation-fix bytes, all PASS with no blocking findings; local `npm run check` 407/406/0/1, all manifest suites PASS, `git diff --check` clean. Scope: docs + binding only; no P1–P18 rewording, no `src/`, `scripts/`, `package.json`, or CI change; `private: true`, unpublished, uninstalled. The Phase 7 gate decision and publication remain separate explicit maintainer decisions and are not closed here.
 
 ## Phase 7 step 3 acceptance (2026-09-24)
 
