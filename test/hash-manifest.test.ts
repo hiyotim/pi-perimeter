@@ -32,6 +32,17 @@ const CHANGED_IN_HOSTED_CI = new Set<string>([".github/workflows/ci.yml"]);
  * bytes; docs/packaging-hashes.json binds the current bytes.
  */
 const CHANGED_IN_PACKAGING = new Set<string>(["package.json", "test/package-lifecycle.test.ts"]);
+/**
+ * Artifacts whose bytes the regression-evidence Goal
+ * (`20260922-regression-evidence-per-guarantee`) changed: new biting
+ * regressions plus this declaration. Their entries here stay historical;
+ * docs/regression-evidence-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_REGRESSION_EVIDENCE: Record<string, true> = {
+  "test/controlled-traversal.test.ts": true,
+  "test/gate-runtime.test.ts": true,
+  "test/hash-manifest.test.ts": true,
+};
 
 const COVERED_FILES = [
   "package.json",
@@ -61,6 +72,7 @@ test("the Goal 2 artifact hash manifest matches the final working tree", async (
   for (const file of COVERED_FILES) {
     if (CHANGED_IN_HOSTED_CI.has(file)) continue; // historical bytes; fresh evidence binds the current tree
     if (CHANGED_IN_PACKAGING.has(file)) continue; // renamed identity; the packaging manifest binds the current bytes
+    if (CHANGED_IN_REGRESSION_EVIDENCE[file] === true) continue; // new regressions; the regression-evidence manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

@@ -63,6 +63,20 @@ const CHANGED_IN_V1_GUARANTEES: Record<string, true> = {
   "test/compatibility-manifest.test.ts": true,
   "test/post-transfer-manifest.test.ts": true,
 };
+/**
+ * Artifacts whose bytes the regression-evidence Goal
+ * (`20260922-regression-evidence-per-guarantee`) changed: the raised declared
+ * test count and this declaration. Their entries here stay historical;
+ * docs/regression-evidence-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_REGRESSION_EVIDENCE: Record<string, true> = {
+  "test/ci-test-budget.json": true,
+  "test/packaging-identity.test.ts": true,
+  "test/packaging-manifest.test.ts": true,
+  "test/ci-manifest.test.ts": true,
+  "test/compatibility-manifest.test.ts": true,
+  "test/post-transfer-manifest.test.ts": true,
+};
 
 /** Artifacts this pass also changed inside an earlier manifest. */
 const SHARED_WITH_EARLIER_MANIFESTS: Record<string, string[]> = {
@@ -118,6 +132,7 @@ test("the post-transfer manifest matches the final working tree", async () => {
   for (const file of COVERED_FILES) {
     if (CHANGED_IN_RELEASE_REVIEW[file] === true) continue; // reviewed wording; the release-review manifest binds the current bytes
     if (CHANGED_IN_V1_GUARANTEES[file] === true) continue; // stabilized wording; the v1-guarantees manifest binds the current bytes
+    if (CHANGED_IN_REGRESSION_EVIDENCE[file] === true) continue; // regression evidence; the regression-evidence manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

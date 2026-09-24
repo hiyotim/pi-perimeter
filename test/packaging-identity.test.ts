@@ -106,6 +106,7 @@ const RETAINED: Record<string, string> = {
   "docs/RELEASE-REVIEW-AUDIT.md": "evidence-bound (this Goal's audit; records the former-name finding)",
   "test/release-review-manifest.test.ts": "declares the old-name pattern retention and the earlier-manifest change records",
   "test/v1-guarantees-manifest.test.ts": "runtime-identifier (reads the shared harness verbose flag)",
+  "test/regression-evidence-manifest.test.ts": "runtime-identifier (reads the shared harness verbose flag)",
   "THREAT_MODEL.md": "outside the rename surface (current document, stable anchors)",
   "docs/CONFIGURATION-AUTHORIZATION.md": "outside the rename surface (stable anchors)",
   "docs/MONOTONIC-POLICY-AUTHORITY.md": "outside the rename surface (stable anchors)",
@@ -182,6 +183,20 @@ test("the publishable identity is pi-perimeter and stays unpublished by default"
   const pi = pkg["pi"] as { extensions: string[] };
   assert.deepEqual(pi.extensions, ["./src/index.ts"], "the Pi manifest entry is unchanged by the rename");
   assert.ok(readdirSync("src").includes("index.ts"), "the Pi manifest entry path exists");
+});
+test("the distribution carries no lifecycle script and no CI publish step", () => {
+  const pkg = JSON.parse(readFileSync("package.json", "utf8")) as {
+    scripts?: Record<string, string>;
+    publishConfig?: Record<string, unknown>;
+  };
+  for (const name of Object.keys(pkg.scripts ?? {})) {
+    assert.ok(!/^pre|^post/.test(name), `no pre/post lifecycle script may exist (found ${name})`);
+  }
+  assert.equal(pkg.publishConfig?.["provenance"], true, "provenance stays declared but unwired: no CI release job exists to use it");
+  const workflow = readFileSync(".github/workflows/ci.yml", "utf8");
+  assert.ok(!/npm publish|NPM_TOKEN|NODE_AUTH_TOKEN|--provenance|id-token\s*:\s*write/.test(workflow), "CI must never publish");
+  const tarball = readFileSync("test/package-lifecycle.test.ts", "utf8");
+  assert.ok(!/--provenance/.test(tarball), "the lifecycle evidence installs the local tarball without provenance");
 });
 
 test("distribution files qualify every mention of the former name", () => {

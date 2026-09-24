@@ -227,3 +227,24 @@ test("a forged source set cannot contribute to shell outcomes", () => {
   assert.equal(contributions.read, "DENY");
   assert.equal(contributions.mutation, "DENY");
 });
+test("a protected or denied export target denies the shell invocation even with an open network scope", () => {
+  const denied = decideShellInvocation(
+    inputs({
+      network: { status: "open", entries: ["registry.npmjs.org:443"], unapprovedTargets: [] },
+      resourceOutcomes: [{ kind: "read", logicalPath: ".env", decision: "DENY", reason: "env-file" }],
+    }),
+  );
+  assert.equal(denied.decision, "DENY");
+  assert.equal(denied.reason, "SHELL_RESOURCE_DENIED");
+
+  const invalid = decideShellInvocation(
+    inputs({
+      network: { status: "open", entries: ["registry.npmjs.org:443"], unapprovedTargets: [] },
+      readOutcome: "ALLOW",
+      mutationOutcome: "ALLOW",
+      configurationInvalid: true,
+    }),
+  );
+  assert.equal(invalid.decision, "DENY");
+  assert.equal(invalid.reason, "SHELL_CONFIGURATION_INVALID");
+});

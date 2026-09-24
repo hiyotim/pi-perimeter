@@ -187,3 +187,31 @@ test("grep regex with a malformed pattern matches nothing and performs no conten
     await destroyFixture(fixture);
   }
 });
+test("find never descends into a symlinked directory that points outside the root", async () => {
+  const fixture = await createFixture();
+  try {
+    const target = path.join(fixture.workspace, "target");
+    await mkdir(target);
+    await mkdir(path.join(target, "real"));
+    await writeFile(path.join(target, "real", "inside.ts"), "");
+    // An includable internal directory behind the symlink label: the walker
+    // must still refuse to descend through the link itself.
+    await mkdir(path.join(target, "inner"));
+    await writeFile(path.join(target, "inner", "inner.ts"), "");
+    await symlink(path.join(target, "inner"), path.join(target, "linkdir"));
+    await mkdir(path.join(fixture.workspace, "..", "escape"), { recursive: true });
+    await writeFile(path.join(fixture.workspace, "..", "escape", "leak.ts"), "");
+
+    const { snapshot } = await snapshotFor(fixture);
+    const result = await controlledFind(snapshot, "**", 1000);
+    assert.ok(result.lines.includes("real"), `unexpected find output: ${JSON.stringify(result)}`);
+    assert.ok(result.lines.includes("inner/inner.ts"), `unexpected find output: ${JSON.stringify(result)}`);
+    assert.ok(
+      !result.lines.some((line) => line === "linkdir/inner.ts" || line.startsWith("linkdir/")),
+      `symlinked directory must not be descended even when includable: ${JSON.stringify(result.lines)}`,
+    );
+    assert.ok(!result.lines.some((line) => line.includes("leak.ts")), `outside bytes must not reach find: ${JSON.stringify(result.lines)}`);
+  } finally {
+    await destroyFixture(fixture);
+  }
+});

@@ -45,6 +45,16 @@ const CHANGED_IN_GOAL_4 = new Set<string>([
  * accepted bytes; docs/packaging-hashes.json binds the current bytes.
  */
 const CHANGED_IN_PACKAGING = new Set<string>(["package.json", "test/shell-manifest.test.ts"]);
+/**
+ * Artifacts whose bytes the regression-evidence Goal
+ * (`20260922-regression-evidence-per-guarantee`) changed: one new P15
+ * regression plus this declaration. Their entries here stay historical;
+ * docs/regression-evidence-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_REGRESSION_EVIDENCE: Record<string, true> = {
+  "test/shell-policy.test.ts": true,
+  "test/shell-manifest.test.ts": true,
+};
 
 const COVERED_FILES = [
   "package.json",
@@ -92,6 +102,7 @@ test("the Goal 3 artifact hash manifest matches the final working tree", async (
   for (const file of COVERED_FILES) {
     if (CHANGED_IN_GOAL_4.has(file)) continue; // historical bytes; fresh evidence binds the current tree
     if (CHANGED_IN_PACKAGING.has(file)) continue; // renamed identity; the packaging manifest binds the current bytes
+    if (CHANGED_IN_REGRESSION_EVIDENCE[file] === true) continue; // new P15 regression; the regression-evidence manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

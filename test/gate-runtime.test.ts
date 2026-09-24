@@ -556,12 +556,20 @@ test("secret resources are denied hard and never approvable", async () => {
     await mkdir(p.join(workspace, "target"));
     await writeFile(p.join(workspace, "target", ".env"), "TOP=secret\n");
     const harness = buildGateHarness(userRoot, []);
-    const ctx = fakeCtx(workspace, true); // even a willing user cannot approve
     const input = { path: p.join("target", ".env") };
-    const result = await harness.toolCall({ type: "tool_call", toolName: "read", toolCallId: "s1", input }, ctx);
-    assert.ok(result && typeof result === "object" && (result as { block?: unknown }).block === true);
-    const reason = (result as { reason?: string }).reason ?? "";
-    assert.match(reason, /SECRET_RESOURCE/);
+    const confirmCalls: unknown[] = [];
+    const refusingApprovalCtx = {
+      cwd: workspace,
+      hasUI: true,
+      ui: { confirm: async () => { confirmCalls.push(1); return true; }, notify: () => undefined },
+      sessionManager: { getSessionId: () => "integration-session" },
+    };
+    const result = await harness.toolCall({ type: "tool_call", toolName: "read", toolCallId: "s1", input }, refusingApprovalCtx);
+    assert.ok(typeof result === "object" && result !== null && "block" in result);
+    const record: { block?: unknown; reason?: unknown } = result as { block?: unknown; reason?: unknown };
+    assert.equal(record.block, true);
+    assert.match(typeof record.reason === "string" ? record.reason : "", /SECRET_RESOURCE/);
+    assert.equal(confirmCalls.length, 0, "secret denials must not be approvable");
     assert.equal(input.path, "target/.env", "denied call must not be pinned to the canonical resource");
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -575,7 +583,8 @@ test("missing read targets fail closed", async () => {
     const ctx = fakeCtx(workspace);
     const input = { path: "nope.txt" };
     const result = await harness.toolCall({ type: "tool_call", toolName: "read", toolCallId: "m1", input }, ctx);
-    const reason = (result as { reason?: string })?.reason ?? "";
+    const record = result as { reason?: string };
+    const reason = record?.reason ?? "";
     assert.match(reason, /READ_TARGET_MISSING/);
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -588,13 +597,14 @@ test("shell routes are either contained or blocked; nothing runs uncontained", a
     const harness = buildGateHarness(userRoot, []);
     const ctx = fakeCtx(workspace);
 
-    // A shell dialect without a containment path is always blocked.
+    // A shell dialect without a containment path is always blocked with a distinct reason.
     const powershell = await harness.toolCall(
       { type: "tool_call", toolName: "powershell", toolCallId: "ps", input: { command: "echo hi" } },
       ctx,
     );
-    assert.ok((powershell as { block?: unknown })?.block === true, "powershell must be blocked");
-    assert.match((powershell as { reason?: string }).reason ?? "", /blocked/);
+    const psRecord = powershell as { block?: unknown; reason?: string };
+    assert.ok(psRecord?.block === true, "powershell must be blocked");
+    assert.match(psRecord?.reason ?? "", /no containment path/);
 
     // Denied, unsupported and malformed shell input never reaches containment.
     for (const [id, command] of [
@@ -722,6 +732,44 @@ test("protected control-plane resources override workspace allowance and any app
     assert.ok((result as { block?: unknown })?.block === true);
     assert.match((result as { reason?: string }).reason ?? "", /PROTECTED_RESOURCE/);
     assert.equal(confirmCalls.length, 0, "protected denials must not be approvable");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+test("a hostile project policy that allows a protected path still denies it", async () => {
+  const { root, workspace, userRoot } = await tempFixture();
+  try {
+    const zoneRoot = await canonicalizeWorkspace(userRoot);
+    const harness = buildGateHarness(userRoot, [zoneRoot]);
+    await mkdir(p.join(workspace, ".pi-warden"), { recursive: true });
+    await writeFile(
+      p.join(workspace, ".pi-warden", "policy.json"),
+      JSON.stringify({ version: 1, operations: { read: "ALLOW" } }),
+    );
+    const sibling = `${zoneRoot}-suffix`;
+    await mkdir(sibling, { recursive: true });
+    const siblingTarget = p.join("..", "user-config-suffix", "policy.json");
+    await writeFile(p.join(sibling, "policy.json"), "sibling content\n");
+    const siblingCtx = fakeCtx(workspace, true);
+    const siblingResult = await harness.toolCall(
+      { type: "tool_call", toolName: "read", toolCallId: "sibling", input: { path: siblingTarget } },
+      siblingCtx,
+    );
+    assert.equal(siblingResult, undefined, "a sibling sharing the zone prefix is not a protected zone");
+    const confirmCalls: unknown[] = [];
+    const ctx = {
+      cwd: workspace,
+      hasUI: true,
+      ui: { confirm: async () => { confirmCalls.push(1); return true; }, notify: () => undefined },
+      sessionManager: { getSessionId: () => "integration-session" },
+    };
+    const input = { path: p.join("..", "user-config", "pi-warden", "policy.json") };
+    const result = await harness.toolCall({ type: "tool_call", toolName: "read", toolCallId: "hostile", input }, ctx);
+    assert.ok(typeof result === "object" && result !== null && "block" in result);
+    const record: { block?: unknown; reason?: unknown } = result as { block?: unknown; reason?: unknown };
+    assert.equal(record.block, true);
+    assert.match(typeof record.reason === "string" ? record.reason : "", /PROTECTED_RESOURCE/);
+    assert.equal(confirmCalls.length, 0, "project policy cannot make a protected denial approvable");
   } finally {
     await rm(root, { recursive: true, force: true });
   }

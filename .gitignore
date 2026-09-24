@@ -13,3 +13,4 @@ coverage/
 # Native helper build artifacts (built explicitly by `npm run build:native`).
 /native/piwarden-helper
 /native/build-manifest.json
+.zcode/

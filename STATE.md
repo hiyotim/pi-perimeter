@@ -8,10 +8,10 @@ Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c2
 
 ## Continuation
 
-- Current: Goals 1–4 are accepted; all five Phase 6 checklist items are closed and **the Phase 6 release gate was closed by explicit owner decision on 2026-09-22**. The repository lives at `hiyotim/pi-perimeter`; **Phase 7 (v1.0) is active: step 1 "Stabilize the supported security guarantees" (`20260922-stabilize-guarantees`) was accepted by the owner on 2026-09-22**. Binding triple: [docs/v1-guarantees-hashes.json](docs/v1-guarantees-hashes.json) SHA-256 `2d59ca09f8d2bdb195164bfba5de630cc8e8410186df7822b5dc33a1bb56cfe5` (10 entries, 10/10 recompute-match) + implementation commit `24da69fe1dd51f7bb66db1001dce3fc1fe7a6d2b` (pushed, single push) + hosted run `35740981632` (conclusion `success`; tests 391, pass 337, fail 0, skipped 54). ROADMAP.md Phase 7 item 1 checked, items 2–4 open.
-- Review: **PASS** — rounds 1–4 for `20260922-stabilize-guarantees` (rounds 1–2 FAIL findings fixed inside the Goal; round 3 PASS with no blocking findings; round 4 delta PASS on the run-id lines plus refreshed manifest entry, no blocking findings). Prior reviews unchanged (see history below). Every accepted item has a recorded independent review.
-- Limits: hosted CI covers the platform-independent suite on Linux only and supplies no containment evidence or platform support claim; the compatibility matrix reports verified rows only (Linux file gates execute with the Class 1 runtime-evidence question open, no support claim); `pi-perimeter` stays unpublished with `private: true` and provenance unwired; publication, v1.0 release, and installation into a real profile remain unauthorized; nothing is published or installed, while the repository content itself is pushed to `origin` (`hiyotim/pi-perimeter`).
-- Next: owner selects Phase 7 step 2 ("Maintain regression evidence for every guarantee"); do not self-select.
+- Current: Phase 7 step 1 accepted (triple `2d59ca09…` + `24da69f` + run `35740981632`); step 2 (`20260922-regression-evidence-per-guarantee`) executed, uncommitted, manifest `8a42fd59…`.
+- Review: Step 2 rounds 1–4 reviewer-run PASS 2026-09-22, no blocking findings; step 1 PASS unchanged.
+- Limits: Linux-only CI, no containment evidence; step-2 bytes uncommitted, no hosted run; unpublished, uninstalled.
+- Next: owner authorizes commit/push of step-2 snapshot, then hosted run and acceptance.
 
 ## Current checkpoint
 

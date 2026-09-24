@@ -64,6 +64,22 @@ const CHANGED_IN_V1_GUARANTEES: Record<string, true> = {
   "test/ci-manifest.test.ts": true,
   "test/compatibility-manifest.test.ts": true,
 };
+/**
+ * Artifacts whose bytes the regression-evidence Goal
+ * (`20260922-regression-evidence-per-guarantee`) changed: new biting
+ * regressions plus the two declarations below. Their entries here stay
+ * historical; docs/regression-evidence-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_REGRESSION_EVIDENCE: Record<string, true> = {
+  "test/controlled-traversal.test.ts": true,
+  "test/gate-runtime.test.ts": true,
+  "test/shell-policy.test.ts": true,
+  "test/hash-manifest.test.ts": true,
+  "test/shell-manifest.test.ts": true,
+  "test/network-manifest.test.ts": true,
+  "test/packaging-identity.test.ts": true,
+  "test/packaging-manifest.test.ts": true,
+};
 
 const COVERED_FILES = [
   "package.json",
@@ -126,6 +142,7 @@ test("the packaging artifact hash manifest matches the final working tree", asyn
     if (CHANGED_IN_POST_TRANSFER.has(file)) continue; // moved canonical location; the post-transfer manifest binds the current bytes
     if (CHANGED_IN_RELEASE_REVIEW[file] === true) continue; // reviewed wording; the release-review manifest binds the current bytes
     if (CHANGED_IN_V1_GUARANTEES[file] === true) continue; // stabilized wording; the v1-guarantees manifest binds the current bytes
+    if (CHANGED_IN_REGRESSION_EVIDENCE[file] === true) continue; // new P17 absence regression; the regression-evidence manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });
