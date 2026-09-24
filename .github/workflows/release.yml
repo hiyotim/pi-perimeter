@@ -22,6 +22,8 @@ jobs:
           node-version: 22.19.0
           cache: npm
           registry-url: https://registry.npmjs.org
+      - name: Ensure an npm release with OIDC support
+        run: npm install -g npm@11.20.0
       - run: npm ci --ignore-scripts
       - name: Typecheck and run the test suite
         shell: bash
@@ -42,5 +44,3 @@ jobs:
       - name: Publish the staging artifact with provenance
         working-directory: release-staging
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

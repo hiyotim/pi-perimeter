@@ -68,10 +68,10 @@ Notes on the contents:
 
 - `private: true` stays set on `main`. npm refuses to publish the source tree by construction; the publishable manifest exists only inside the deterministic staging artifact built by the release workflow. Removing the flag from source is never authorized.
 - No `pre*`/`post*` lifecycle scripts exist, so installing the published tarball runs no package code beyond the extension itself.
-- Ordinary CI never publishes: `.github/workflows/ci.yml` typechecks, runs the suite and asserts the declared counts, and nothing else; `test/release-safeguards.test.ts` fails if any `npm publish`, token reference, `--provenance`, or `id-token: write` appears in any workflow other than `.github/workflows/release.yml`.
-- Only the dedicated release workflow (`.github/workflows/release.yml`, tag-triggered) may publish: it rebuilds the staging artifact deterministically, verifies its bytes against `docs/release-hashes.json`, and runs `npm publish --provenance` with the scoped `NPM_TOKEN` secret there and nowhere else.
-- `publishConfig` declares `access: public` and `provenance: true` as the release settings. Provenance is attested by the CI publish run.
-- Account-level controls (npm 2FA, trusted publishing, ownership of the name) are maintainer actions outside this repository.
+- Ordinary CI never publishes: `.github/workflows/ci.yml` typechecks, runs the suite and asserts the declared counts, and nothing else; `test/release-safeguards.test.ts` fails if any ordinary workflow publishes, carries a publish credential or provenance flag, or holds `id-token: write` — only `.github/workflows/release.yml` may.
+- Only the dedicated release workflow (`.github/workflows/release.yml`, tag-triggered) may publish: it rebuilds the staging artifact deterministically, verifies its bytes against `docs/release-hashes.json`, pins an explicit npm 11.x release (>= 11.5.1) for OIDC support, and runs `npm publish --provenance` from inside `release-staging` over npm Trusted Publishing (GitHub OIDC, `id-token: write`) with no publish token and no secret reference.
+- `publishConfig` declares `access: public` and `provenance: true` as the release settings. Provenance is attested by the CI publish run under Trusted Publishing.
+- The npm Trusted Publisher (GitHub user `hiyotim`, repository `pi-perimeter`, workflow `release.yml`, no environment, direct publish allowed) is the account-level counterpart; the repository side never carries a publish token.
 
 ## Release checklist
 
@@ -81,7 +81,7 @@ Run only after an explicit release decision; every step is recorded in [RELEASE-
 2. Repository at its canonical location (`repository`, `homepage`, `bugs`, reporting route).
 3. `npm pack --dry-run` of the staging artifact matches this document; the packaged README and `SECURITY.md` read as a consumer would.
 4. Version `1.0.0`, dist-tag `latest`; `private: true` stays on source, removed only inside staging.
-5. Publish from the release workflow with provenance and the scoped token — never from a developer machine — and confirm the attested artifact identity.
+5. Publish from the release workflow over Trusted Publishing (GitHub OIDC) with provenance and no publish token — never from a developer machine — and confirm the attested artifact identity.
 6. Record the published name, version, integrity and provenance attestation in [STATE.md](../STATE.md), bound by `docs/release-hashes.json`.
 
 ## Outstanding
