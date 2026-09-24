@@ -59,7 +59,7 @@ Use primary sources:
 2. the current `earendil-works/pi` source and examples;
 3. released package metadata for the intended compatibility range.
 
-Verify at least the package manifest, exported extension types, entry-point contract, tool and `user_bash` interception semantics, supported replacement operations, project-trust behavior, core peer-dependency convention, and Node engine. Record the upstream version or commit used by a compatibility-affecting decision.
+Verify at least the package manifest, exported extension types, entry-point contract, tool and `user_bash` interception semantics, supported replacement operations, project-trust behavior, core peer-dependency convention, and Node engine. Record the upstream version or commit used by a compatibility-affecting decision. Any change to the integration layer must also verify the startup readiness signal: on Pi `0.84.4` `pi.getAllTools()` throws at extension load and ownership observation runs only after `session_start`.
 
 Do not infer a stable security boundary from an example extension. Upstream examples may demonstrate capability without implementing this project's fail-closed or configuration-authority requirements.
 

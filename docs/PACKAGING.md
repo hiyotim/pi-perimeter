@@ -16,7 +16,7 @@ verified platform rows and [ROADMAP.md](../ROADMAP.md) for the Phase 6 release g
 | License | MIT (`LICENSE`, "pi-perimeter contributors") |
 | Node floor | `engines.node` `>=22.19.0`; verified versions are in [COMPATIBILITY.md](COMPATIBILITY.md) |
 | Pi peer | `peerDependencies["@earendil-works/pi-coding-agent"] = "*"` — a declared range, **not** a verified one; `0.84.4` is the only verified version |
-| Pi manifest | `pi.extensions` = `./src/index.ts` (a path, unchanged by the rename) |
+| Pi manifest | `pi.extensions` = `./src/index.ts` (a path, unchanged by the rename); the unreleased source correction waits for Pi `0.84.4` `session_start` before observing tool ownership |
 
 `package.json` carries `repository`, `homepage` and `bugs`, all pointing at
 `github.com/hiyotim/pi-perimeter` — the canonical location since the repository was
@@ -60,6 +60,11 @@ Notes on the contents:
   compiled helper and its build manifest therefore cannot enter the tarball even when a
   release is packed on a machine that has built them, and nothing is compiled at install
   time — the helper is built explicitly per platform with `npm run build:native`.
+  For an npm installation, run that script against the installed package directory
+  reported by `pi list` (for the default user profile:
+  `npm --prefix "$HOME/.pi/agent/npm/node_modules/pi-perimeter" run build:native`).
+  This does not repair the published `1.0.0` startup failure; the corrected source
+  needs a separately reviewed release.
   `test/packaging-identity.test.ts` asserts that exclusion.
 - The audits and contracts under `docs/` ship with the package, deliberately: the
   documented guarantees and their declared limitations are part of the artifact.

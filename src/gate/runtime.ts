@@ -54,6 +54,7 @@ import {
 } from "./shell-runtime.ts";
 import { defaultBuildManifestPath, defaultHelperPath, packageRootFromModule } from "../sandbox/helper.ts";
 import { randomUUID } from "node:crypto";
+import path from "node:path";
 
 export const SHELL_UNSUPPORTED_REASON = "pi-warden: this shell dialect has no containment path and is blocked";
 export const UNKNOWN_TOOL_REASON = "pi-warden: tool is not integrated and is blocked (fail closed)";
@@ -65,6 +66,20 @@ export const CONTROLLED_TOOL_FOREIGN_OWNER_REASON =
   "pi-warden: controlled tool registration does not match the authorized owner";
 export const GATE_FAILURE_REASON =
   "pi-warden: gate initialization failed; affected operations are blocked (fail closed)";
+/**
+ * Pre-ready refusal: Pi `0.84.4` keeps every action method (`getAllTools`,
+ * `getActiveTools`, ...) as a throwing stub until its session binds the core
+ * (`ExtensionRunner.bindCore`), and only then emits `session_start`
+ * (`dist/core/extensions/loader.js:132-155` stubs, `runner.js:160-170`
+ * `bindCore` wiring in `_bindExtensionCore` at `agent-session.js:2003`
+ * (called from `_buildRuntime` at `:2199`), `bindExtensions` at `:1916-1920`
+ * applying bindings then emitting `session_start` (`:152` default event,
+ * reload re-emit `:2229-2230`); real `getAllTools` `:641`). Ownership
+ * observations therefore run only in the `session_start` handler; every
+ * gated call before that blocks here.
+ */
+export const GATE_NOT_READY_REASON =
+  "pi-warden: gate not ready (waiting for Pi session_start); operations are blocked (fail closed)";
 
 export interface ToolOwnerInfo {
   readonly name: string;
@@ -103,6 +118,8 @@ export interface RuntimeState {
   /** Gate-issued shell authorizations; entries are consumed exactly once. */
   readonly pendingShellCalls: Map<string, PendingShellCall>;
   readonly degraded: boolean;
+  /** True once Pi emitted `session_start` and ownership was observed. */
+  readonly ready: boolean;
 }
 
 export interface GateRuntimeOptions {
@@ -183,6 +200,10 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
   };
 
   const packageRoot = packageRootFromModule(import.meta.url);
+  // Pi derives extension tool provenance from the loaded entry file. This is
+  // the only owner that may replace the built-in tools, even if another
+  // extension registered a same-name tool before session_start.
+  const extensionPath = path.join(packageRoot, "src", "index.ts");
   const shellServices: ShellServices = {
     trustedUserConfigRoot: options.trustedUserConfigRoot,
     protectedZones,
@@ -192,6 +213,9 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
     ...(options.approvalTimeoutMs !== undefined ? { approvalTimeoutMs: options.approvalTimeoutMs } : {}),
   };
   let sessionEpoch = 0;
+  /** False until Pi emits `session_start` (post-bindCore); every
+   * `getAllTools()` ownership observation runs only after that signal. */
+  let ready = false;
   let degraded = false;
   const authorizedCalls = new Map<string, AuthorizedCall>();
   const pendingShellCalls = new Map<string, PendingShellCall>();
@@ -219,6 +243,43 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
     return { hasUI: true, confirm: ui.confirm };
   }
 
+  /** Ownership observation: runs only from the `session_start` handler (never
+   * at factory load). The name table is literal so it is callable before the
+   * executor closures below are defined. */
+  function observeControlledToolOwners(): boolean {
+    const names = ["bash", "read", "write", "edit", "ls", "find", "grep"] as const;
+    let tools: ToolOwnerInfo[];
+    try {
+      tools = pi.getAllTools();
+    } catch {
+      degraded = true;
+      return false;
+    }
+    for (const name of names) {
+      const observed = tools.filter((tool) => tool.name === name);
+      if (observed.length !== 1 || observed[0].sourceInfo?.path !== extensionPath) {
+        degraded = true;
+        return false;
+      }
+      controlledToolOwners.set(name, observed[0].sourceInfo);
+    }
+    return true;
+  }
+
+  pi.on("session_start", () => {
+    // Readiness signal: Pi `0.84.4` emits this only after bindCore replaces
+    // the throwing action-method stubs (evidence: see `GATE_NOT_READY_REASON`
+    // note), so `getAllTools()` is safe here and throws at factory load.
+    // Ownership is observed exactly once per session binding;
+    // missing/duplicate observation degrades. No epoch bump here:
+    // `session_shutdown` already advanced it.
+    ready = false;
+    pendingShellCalls.clear();
+    authorizedCalls.clear();
+    controlledToolOwners.clear();
+    if (!degraded) ready = observeControlledToolOwners();
+  });
+
   pi.on("session_shutdown", () => {
     sessionEpoch += 1;
     for (const pending of pendingShellCalls.values()) {
@@ -227,8 +288,10 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
     pendingShellCalls.clear();
     authorizedCalls.clear();
     // Ownership observations belong to the current session binding; a new
-    // session binding must reobserve them before controlled calls run.
+    // session binding must reobserve them (via `session_start`) before
+    // controlled calls run.
     controlledToolOwners.clear();
+    ready = false;
   });
 
   pi.on("tool_call", async (event: unknown, ctx: unknown) => {
@@ -260,6 +323,7 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
         return blocked(`${MALFORMED_INPUT_REASON} (SHELL_INPUT)`);
       }
       if (degraded) return blocked(GATE_FAILURE_REASON);
+      if (!ready) return blocked(GATE_NOT_READY_REASON);
       const dyn = (typeof ctx === "object" && ctx !== null ? ctx : {}) as ExtCtx;
       const workspace =
         typeof dyn.cwd === "string" && dyn.cwd.length > 0 ? dyn.cwd : undefined;
@@ -328,6 +392,9 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
   ): Promise<Record<string, unknown> | undefined> {
     if (degraded) {
       return { block: true, reason: GATE_FAILURE_REASON };
+    }
+    if (!ready) {
+      return { block: true, reason: GATE_NOT_READY_REASON };
     }
     const frame = parseShellToolInput(call.input);
     if (frame === undefined) {
@@ -404,6 +471,9 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
 
     if (degraded) {
       return { block: true, reason: GATE_FAILURE_REASON };
+    }
+    if (!ready) {
+      return { block: true, reason: GATE_NOT_READY_REASON };
     }
 
     const frame = parseGateInput(toolName, call.input);
@@ -731,6 +801,11 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
     return { content: [{ type: "text", text }], details: undefined };
   }
 
+  // Factory-load phase: `registerTool`/`on` are the only Pi calls valid here.
+  // `getAllTools()` still throws (`Extension runtime not initialized`), so
+  // ownership observation is deferred to the `session_start` handler above,
+  // which Pi emits only after `bindCore`. A registration failure degrades
+  // immediately; the per-session observation degrades on missing/duplicate.
   const controlledTools: readonly ControlledTool[] = [
     { name: "bash", run: executeControlledBash },
     { name: "read", run: executeControlledRead },
@@ -740,7 +815,6 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
     { name: "find", run: executeControlledFind },
     { name: "grep", run: executeControlledGrep },
   ];
-
   for (const controlled of controlledTools) {
     const base = controlledBaseDefinition(controlled.name, process.cwd());
     if (base === undefined) {
@@ -758,15 +832,18 @@ export function createPiWardenRuntime(pi: PiRuntimeAPI, options: GateRuntimeOpti
       degraded = true;
       break;
     }
-    const observed = pi.getAllTools().filter((tool) => tool.name === controlled.name);
-    if (observed.length !== 1) {
-      degraded = true;
-      break;
-    }
-    controlledToolOwners.set(controlled.name, observed[0].sourceInfo);
   }
 
-  return { authorizedCalls, pendingShellCalls, degraded };
+  return {
+    authorizedCalls,
+    pendingShellCalls,
+    get degraded() {
+      return degraded;
+    },
+    get ready() {
+      return ready;
+    },
+  };
 }
 
 export function runControlledToolCall(

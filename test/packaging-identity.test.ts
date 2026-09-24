@@ -49,6 +49,8 @@ const RETAINED: Record<string, string> = {
   ".gitignore": "runtime-identifier",
   "native/build-manifest.json": "runtime-identifier (build artifact)",
   "native/piwarden-helper": "runtime-identifier (compiled helper artifact)",
+  "IMPLEMENTATION_HANDOFF.md": "records the runtime helper path for this Goal",
+  "docs/STARTUP-READINESS-AUDIT.md": "records the installed helper path",
   "test/packaging-identity.test.ts": "declares the old-name pattern and the retention list",
   "test/packaging-manifest.test.ts": "declares the earlier-manifest change sets and reads the manifest verbose flag",
   "test/post-transfer-manifest.test.ts": "records the moved repository and the earlier-manifest change sets",

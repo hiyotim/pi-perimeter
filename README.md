@@ -105,7 +105,7 @@ The project still does **not** provide:
 
 ## Installation
 
-`pi-perimeter@1.0.0` (macOS-only v1.0) is published on npm. Supported installation is the declared containment target only (macOS 27.0 arm64, Pi `0.84.4`); every other platform or peer version is outside the demonstrated guarantees — see [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
+`pi-perimeter@1.0.0` (macOS-only v1.0) is published on npm, but a fresh-install audit found that this published version fails to load in Pi `0.84.4` because it calls `getAllTools()` before Pi initializes the extension runtime. Do not rely on `1.0.0` for enforcement. The startup correction in this source tree has not been released or accepted. The declared containment target remains macOS 27.0 arm64 with Pi `0.84.4`; see [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 
 The package identity is `pi-perimeter` (formerly `pi-warden`); the unscoped npm
 name `pi-warden` belongs to another maintainer, so installing `npm:pi-warden`
@@ -125,10 +125,11 @@ those limits. See [SECURITY.md](SECURITY.md) for the current reporting policy.
 
 Contained shell execution needs the small native helper described in
 [docs/SHELL-GATE.md](docs/SHELL-GATE.md). Build it explicitly with the
-platform toolchain:
+platform toolchain **in the installed package directory shown by `pi list`**.
+For the default user-level Pi profile, the command is:
 
 ```sh
-npm run build:native     # writes native/piwarden-helper + native/build-manifest.json
+npm --prefix "$HOME/.pi/agent/npm/node_modules/pi-perimeter" run build:native
 ```
 
 There is no implicit compilation at runtime, no download, and no privileged

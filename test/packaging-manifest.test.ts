@@ -125,6 +125,21 @@ const CHANGED_IN_RELEASE: Record<string, true> = {
 };
 
 
+/** Historical entries changed by the startup-readiness Goal; current bytes are bound by docs/startup-readiness-hashes.json. */
+const CHANGED_IN_STARTUP_READINESS = new Set<string>([
+  "README.md",
+  "docs/COMPATIBILITY.md",
+  "docs/PACKAGING.md",
+  "test/ci-manifest.test.ts",
+  "test/ci-test-budget.json",
+  "test/compatibility-manifest.test.ts",
+  "test/hash-manifest.test.ts",
+  "test/network-manifest.test.ts",
+  "test/packaging-identity.test.ts",
+  "test/packaging-manifest.test.ts",
+  "test/shell-manifest.test.ts",
+]);
+
 const COVERED_FILES = [
   "package.json",
   "package-lock.json",
@@ -190,6 +205,7 @@ test("the packaging artifact hash manifest matches the final working tree", asyn
     if (CHANGED_IN_UNKNOWN_BOUNDS[file] === true) continue; // unknowns bound; the unknown-bounds manifest binds the current bytes
     if (CHANGED_IN_INDEPENDENT_AUDIT[file] === true) continue; // independent audit; the independent-audit manifest binds the current bytes
     if (CHANGED_IN_RELEASE[file] === true) continue; // release v1; the release manifest binds the current bytes
+    if (CHANGED_IN_STARTUP_READINESS.has(file)) continue; // current snapshot bound by the startup-readiness manifest
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

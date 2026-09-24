@@ -38,7 +38,11 @@ re-read, and exercised against `0.84.4` for Goals 3 and 4
 ([docs/SHELL-GATE.md](SHELL-GATE.md), [docs/SHELL-GATE-AUDIT.md](SHELL-GATE-AUDIT.md),
 [docs/NETWORK-GATE-AUDIT.md](NETWORK-GATE-AUDIT.md)). Goal 2's file-gate audit records
 the same machine, Node version, and isolated-fixture method but does not restate the peer
-version ([docs/FILE-GATE-AUDIT.md](FILE-GATE-AUDIT.md)).
+version ([docs/FILE-GATE-AUDIT.md](FILE-GATE-AUDIT.md)). A fresh-install audit found that
+published `pi-perimeter@1.0.0` fails to load with Pi `0.84.4`: `pi.getAllTools()` throws
+`Extension runtime not initialized` at extension load. The unreleased source correction
+defers ownership observation until `session_start`, after `ExtensionRunner.bindCore`.
+This correction is not evidence that the published `1.0.0` works.
 
 **Untested: everything else.** The local `pi` CLI is now `0.86.1`, which no recorded
 evidence covers: no audit, test suite, or hosted run has exercised this extension

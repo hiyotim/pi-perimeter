@@ -23,6 +23,22 @@ import { test } from "node:test";
  */
 const MANIFEST_PATH = "docs/release-hashes.json";
 
+/** Historical entries changed by the startup-readiness Goal; current bytes are bound by docs/startup-readiness-hashes.json. */
+const CHANGED_IN_STARTUP_READINESS = new Set<string>([
+  "README.md",
+  "docs/COMPATIBILITY.md",
+  "docs/PACKAGING.md",
+  "test/ci-manifest.test.ts",
+  "test/ci-test-budget.json",
+  "test/independent-audit-manifest.test.ts",
+  "test/packaging-identity.test.ts",
+  "test/packaging-manifest.test.ts",
+  "test/post-transfer-manifest.test.ts",
+  "test/release-manifest.test.ts",
+  "test/release-review-manifest.test.ts",
+  "test/v1-guarantees-manifest.test.ts",
+]);
+
 const COVERED_FILES = [
   "docs/RELEASE-AUDIT.md",
   "docs/V1-GUARANTEES.md",
@@ -150,6 +166,7 @@ test("the release artifact hash manifest matches the final working tree", async 
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if (CHANGED_IN_STARTUP_READINESS.has(file)) continue; // current snapshot bound by the startup-readiness manifest
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

@@ -36,6 +36,12 @@ const CHANGED_IN_REGRESSION_EVIDENCE: Record<string, true> = {
   "test/network-manifest.test.ts": true,
 };
 
+/** Historical entries changed by the startup-readiness Goal; current bytes are bound by docs/startup-readiness-hashes.json. */
+const CHANGED_IN_STARTUP_READINESS = new Set<string>([
+  "test/network-manifest.test.ts",
+  "test/shell-manifest.test.ts",
+]);
+
 const COVERED_FILES = [
   "src/policy/configuration.ts",
   "src/policy/network.ts",
@@ -65,6 +71,7 @@ test("the Goal 4 artifact hash manifest matches the final working tree", async (
   for (const file of COVERED_FILES) {
     if (CHANGED_IN_PACKAGING.has(file)) continue; // renamed identity; the packaging manifest binds the current bytes
     if (CHANGED_IN_REGRESSION_EVIDENCE[file] === true) continue; // new P15 regression; the regression-evidence manifest binds the current bytes
+    if (CHANGED_IN_STARTUP_READINESS.has(file)) continue; // current snapshot bound by the startup-readiness manifest
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

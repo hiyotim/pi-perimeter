@@ -66,6 +66,12 @@ const CHANGED_IN_UNKNOWN_BOUNDS: Record<string, true> = {
   "test/shell-manifest.test.ts": true,
 };
 
+/** Historical entries changed by the startup-readiness Goal; current bytes are bound by docs/startup-readiness-hashes.json. */
+const CHANGED_IN_STARTUP_READINESS = new Set<string>([
+  "src/gate/runtime.ts",
+  "test/shell-manifest.test.ts",
+]);
+
 const COVERED_FILES = [
   "package.json",
   "src/index.ts",
@@ -114,6 +120,7 @@ test("the Goal 3 artifact hash manifest matches the final working tree", async (
     if (CHANGED_IN_PACKAGING.has(file)) continue; // renamed identity; the packaging manifest binds the current bytes
     if (CHANGED_IN_REGRESSION_EVIDENCE[file] === true) continue; // new P15 regression; the regression-evidence manifest binds the current bytes
     if (CHANGED_IN_UNKNOWN_BOUNDS[file] === true) continue; // unknowns bound; the unknown-bounds manifest binds the current bytes
+    if (CHANGED_IN_STARTUP_READINESS.has(file)) continue; // current snapshot bound by the startup-readiness manifest
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

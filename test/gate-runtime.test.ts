@@ -2,8 +2,18 @@ import assert from "node:assert/strict";
 import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import p from "node:path";
+import { fileURLToPath } from "node:url";
 import { tmpdir } from "node:os";
 import { test } from "node:test";
+import {
+  createBashToolDefinition,
+  createExtensionRuntime,
+  createSyntheticSourceInfo,
+  ExtensionRunner,
+  ModelRegistry,
+  ModelRuntime,
+  SessionManager,
+} from "@earendil-works/pi-coding-agent";
 
 import {
   createPiWardenRuntime,
@@ -23,10 +33,10 @@ type FakeHandler = (event: unknown, ctx: unknown) => Promise<unknown>;
 type FakeSourceInfo = NonNullable<ToolOwnerInfo["sourceInfo"]>;
 
 const SOURCE_INFO: FakeSourceInfo = {
-  source: "pi-warden-integration",
+  source: "local",
   scope: "temporary",
   origin: "top-level",
-  path: "<integration:fake>",
+  path: fileURLToPath(new URL("../src/index.ts", import.meta.url)),
 };
 
 interface RegisteredTool {
@@ -95,6 +105,13 @@ function buildGateHarness(
     protectedRoots: protectedRoots.map((canonicalRoot) => ({ name: "pi-warden-user-config" as const, canonicalRoot })),
     ...(options?.pendingShellTtlMs !== undefined ? { pendingShellTtlMs: options.pendingShellTtlMs } : {}),
   });
+  // Model production startup: Pi emits `session_start` after bindCore, which
+  // is the only point where `getAllTools()` ownership observation may run.
+  // `dropRegistered` drops AFTER that observation, modelling a lost
+  // registration between observation and the per-call recheck.
+  const sessionStart = fake.handlers.get("session_start");
+  assert.ok(sessionStart !== undefined);
+  void sessionStart({ type: "session_start", reason: "startup" }, { cwd: userRoot });
   if (options?.dropRegistered === true) fake.dropRegistered();
   const toolCall = fake.handlers.get("tool_call");
   const userBash = fake.handlers.get("user_bash");
@@ -905,6 +922,24 @@ test("session lifecycle transitions invalidate the gate-issued memo", async () =
     assert.ok(shutdown !== undefined);
     await shutdown({ type: "session_shutdown", reason: "new" }, ctx);
     assert.equal(harness.state.authorizedCalls.has("L1"), false, "memo must not survive session replacement");
+    assert.equal(harness.state.ready, false, "shutdown must revoke readiness until the next session_start");
+    const blockedWhileDown = await harness.toolCall(
+      { type: "tool_call", toolName: "ls", toolCallId: "L2", input: { path: "target" } },
+      ctx,
+    );
+    assert.ok(typeof blockedWhileDown === "object" && blockedWhileDown !== null && "block" in blockedWhileDown);
+    assert.equal(blockedWhileDown.block, true, "calls between shutdown and start must block");
+    assert.ok("reason" in blockedWhileDown && typeof blockedWhileDown.reason === "string");
+    assert.match(blockedWhileDown.reason, /waiting for Pi session_start/);
+
+    // The next session binding re-observes ownership exactly once.
+    const sessionStart = harness.fake.handlers.get("session_start");
+    assert.ok(sessionStart !== undefined);
+    await sessionStart({ type: "session_start", reason: "new" }, ctx);
+    assert.equal(harness.state.ready, true, "session_start must restore readiness");
+    const inputLs2 = { path: "target" };
+    const allowedAgain = await harness.toolCall({ type: "tool_call", toolName: "ls", toolCallId: "L3", input: inputLs2 }, ctx);
+    assert.equal(allowedAgain, undefined, "calls after re-observation must authorize again");
 
     // Stale memo after the session transition cannot serve a delayed execute.
     const lsEntry = harness.fake.registered.find((tool) => tool.name === "ls");
@@ -1010,11 +1045,202 @@ test("a lost or foreign controlled-tool registration blocks search tools at the 
     await mkdir(p.join(workspace, "target"));
     const ctx = fakeCtx(workspace);
     const result = await harness.toolCall({ type: "tool_call", toolName: "grep", toolCallId: "g1", input: { pattern: "x", path: "target" } }, ctx);
-    assert.ok((result as { block?: unknown })?.block === true, "unowned controlled tool call must be blocked");
-    assert.match((result as { reason?: string }).reason ?? "", /controlled tool registration does not match the authorized owner/);
+    assert.ok(typeof result === "object" && result !== null && "block" in result);
+    assert.equal(result.block, true, "unowned controlled tool call must be blocked");
+    assert.ok("reason" in result && typeof result.reason === "string");
+    assert.match(result.reason, /controlled tool registration does not match the authorized owner/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("pre-ready tool calls and user shell block fail-closed until session_start", async () => {
+  const { root, workspace, userRoot } = await tempFixture();
+  try {
+    const fake = makeHost();
+    const state = createPiWardenRuntime(fake as unknown as PiRuntimeAPI, {
+      trustedUserConfigRoot: userRoot,
+      protectedRoots: [],
+    });
+    assert.equal(state.ready, false, "factory load must not mark the runtime ready");
+    assert.equal(state.degraded, false, "factory load must not degrade without evidence");
+    const toolCall = fake.handlers.get("tool_call");
+    const userBash = fake.handlers.get("user_bash");
+    assert.ok(toolCall !== undefined);
+    assert.ok(userBash !== undefined);
+    const ctx = fakeCtx(workspace);
+    await writeFile(p.join(workspace, "plain.txt"), "plain\n");
+    const preReady = await toolCall({ type: "tool_call", toolName: "read", toolCallId: "pre1", input: { path: "plain.txt" } }, ctx);
+    assert.ok(typeof preReady === "object" && preReady !== null && "block" in preReady);
+    assert.equal(preReady.block, true, "pre-ready file calls must block with no effect");
+    assert.ok("reason" in preReady && typeof preReady.reason === "string");
+    assert.match(preReady.reason, /waiting for Pi session_start/);
+    assert.equal(state.authorizedCalls.has("pre1"), false, "no binding may be issued pre-ready");
+    const preShell = await toolCall(
+      { type: "tool_call", toolName: "bash", toolCallId: "pre2", input: { command: "echo hi" } },
+      ctx,
+    );
+    assert.ok(typeof preShell === "object" && preShell !== null && "block" in preShell);
+    assert.equal(preShell.block, true, "pre-ready shell calls must block with no effect");
+    const preUser = await userBash({ type: "user_bash", command: "echo hi" }, ctx);
+    assert.ok(typeof preUser === "object" && preUser !== null && "result" in preUser);
+    const preResult = preUser.result;
+    assert.ok(typeof preResult === "object" && preResult !== null && "output" in preResult);
+    assert.ok(typeof preResult.output === "string");
+    assert.match(preResult.output, /waiting for Pi session_start/);
+    assert.match(preResult.output, /\(command not executed\)/);
+    // Readiness arrives exactly once via `session_start`; then calls authorize.
+    const sessionStart = fake.handlers.get("session_start");
+    assert.ok(sessionStart !== undefined);
+    await sessionStart({ type: "session_start", reason: "startup" }, ctx);
+    assert.equal(state.ready, true, "session_start must mark the runtime ready");
+    assert.equal(state.degraded, false, "clean observation must not degrade");
+    const postReady = await toolCall({ type: "tool_call", toolName: "read", toolCallId: "post1", input: { path: "plain.txt" } }, ctx);
+    assert.equal(postReady, undefined, "post-ready calls must reach authorization");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test("a foreign tool visible at session_start cannot become the authorized owner", async () => {
+  const { root, workspace, userRoot } = await tempFixture();
+  try {
+    const fake = makeHost();
+    const state = createPiWardenRuntime(fake as unknown as PiRuntimeAPI, {
+      trustedUserConfigRoot: userRoot,
+      protectedRoots: [],
+    });
+    const read = fake.registered.find((entry) => entry.name === "read");
+    assert.ok(read);
+    read.sourceInfo = { ...SOURCE_INFO, path: "<foreign:read>" };
+
+    const start = fake.handlers.get("session_start");
+    assert.ok(start);
+    await start({ type: "session_start", reason: "startup" }, fakeCtx(workspace));
+    assert.equal(state.degraded, true);
+    assert.equal(state.ready, false);
+
+    const toolCall = fake.handlers.get("tool_call");
+    assert.ok(toolCall);
+    const result = await toolCall(
+      { type: "tool_call", toolName: "read", toolCallId: "foreign-start", input: { path: "ordinary.txt" } },
+      fakeCtx(workspace),
+    );
+    assert.equal((result as { block?: unknown })?.block, true);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+test("a duplicate same-name tool observation degrades and blocks", async () => {
+  const { root, workspace, userRoot } = await tempFixture();
+  try {
+    // Duplicate visible at session_start: one genuine registration plus a
+    // foreign same-name entry. The observation count is not exactly one, so
+    // readiness must never be granted on it.
+    const fake = makeHost();
+    const state = createPiWardenRuntime(fake as unknown as PiRuntimeAPI, {
+      trustedUserConfigRoot: userRoot,
+      protectedRoots: [],
+    });
+    fake.registered.push({ name: "read", sourceInfo: { ...SOURCE_INFO, path: "<foreign:read>" }, definition: {} });
+    const start = fake.handlers.get("session_start");
+    assert.ok(start);
+    await start({ type: "session_start", reason: "startup" }, fakeCtx(workspace));
+    assert.equal(state.degraded, true, "duplicate observation must degrade");
+    assert.equal(state.ready, false, "duplicate observation must not grant readiness");
+    const toolCall = fake.handlers.get("tool_call");
+    assert.ok(toolCall);
+    const blocked: unknown = await toolCall(
+      { type: "tool_call", toolName: "read", toolCallId: "dup-start", input: { path: "ordinary.txt" } },
+      fakeCtx(workspace),
+    );
+    assert.ok(typeof blocked === "object" && blocked !== null && "block" in blocked);
+    assert.equal(blocked.block, true, "degraded runtime must block, not fall back");
+
+    // Duplicates appearing after a clean observation must trip the per-call
+    // recheck for both the file route and the contained-shell route. The
+    // ordinary file must exist: the file route authorizes before the owner
+    // recheck, so a missing target would deny first and never reach it.
+    await writeFile(p.join(workspace, "ordinary.txt"), "ordinary\n");
+    const clean = buildGateHarness(userRoot, []);
+    clean.fake.registered.push({ name: "read", sourceInfo: { ...SOURCE_INFO, path: "<foreign:read>" }, definition: {} });
+    clean.fake.registered.push({ name: "bash", sourceInfo: { ...SOURCE_INFO, path: "<foreign:bash>" }, definition: {} });
+    const dupCtx = fakeCtx(workspace);
+    const dupRead: unknown = await clean.toolCall(
+      { type: "tool_call", toolName: "read", toolCallId: "dup-call", input: { path: "ordinary.txt" } },
+      dupCtx,
+    );
+    assert.ok(typeof dupRead === "object" && dupRead !== null && "block" in dupRead && "reason" in dupRead);
+    assert.equal(dupRead.block, true, "duplicated file tool must block at the per-call recheck");
+    assert.ok(typeof dupRead.reason === "string");
+    assert.match(dupRead.reason, /controlled tool registration does not match/);
+    const dupBash: unknown = await clean.toolCall(
+      { type: "tool_call", toolName: "bash", toolCallId: "dup-shell", input: { command: "echo hi" } },
+      dupCtx,
+    );
+    assert.ok(typeof dupBash === "object" && dupBash !== null && "block" in dupBash && "reason" in dupBash);
+    assert.equal(dupBash.block, true, "duplicated shell tool must block at the per-call recheck");
+    assert.ok(typeof dupBash.reason === "string");
+    assert.match(dupBash.reason, /controlled tool registration does not match/);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+
+test("startup against the real 0.84.4 runtime stubs throws on early getAllTools and observes ownership only after bind", async () => {
+  const runtime = createExtensionRuntime();
+  let earlyError = "";
+  try {
+    runtime.getAllTools();
+  } catch (error) {
+    earlyError = error instanceof Error ? error.message : String(error);
+  }
+  assert.match(earlyError, /Extension runtime not initialized/, "early getAllTools must throw the exact 0.84.4 stub error");
+  const observed = [createBashToolDefinition(process.cwd())].map((definition) => ({
+    name: definition.name,
+    description: definition.description,
+    parameters: definition.parameters,
+    promptGuidelines: definition.promptGuidelines,
+    sourceInfo: createSyntheticSourceInfo("<startup-probe:read>", { source: "temporary" }),
+  }));
+  const sessionManager = SessionManager.inMemory(process.cwd());
+  const modelRuntime = await ModelRuntime.create();
+  const runner = new ExtensionRunner([], runtime, process.cwd(), sessionManager, new ModelRegistry(modelRuntime));
+  runner.bindCore(
+    {
+      getAllTools: () => observed,
+      getActiveTools: () => [],
+      setActiveTools: () => {},
+      refreshTools: () => {},
+      getCommands: () => [],
+      sendMessage: () => {},
+      sendUserMessage: () => {},
+      appendEntry: () => {},
+      setSessionName: () => {},
+      getSessionName: () => undefined,
+      setLabel: () => {},
+      setModel: async () => false,
+      getThinkingLevel: () => "off",
+      setThinkingLevel: () => {},
+    },
+    {
+      getModel: () => undefined,
+      getScopedModels: () => [],
+      isIdle: () => true,
+      isProjectTrusted: () => true,
+      getSignal: () => undefined,
+      abort: () => {},
+      hasPendingMessages: () => false,
+      shutdown: () => {},
+      getContextUsage: () => undefined,
+      compact: () => {},
+      getSystemPrompt: () => "",
+      getSystemPromptOptions: () => ({ cwd: process.cwd() }),
+    },
+  );
+  const names = runtime.getAllTools().map((tool) => tool.name);
+  assert.deepEqual(names, ["bash"], "post-bind observation must see the bound registry");
 });
 
 test("initialization failure cannot silently restore unprotected tools", async () => {
@@ -1031,4 +1257,3 @@ test("initialization failure cannot silently restore unprotected tools", async (
     await rm(root, { recursive: true, force: true });
   }
 });
-

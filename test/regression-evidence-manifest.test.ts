@@ -21,6 +21,23 @@ import { test } from "node:test";
  */
 const MANIFEST_PATH = "docs/regression-evidence-hashes.json";
 
+/** Historical entries changed by the startup-readiness Goal; current bytes are bound by docs/startup-readiness-hashes.json. */
+const CHANGED_IN_STARTUP_READINESS = new Set<string>([
+  "test/ci-manifest.test.ts",
+  "test/ci-test-budget.json",
+  "test/compatibility-manifest.test.ts",
+  "test/gate-runtime.test.ts",
+  "test/hash-manifest.test.ts",
+  "test/network-manifest.test.ts",
+  "test/packaging-identity.test.ts",
+  "test/packaging-manifest.test.ts",
+  "test/post-transfer-manifest.test.ts",
+  "test/regression-evidence-manifest.test.ts",
+  "test/release-review-manifest.test.ts",
+  "test/shell-manifest.test.ts",
+  "test/v1-guarantees-manifest.test.ts",
+]);
+
 const COVERED_FILES = [
   "docs/REGRESSION-EVIDENCE-AUDIT.md",
   "test/ci-test-budget.json",
@@ -186,6 +203,7 @@ test("the regression-evidence artifact hash manifest matches the final working t
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if (CHANGED_IN_STARTUP_READINESS.has(file)) continue; // current snapshot bound by the startup-readiness manifest
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (CHANGED_IN_UNKNOWN_BOUNDS[file] === true) continue; // unknowns bound; the unknown-bounds manifest binds the current bytes
     if (CHANGED_IN_INDEPENDENT_AUDIT[file] === true) continue; // independent audit; the independent-audit manifest binds the current bytes

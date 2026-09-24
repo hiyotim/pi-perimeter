@@ -1,68 +1,68 @@
 # Implementation Handoff
 
-Task ID: `20260924-v1-independent-audit`
-Baseline: `b1bab7561131e5e49371bdd303f913928187065c` (index empty; working tree clean)
-Scope Gate: HISTORICAL (step 4 committed as 0bc06da; review + owner acceptance pending)
+Task ID: `20260924-startup-readiness-lifecycle`
+Baseline: `d7c34dd905d4487eb2e541db67b18ac9fa844b5a` (tree clean; `git status --short` empty)
+Scope Gate: READY; owner extended this Goal on 2026-09-24 to include an additive startup-readiness manifest, declared change sets in historical manifest tests, an installed-package regression, and the controlled-tool owner correction. Historical manifest values remain unchanged.
 
 ## Goal
 
-Complete an independent audit appropriate to the claimed v1.0 boundary: close only the Phase 7 checklist item "Complete an independent audit appropriate to the claimed boundary".
+Fix the release-blocking extension startup lifecycle error: `pi.getAllTools()` is called before Pi `0.84.4` initialization completes. Startup must wait for Pi readiness, verify controlled-tool ownership exactly once after ready, and fail closed (block every model-facing tool, no unrestricted fallback) until readiness plus ownership plus helper trust are established.
 
 ## Context
 
-- Steps 1–3 accepted on `main`: stabilized guarantees P1–P18 + R1–R11 (`docs/V1-GUARANTEES.md`, manifest `2d59ca09…`, commit `24da69f`, hosted run `35740981632`); per-promise biting regressions (manifest `8a42fd59…`, 16 entries, commit `c01b53d`, hosted run `35977693960`); R1–R11 dispositions with blocker verdict none open (`docs/UNKNOWN-BOUNDS-AUDIT.md`, manifest `2b7ad6b5…`, 16 entries, commit `82a5c4b`, hosted run `35984659993`); acceptance docs commit `b1bab75` (hosted run green, tests 404 / fail 0 / skipped 54).
-- The claimed boundary is `docs/V1-GUARANTEES.md` P1–P18 (promises with exact platform/operation/threat bounds) plus R1–R11 (explicit non-promises); evidence index §9, doc agreement §8.
-- Declared target unchanged: macOS 27.0 (26A428) arm64, pinned `/usr/bin/sandbox-exec` identity, Pi `0.84.4` only verified peer, Node `26.8.1` (target) / `22.19.0` (hosted Linux floor); hosted CI covers the platform-independent Linux suite only and is never containment evidence (P18/R11).
-- Phase 7 order (owner decision): 1 stabilize (done) → 2 regression-per-guarantee (done) → 3 unknowns bound (done) → 4 independent audit (this Goal) → gate decision and publication as separate maintainer decisions. This Goal is step 4 only.
+- Entry: `src/index.ts` (`piWarden(pi)`) builds trusted options and calls `createPiWardenRuntime(pi, options)` immediately at extension load.
+- Runtime: `src/gate/runtime.ts` (`createPiWardenRuntime`) calls `pi.getAllTools()` synchronously in the controlled-tool registration loop (post-`registerTool` observation, `controlledToolOwners.set`) and re-calls it per tool call / shell call as the foreign-owner check (`CONTROLLED_TOOL_FOREIGN_OWNER_REASON`). `PiRuntimeAPI` (`on`/`registerTool`/`getAllTools`) is a structural subset of `ExtensionAPI`; the cast is confined to `src/index.ts`.
+- Verified peer is exactly `@earendil-works/pi-coding-agent@0.84.4` (`docs/COMPATIBILITY.md`, `docs/FILE-GATE.md`, shell/network audits). A locally installed newer CLI is explicitly untested and outside every guarantee. `peerDependencies` is a declared range (`*`), not a verification.
+- Helper trust: `src/sandbox/helper.ts` (`packageRootFromModule(import.meta.url)` → `native/piwarden-helper` + `build-manifest.json`); `scripts/build-native.mjs` builds explicitly, fails closed off-target, no implicit runtime compilation/download/network; `native/` is gitignored build output and excluded from the packed tarball (`docs/PACKAGING.md`, `test/packaging-identity.test.ts`).
+- Published distribution `pi-perimeter@1.0.0` (2026-09-24, tag `v1.0.0`, release run `36031377325`, binding `ca0fb1c3…`) and all historical manifests/audits/acceptances (`STATE.md`, `ROADMAP.md`, `docs/*-hashes.json`) are frozen evidence and must not be rewritten or reinterpreted by this Goal.
 
 ## Scope
 
-- Independent audit of the exact final snapshot in fresh context(s): re-derive every manifest hash against the working tree, re-run the reviewer-owned checks (typecheck, manifest suites, affected regression suites, `git diff --check`), adversarial code reading of the enforcement chain (authorizer, controlled tools, containment, broker, approvals, freeze/measure/export), and a verdict per P1–P18 (promise holds on its boundary) and per R1–R11 (bound stands with no new claim).
-- Audit record as a new doc (executor-run vs reviewer-run sections kept distinct) plus manifest binding for this Goal's artifacts following the repository's manifest-plus-test pattern: new `docs/*-hashes.json` entry/entries plus suite(s), `CHANGED_IN_*` declarations in every earlier suite whose covered bytes change, explicit `test/ci-test-budget.json` update if and only if the collected set changes, retention-list update in `test/packaging-identity.test.ts` if and only if new files carry old-name mentions.
-- Adversarial findings and their fixes stay inside this Goal; every fix carries its biting regression and fresh checks, and the affected evidence is re-reviewed (no stale PASS transfers to different bytes).
-- Narrow source fix under `src/` if and only if the audit exposes an open bypass of a claimed P-protection (release blocker); each such fix stays inside this Goal with its biting regression and fresh checks.
+- `src/index.ts` and `src/gate/runtime.ts`: readiness-gated startup — defer every `getAllTools()` ownership observation until Pi signals ready; fail-closed (block, `GATE_FAILURE_REASON`-class reason, degraded state) on not-ready access, registration failure, missing/duplicate/foreign-owner observation; keep the per-call owner recheck after ready.
+- `src/sandbox/helper.ts` only if the installed-package layout breaks the existing module-URL resolution, plus the explicit build inside the installed-package directory discovered via the `pi list` catalog (test/human discovery path for the build command; the runtime itself resolves the helper only from its own installed module URL and performs no catalog lookup; missing/unverifiable helper still blocks every shell route with an actionable reason).
+- Tests only: one installed-package startup regression proving the exact failure (early `getAllTools` against real `0.84.4` bytes) fails pre-fix and passes post-fix, plus readiness/owner refusal-path regressions (not-ready blocked, foreign/missing/duplicate owner blocked, degraded sticks). A foreign owner present at `session_start` must never be recorded as trusted.
+- Bind the new snapshot in `docs/startup-readiness-hashes.json` and its test. Historical manifests keep their values; their test suites declare this Goal's changed bytes through `CHANGED_IN_STARTUP_READINESS`. Update the CI count budget for the registered tests.
+- Minimal public-doc fixes only: `README.md` (Installation), `docs/COMPATIBILITY.md` (Pi row), `docs/PACKAGING.md` / `docs/DEVELOPMENT.md` startup wording — state the readiness requirement and the `0.84.4`-only verification; no new claims.
 
 ## Out of Scope
 
-- Closing the Phase 7 gate, releasing, tagging, publishing, removing `private: true`, wiring provenance, pushing, or installing into a real Pi profile.
-- Rewording the stabilized P1–P18 set beyond corrections the audit forces; rewriting accepted evidence bytes without a manifest declaration; smoothing a disagreement by rewording evidence away.
-- Extending platform support, adding a hosted macOS job, verifying new Pi/Node versions, resolving the Class 1 Linux question, or making any mount/B3/descendant/Keychain claim beyond the inherited bound.
-- Refactors, dependency changes, packaging/CI behavior changes, or padding the suite with non-biting tests.
-- Acceptance recording itself (`STATE.md`/`ROADMAP.md` acceptance entries and the manifest binding SHA-256, which is recorded in `STATE.md` at acceptance to avoid a self-referential hash cycle, not in the bound audit).
+- Mutating, rebinding, or reinterpreting the published `pi-perimeter@1.0.0`, tag `v1.0.0`, or any historical manifest values, audits, or acceptance bytes (`docs/*-hashes.json`, `STATE.md`/`ROADMAP.md` acceptance entries). New declarations in manifest test suites are in scope.
+- Release actions: tagging, publishing, provenance wiring, `private: true` removal, or installing into a real Pi profile as evidence.
+- New platform/version support (any Pi version besides `0.84.4`, any Node beyond the verified rows, any OS/arch beyond the declared macOS 27.0 arm64 target), Linux/Windows claims, or resolving the open Class 1 Linux runtime-evidence question.
+- Guarantee changes (`docs/V1-GUARANTEES.md` P1–P18/R1–R11), policy/sandbox/network enforcement semantics, approval semantics, dependency changes, refactors, or non-biting tests.
+- This handoff authorizes no implementation, commit, push, or publication by itself.
 
 ## Risk Gates
 
-- The audit must run in fresh context(s) against the exact final bytes; an audit reusing prior-context evidence or transferring a stale PASS to different bytes is invalid.
-- Review evidence must distinguish reviewer-run checks from executor-run checks; acceptance binds to exact bytes/hashes of the reviewed snapshot.
-- Any Linux-support, mount-isolation, same-user-writer, descendant-termination, Keychain-beyond-probe, or exfiltration-resistance claim requires fixtures and evidence that do not currently exist; without them the inherited R-bounds stand.
+- Before wiring the fix, record the exact `0.84.4` readiness signal (which event/API state makes `getAllTools()` safe to call) evidenced from the installed package bytes and Pi docs; the implementation must bind to that evidence, not to assumed load ordering.
+- Before relying on the installed-package build path, record the `pi list` → installed-package-root resolution evidenced on the declared target; a missing or ambiguous catalog mapping stops helper-path work. The runtime never shells out to a catalog and never falls back to an unverified path: the module-URL resolution is the only runtime path, and an unverifiable helper stays a blocking refusal.
 
 ## Acceptance Criteria
 
-1. A fresh-context independent audit of the exact final snapshot returns PASS with no blocking findings, covering every P1–P18 against its cited evidence and every R1–R11 against its bound.
-2. Every audit finding was fixed inside this Goal with its biting regression and re-verified; no open bypass of a claimed protection remains unrecorded.
-3. P1–P18 wording is unchanged except corrections the audit forces; the doc-agreement re-read lists any disagreement instead of rewording evidence away.
-4. This Goal's artifacts are bound by a manifest and its test; `npm run check`, all manifest suites, and `git diff --check` pass locally, and the hosted run for the final commit is green with the declared counts.
-5. Owner acceptance closes only the "Complete an independent audit appropriate to the claimed boundary" item; the Phase 7 gate decision and publication remain separate explicit maintainer decisions.
+1. Extension startup never calls `pi.getAllTools()` before Pi signals ready; ownership observations are taken exactly once after ready and after each same-name registration.
+2. Until readiness plus successful ownership observation, every model-facing tool call (`read`/`write`/`edit`/`grep`/`find`/`ls`/`bash`, unknown tools) and user `!`/`!!` execution is blocked fail-closed with an actionable reason; no tool effect executes and there is no unrestricted fallback.
+3. Registration failure, missing/duplicate observation, or foreign-owner controlled tool marks the runtime degraded and blocks the affected tools; the per-call owner recheck still enforced after ready.
+4. An installed-package startup regression against the real `@earendil-works/pi-coding-agent@0.84.4` bytes reproduces the early-`getAllTools` failure pre-fix (or by gate-bypass mutation) and passes post-fix, using isolated fixtures only — no real profile, credentials, secret files, or home-directory reads.
+5. The native helper is built explicitly inside the installed-package directory discovered via the `pi list` catalog (`npm --prefix <listed directory> run build:native`); at runtime the helper is resolved only from the extension's own installed module URL with no catalog lookup; a missing or unverifiable helper blocks every shell route with an actionable reason; no implicit compilation, download, or network use at runtime.
+6. Public docs (`README.md` Installation, `docs/COMPATIBILITY.md` Pi row, plus only the forced `PACKAGING.md`/`DEVELOPMENT.md` startup lines) state the readiness requirement and `0.84.4`-only verification with no new guarantee, platform, or install claim; published `1.0.0` bytes and historical manifests/audits are byte-unchanged.
 
 ## Verification
 
-- Criterion 1: read the audit verdict, its scope (exact commit SHA), and the per-promise/per-residual coverage against `docs/V1-GUARANTEES.md` §§1–9.
-- Criterion 2: for each finding, read the fix, its biting regression, and the re-verification (mutation fail / accepted-bytes pass); read the blocker verdict.
-- Criterion 3: diff `docs/V1-GUARANTEES.md` P1–P18 against the step-1 accepted bytes; read the doc-agreement table for unlisted disagreements.
-- Criterion 4: `npm run check`, the manifest suites, `git diff --check`; confirm the hosted run for the final commit is green and the count assertion reports the declared numbers; `package.json` still `private: true`, no lifecycle scripts, CI never publishes.
-- Criterion 5: owner acceptance recorded in `STATE.md`; no gate closure or publication claimed.
+- Criteria 1–3: new readiness/owner regression suite plus `npm run check` (typecheck + full suite), focused `npm run test:gate`, and `git diff --check`; mutation check (restore early `getAllTools` / drop the ready gate) must make the new regressions fail.
+- Criterion 4: the installed-package startup regression run on the declared target (macOS 27.0 arm64, Node `26.8.1`, Pi `0.84.4`), with the installed peer version and `pi list` catalog evidence recorded in the test/audit note; `npm run check` green locally.
+- Criterion 5: explicit `npm --prefix <directory reported by pi list> run build:native`, helper refusal-path regressions, and `npm run test:containment` on the declared target (declared platform skip elsewhere); no `native/` output enters the tree or tarball (`test/packaging-identity.test.ts` still passes). The runtime continues to derive its helper path from its own installed module URL; no catalog lookup is needed inside the extension.
+- Criterion 6: doc diff review limited to the listed files; all manifest suites still pass with no historical entry rewritten (`npm run test:manifest`, `git diff --check`); `package.json` still `private: true`, no lifecycle scripts, ordinary CI never publishes.
 
 ## Constraints
 
-- Preserve the `AGENTS.md` security invariants; fail closed where proceeding would cross a protected boundary; project-controlled configuration never weakens global policy.
-- Tests use isolated temporary fixtures only; no real credentials, secret files, home-directory reads, or real-profile installation.
-- Per standing owner decision, all work lands directly on `main`; no additional topic branches.
-- Exact versions, run identifiers, and hashes only; never invent evidence; prior manifests keep historical entries via declared change sets.
-- Documentation states only guarantees demonstrated by the implementation and tests.
+- Preserve the `AGENTS.md` security invariants: fail closed across protected boundaries; project-controlled configuration never weakens global policy; approval and containment stay separate; no silent fallback to unrestricted execution.
+- Keep `src/index.ts` thin (wiring only, no policy decisions); keep pure decisions in `src/policy/`, containment in `src/sandbox/`, approvals in `src/approvals/`.
+- Tests use isolated temporary fixtures only; never real credentials, secret files, home-directory reads, or real-profile installation.
+- Exact versions, hashes, and run identifiers only; never invent evidence; documentation states only guarantees demonstrated by the implementation and tests.
 
 ## Escalate If
 
-- The audit surfaces a bypass needing implementation beyond a narrow in-Goal fix, a support commitment, a platform claim, or publication authority.
-- A residual cannot stay bounded without changing a P-promise (potential release blocker or guarantee change, not a silent bound edit).
-- The Goal splits into independently reviewable/acceptable outcomes (e.g. per-layer audits shippable separately) — stop, do not expand; that is a decomposition signal.
+- Pi `0.84.4` exposes no observable readiness signal, or the fix would require supporting another Pi version, changing the peer range semantics, or touching published/historical bytes — stop instead of widening scope.
+- The `pi list` catalog mapping is ambiguous or unavailable on the declared target — stop instead of inventing a runtime discovery path; the module-URL resolution is the only runtime path, and an unverifiable helper stays a blocking refusal.
+- The Goal splits into independently shippable outcomes (e.g. readiness gate vs helper-catalog work vs docs each reviewable/acceptable alone) — stop; that is a decomposition signal.
 - Baseline, ownership, attribution, or overwrite authority becomes ambiguous; stop without changing the handoff.
