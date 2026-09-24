@@ -198,7 +198,7 @@ Ledger reconciliation (2026-09-20, task `20260920-ledger-reconciliation`): these
 ## Phase 7 — v1.0
 
 - [x] Stabilize the supported security guarantees. (Closed 2026-09-22 as `20260922-stabilize-guarantees`: `docs/V1-GUARANTEES.md` P1–P18 + R1–R11, audit `docs/V1-GUARANTEES-AUDIT.md`, manifest `docs/v1-guarantees-hashes.json` SHA-256 `2d59ca09f8d2bdb195164bfba5de630cc8e8410186df7822b5dc33a1bb56cfe5`, commit `24da69f`, hosted run `35740981632` green with tests 391 / pass 337 / fail 0 / skipped 54, rounds 1–4 reviewed with round 3 PASS and round 4 delta PASS. Docs + test-binding only; no behavior change.)
-- [ ] Maintain regression evidence for every guarantee.
+- [x] Maintain regression evidence for every guarantee. (Closed 2026-09-24 as `20260922-regression-evidence-per-guarantee`: per-promise biting regressions P1–P18 in `docs/REGRESSION-EVIDENCE-AUDIT.md`, manifest `docs/regression-evidence-hashes.json` SHA-256 `8a42fd593997b38a08fd1376add072fab5c4053a09684236602e22394e52687e`, commit `c01b53d`, hosted run `35977693960` green with tests 398 / fail 0 / skipped 54, rounds 1–4 reviewed PASS. Tests + binding + audit only; no behavior change.)
 - [ ] Resolve or explicitly bound release-blocking known unknowns.
 - [ ] Complete an independent audit appropriate to the claimed boundary.
 

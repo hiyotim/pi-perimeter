@@ -2,7 +2,7 @@
 
 Task ID: `20260922-regression-evidence-per-guarantee`
 Baseline: `1e75222640902894180d3fe8a9fc1a6b91dc406b` (index empty; unstaged `M STATE.md` — Continuation-block condensation only, 4 lines; untracked `.commandcode/` session tooling only)
-Scope Gate: READY
+Scope Gate: HISTORICAL (step 2 committed as c01b53d; close pending owner acceptance)
 
 ## Goal
 

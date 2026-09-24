@@ -5,13 +5,19 @@ Branch at planning update: `codex/operation-policy-contribution-contract`
 Current branch: `main` (`main` == `origin/main`, ahead/behind 0/0; the current local commits are pushed; `codex/mac-migration-snapshot` still exists but is no longer the working branch)
 Goal 3 implementation start baseline: `b9060dad829a92d3699da3b689fe909446a1e810` (accepted Goal 2 corrective pass and Goal 3 research). The subsequent preparation commit changes only STATE, ROADMAP, and IMPLEMENTATION_HANDOFF. Historical Goal 1 planning baseline: `c10e8f384e678c41792937d340d716d25e592e28`.
 Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c276e2154e2910e6`
+Result (2026-09-24): step 2 snapshot committed as c01b53d45e58dcf210610f18d4b98af564406459 on main, hosted run 35977693960 green.
+Owner authorized commit+push of ONLY the Phase 7 step 2 snapshot in-session 2026-09-24.
 
 ## Continuation
 
-- Current: Phase 7 step 1 accepted (triple `2d59ca09…` + `24da69f` + run `35740981632`); step 2 (`20260922-regression-evidence-per-guarantee`) executed, uncommitted, manifest `8a42fd59…`.
-- Review: Step 2 rounds 1–4 reviewer-run PASS 2026-09-22, no blocking findings; step 1 PASS unchanged.
-- Limits: Linux-only CI, no containment evidence; step-2 bytes uncommitted, no hosted run; unpublished, uninstalled.
-- Next: owner authorizes commit/push of step-2 snapshot, then hosted run and acceptance.
+- Current: Step 2 accepted 2026-09-24; binding 8a42fd59…, commit c01b53d, run 35977693960 green.
+- Review: Rounds 1–4 reviewer-run PASS 2026-09-22; no blocking findings.
+- Limits: Linux-only CI, no containment evidence; unpublished, uninstalled.
+- Next: Owner selects Phase 7 step 3 unknowns Goal; no step 3/4 started.
+
+## Phase 7 step 2 acceptance (2026-09-24)
+
+Task ID: `20260922-regression-evidence-per-guarantee`. **Accepted by the owner on 2026-09-24; the Phase 7 checklist item "Maintain regression evidence for every guarantee" is closed.** Acceptance binds to [docs/regression-evidence-hashes.json](docs/regression-evidence-hashes.json), SHA-256 `8a42fd593997b38a08fd1376add072fab5c4053a09684236602e22394e52687e` (16 entries), commit `c01b53d45e58dcf210610f18d4b98af564406459` on `main` (pushed), and hosted run `35977693960` (success; `tests 398, fail 0, skipped 54`). Review: rounds 1–4 reviewer-run PASS 2026-09-22, no blocking findings; local `npm run check` 398/397/0/1, all manifest suites PASS, `git diff --check` clean. Scope: tests + test-binding + audit only; no `src/`, `scripts/`, `package.json`, or CI change; `docs/V1-GUARANTEES.md` unrewritten; `private: true`, unpublished, uninstalled. No other Phase 7 item is closed; the Phase 7 gate stays open.
 
 ## Current checkpoint
 
