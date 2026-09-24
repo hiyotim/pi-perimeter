@@ -2,7 +2,7 @@
 
 Task ID: `20260924-v1-independent-audit`
 Baseline: `b1bab7561131e5e49371bdd303f913928187065c` (index empty; working tree clean)
-Scope Gate: READY
+Scope Gate: HISTORICAL (step 4 committed as 0bc06da; review + owner acceptance pending)
 
 ## Goal
 

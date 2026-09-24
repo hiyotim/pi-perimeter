@@ -114,7 +114,7 @@ Transcribed from alpha §4 (evidence: file:line + biting suite):
 | P3 path baselines | HOLD | `src/policy/decisions.ts` + `effective.ts:137-143` DENY preserved; suites `decisions`, `write-decisions`, `edit-decisions`, `resources`, `paths` |
 | P4 central mediation, fail-closed | HOLD | `src/gate/runtime.ts:400-403` unknown tool → block, `:392-394` powershell → block, `:430-440` hard-linked root denied; `controlled-traversal.ts:92-148`; suites `gate-runtime`, `controlled-traversal`, `package-compat` |
 | P5 bound execution | HOLD | `bound-execution.ts:12-53` two-class design; plan-before-approval `runtime.ts:453-470`; `nlink===1` + dev/ino + size/mtime `:473-502`; suite `gate-runtime` |
-| P6 single-use approvals | HOLD | `approvals.ts:76-110` fail-closed outcomes; consume-once-delete `runtime.ts:521-547`; shell grants `shell-approvals.ts:181-205` + command-equality `runtime.ts:663-678`; suite `approvals` |
+| P6 single-use approvals | HOLD | `approvals.ts:76-110` fail-closed outcomes; consume-once-delete `runtime.ts:521-547`; shell grants `shell-approvals.ts:181-205` + command-equality `runtime.ts:680-689`; suite `approvals` |
 | P7 control-plane | HOLD | `control-plane.ts:58-99` issued-zone brand, component-aware membership, structural DENY; authorizer above all outcomes `:63-100`; `index.ts:26-43`; suites `gate-runtime`, `projection`, `export` |
 | P8 containment-or-nothing | HOLD | `containment.ts:105-152` `verifyPlatform`, no-fallback header `:1-9`, every failure `ShellRefusal`; suite `shell-containment` |
 | P9 projection + env | HOLD | `projection.ts` exclusions (`nlink!==1` refuse `:182`); `containment.ts:199-226` constructed env; `freeze.ts:1-9`; suites `projection`, `seatbelt-profile`, `shell-containment` |
@@ -181,7 +181,7 @@ none exists, and refactors/non-biting tests are out of scope):
 2. (alpha) `authorizeExportEffect` lets a loader throw propagate instead
    of converting to DENY (`shell-runtime.ts:459`, unlike
    `authorizer.ts:67-71`). Still fails closed (caught at
-   `executeAuthorizedShellRoute:486-489` → blocked); reason-fidelity only.
+   `executeAuthorizedShellRoute:516-519` → blocked); reason-fidelity only.
 3. (alpha) Broker hostname normalization is one-sided: CONNECT target
    lowercased (`network-broker.ts:339`) but `byHost` keys stored
    as-pinned. An uppercase scope entry would 403 its own destination —

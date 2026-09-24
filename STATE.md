@@ -10,10 +10,10 @@ Result (2026-09-24): step 3 snapshot ready for authorized commit+push — Task I
 
 ## Continuation
 
-- Current: Step 3 accepted 2026-09-24; binding 2b7ad6b5…, commit 82a5c4b, run 35984659993 green.
-- Review: Fresh review PASS 2026-09-24, no blocking findings.
+- Current: Step 4 accepted 2026-09-24; binding 32cb0399…, commit PENDING, run PENDING.
+- Review: Final-bytes PASS + delta PASS 2026-09-24, no blocking findings.
 - Limits: Linux-only CI, no containment evidence; unpublished, uninstalled.
-- Next: Owner selects Phase 7 step 4 audit Goal; no step 4 started.
+- Next: Ship fix commit, record commit+run, tick Phase 7 item.
 
 ## Phase 7 step 3 acceptance (2026-09-24)
 
