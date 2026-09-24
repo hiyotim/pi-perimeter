@@ -1,5 +1,5 @@
 {
-  "docs/INDEPENDENT-AUDIT.md": "8b1213bef38dc457208a4a62a1558450d759e98abd30875a8bb9cfe004fb31b4",
+  "docs/INDEPENDENT-AUDIT.md": "73b9da7b8d4529c46a5fba5560a66ddc7f9493e8fe01774edd1ca307985d0f1e",
   "test/ci-test-budget.json": "c142e6c79b95c51a89ebe37ea094ed8ff75b3d607ad3d1c4a1a7db4b33493059",
   "test/packaging-identity.test.ts": "b6bb654f447d71fa19d931a60b92c6f4630793ba2c7470212bd6523056b07ba2",
   "test/ci-manifest.test.ts": "8da682d6e06a010e46214bb213cc5ca3f1a55f3fc6acf343f1d314c357121c21",

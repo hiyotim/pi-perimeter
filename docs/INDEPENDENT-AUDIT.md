@@ -239,6 +239,20 @@ none exists, and refactors/non-biting tests are out of scope):
 - Hosted run for the new commit: green; run id and counts recorded at
   ship time in the session report (budget: tests 407, fail 0,
   skipped 54).
+- Post-binding corrections: `d44cfa3` corrected the stale in-doc
+  manifest SHA (`de7443fa…` → `c829dcdd…`, the true value at the time)
+  and recomputed the doc entry (`e35f42…`); `671e624` then removed the
+  self-quoting manifest-file SHA per the handoff/STATE.md cycle
+  convention, leaving the file-level SHA of
+  `docs/independent-audit-hashes.json` bound at owner acceptance in
+  STATE.md (new doc entry `8b1213be…`). Each fix re-ran `npm run
+  check` (407/406/0/1), all manifest suites (33/33), and
+  `git diff --check` (clean), with hosted runs `35993080540`
+  (`d44cfa3`, success, tests 407 / fail 0 / skipped 54) and
+  `35993521475` (`671e624`, success, tests 407 / pass 353 / fail 0 /
+  skipped 54) green against budget tests 407 / fail 0 / skipped 54.
+  Final snapshot = HEAD `671e624`; no file-level SHA of
+  `docs/independent-audit-hashes.json` is quoted here.
 
 ## Limits
 
