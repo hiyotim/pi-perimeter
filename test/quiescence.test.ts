@@ -61,6 +61,21 @@ test("survivor detection requires a matching start time, so pid reuse is not a s
   );
   assert.equal(survivingInvocationProcesses(recorded, table()).length, 0);
 });
+test("a setsid-reparented descendant is not attributable to the invocation (R3 bound)", () => {
+  // A child that called setsid() and was reparented between census samples:
+  // own process group, parented to init, never a descendant of an attributed pid.
+  const sample = table(
+    record(100, 1, 100), // entry, group leader
+    record(101, 100, 100), // attributed child still in the group
+    record(400, 1, 400), // setsid survivor: own group, reparented to init
+    record(401, 400, 400), // its own child: still outside every attribution rule
+  );
+  const attributed = attributeInvocationProcesses(sample, { entryPid: 100, processGroupId: 100 });
+  assert.deepEqual(
+    attributed.map((entry) => entry.pid).sort((left, right) => left - right),
+    [100, 101],
+  );
+});
 
 /**
  * Measurement and freeze tests use the real native helper on the declared

@@ -53,3 +53,12 @@ test("the CI workflow reproduces dependency installation in an isolated environm
   assert.match(workflow, /permissions:\s*\n\s*contents: read/);
   assert.match(workflow, /node-version: 22\.19\.0/);
 });
+
+test("the Pi peer range stays a declared star, not a verified range (R10 bound)", async () => {
+  const source = await manifest();
+  assert.equal(
+    source.peerDependencies["@earendil-works/pi-coding-agent"],
+    "*",
+    "the peer range is declared, not verified: narrowing it needs its own verification evidence and decision",
+  );
+});

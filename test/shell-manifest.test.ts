@@ -55,6 +55,16 @@ const CHANGED_IN_REGRESSION_EVIDENCE: Record<string, true> = {
   "test/shell-policy.test.ts": true,
   "test/shell-manifest.test.ts": true,
 };
+/**
+ * Artifacts whose bytes the unknowns-bound Goal
+ * (`20260924-unknowns-bound`) changed: one new R3 regression plus this
+ * declaration. Their entries here stay historical;
+ * docs/unknown-bounds-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_UNKNOWN_BOUNDS: Record<string, true> = {
+  "test/quiescence.test.ts": true,
+  "test/shell-manifest.test.ts": true,
+};
 
 const COVERED_FILES = [
   "package.json",
@@ -103,6 +113,7 @@ test("the Goal 3 artifact hash manifest matches the final working tree", async (
     if (CHANGED_IN_GOAL_4.has(file)) continue; // historical bytes; fresh evidence binds the current tree
     if (CHANGED_IN_PACKAGING.has(file)) continue; // renamed identity; the packaging manifest binds the current bytes
     if (CHANGED_IN_REGRESSION_EVIDENCE[file] === true) continue; // new P15 regression; the regression-evidence manifest binds the current bytes
+    if (CHANGED_IN_UNKNOWN_BOUNDS[file] === true) continue; // unknowns bound; the unknown-bounds manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

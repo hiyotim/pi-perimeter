@@ -1,0 +1,18 @@
+{
+  "docs/UNKNOWN-BOUNDS-AUDIT.md": "8663cb667bc7345b80d05900131468ccb3a59e6812b8b55ecf410b05e2d899d9",
+  "test/ci-test-budget.json": "450292e2452f28385e87c3d93a6def2db61b2dc9e33821f3178a7fafa4436e76",
+  "test/quiescence.test.ts": "e2974a4a98956e610c14c9c9fcebfce733f08fadc16a8eb55d1a3d848a646ce8",
+  "test/resources.test.ts": "e7a93601f3ea8507a80a22b8ce864e0bde0ebf75d774097c5254fb6241718ab2",
+  "test/package-compat.test.ts": "608e83cbdceecaa4c1b7eb6a63b6dc4d2eab727b2de99771fdac11293d2fdea3",
+  "test/packaging-identity.test.ts": "f14b7bc56aa5f38cf4619bb392d88b99f8639b1e92a13ed5bd8afbed4b89d58c",
+  "test/hash-manifest.test.ts": "d874b0cb540a6b1aa85138aadfe83c0ec94f13406369995f92654a612054037f",
+  "test/shell-manifest.test.ts": "02112725d20c391cc470fd0cf794d3fde2ffbdef097279fa13eb90b982e78c11",
+  "test/ci-manifest.test.ts": "b6bb352521f47910eb9087318ead2a3736b1fac43c5fc69bd08f240e5f042e47",
+  "test/compatibility-manifest.test.ts": "8ee64033e3f6fb274bf9f69179ffb3cbf99125bd67b25c93fcfd68db8343a231",
+  "test/packaging-manifest.test.ts": "77eae4715920e2a5c482b7a4f377086d3e2f1a469a5a6f4c259b198f12c8f834",
+  "test/post-transfer-manifest.test.ts": "a6e930fb040b9273290fe540420bf88c741ee1f35738f47288439e0eb7b56b85",
+  "test/release-review-manifest.test.ts": "32a98acc0d1e83f7998e7a62005c7f08bb2f609925fdad158a84aed80dd03222",
+  "test/v1-guarantees-manifest.test.ts": "96e6b1bf6c1811b653e5c693ce282c61c81bfd7b5e28f98d3793600905982a97",
+  "test/regression-evidence-manifest.test.ts": "0758206a7596df33c861d477baa3c2f8c5072a6ab5823d1d66d78dc3f45f2da0",
+  "test/unknown-bounds-manifest.test.ts": "aabb4fe0700e03bb85f553f67e7aa50d9112e06983ff65aa6c7006a3e6b4718a"
+}

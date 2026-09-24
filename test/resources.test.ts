@@ -2525,3 +2525,28 @@ test("preserves deterministic rule ordering and maximum sensitivity when a crede
     ]);
   });
 });
+
+test("classification is content-blind: secret bytes in an ordinary filename still classify ordinary (R7 bound)", async () => {
+  await withFixture(async ({ workspace }) => {
+    // Synthetic fixture bytes only: shaped like secret material, no real credential.
+    const payload = "FAKE-SYNTHETIC-SECRET-DO-NOT-USE\n-----BEGIN FAKE PRIVATE KEY-----\nAAAA\n";
+    await writeFile(path.join(workspace, "notes.txt"), payload);
+    await writeFile(path.join(workspace, ".env"), payload);
+    await mkdir(path.join(workspace, "keys"), { recursive: true });
+    await writeFile(path.join(workspace, "keys", "id_rsa"), payload);
+
+    assert.deepEqual(
+      classifyPathResource(await resolveWorkspacePath(workspace, path.join(workspace, "notes.txt"))),
+      { sensitivity: "ordinary", matches: [] },
+    );
+    // Controls: the same bytes under a secret name still classify secret.
+    assert.equal(
+      classifyPathResource(await resolveWorkspacePath(workspace, path.join(workspace, ".env"))).sensitivity,
+      "secret",
+    );
+    assert.equal(
+      classifyPathResource(await resolveWorkspacePath(workspace, path.join(workspace, "keys", "id_rsa"))).sensitivity,
+      "secret",
+    );
+  });
+});
