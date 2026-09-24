@@ -38,7 +38,22 @@ const COVERED_FILES = [
   "test/independent-audit-manifest.test.ts",
 ] as const;
 
-/** Artifacts this Goal also changed inside an earlier manifest. */
+/**
+ * Artifacts this Goal also changed inside an earlier manifest, plus artifacts
+ * whose bytes the release Goal (`20260924-release-v1`) changed (the adapted
+ * safeguard suite and the release declaration): their entries here stay
+ * historical; docs/release-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_RELEASE: Record<string, true> = {
+  "test/ci-test-budget.json": true,
+  "test/packaging-identity.test.ts": true,
+  "test/packaging-manifest.test.ts": true,
+  "test/post-transfer-manifest.test.ts": true,
+  "test/release-review-manifest.test.ts": true,
+  "test/v1-guarantees-manifest.test.ts": true,
+  "test/ci-manifest.test.ts": true,
+  "test/independent-audit-manifest.test.ts": true,
+};
 const SHARED_WITH_EARLIER_MANIFESTS: Record<string, string[]> = {
   "test/ci-test-budget.json": [
     "docs/ci-hashes.json",
@@ -179,6 +194,7 @@ test("the independent-audit artifact hash manifest matches the final working tre
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if (CHANGED_IN_RELEASE[file] === true) continue; // release v1; the release manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

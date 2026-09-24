@@ -154,6 +154,18 @@ const CHANGED_IN_INDEPENDENT_AUDIT: Record<string, true> = {
   "test/ci-manifest.test.ts": true,
   "test/release-review-manifest.test.ts": true,
 };
+/**
+ * Artifacts whose bytes the release Goal (`20260924-release-v1`) changed:
+ * the README/SECURITY/COMPATIBILITY revision and this declaration. Their
+ * entries here stay historical; docs/release-hashes.json binds the current
+ * bytes.
+ */
+const CHANGED_IN_RELEASE: Record<string, true> = {
+  "README.md": true,
+  "SECURITY.md": true,
+  "docs/COMPATIBILITY.md": true,
+  "test/release-review-manifest.test.ts": true,
+};
 
 
 test("the release-review artifact hash manifest matches the final working tree", async () => {
@@ -164,6 +176,7 @@ test("the release-review artifact hash manifest matches the final working tree",
     if (CHANGED_IN_REGRESSION_EVIDENCE[file] === true) continue; // regression evidence; the regression-evidence manifest binds the current bytes
     if (CHANGED_IN_UNKNOWN_BOUNDS[file] === true) continue; // unknowns bound; the unknown-bounds manifest binds the current bytes
     if (CHANGED_IN_INDEPENDENT_AUDIT[file] === true) continue; // independent audit; the independent-audit manifest binds the current bytes
+    if (CHANGED_IN_RELEASE[file] === true) continue; // release v1; the release manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

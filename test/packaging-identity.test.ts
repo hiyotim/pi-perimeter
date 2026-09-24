@@ -27,7 +27,7 @@ const REPOSITORY = {
 };
 
 /** Directories that are not part of the repository's tracked content. */
-const SKIPPED_DIRECTORIES = new Set([".git", "node_modules", ".commandcode", ".zcode", "dist", "coverage"]);
+const SKIPPED_DIRECTORIES = new Set([".git", "node_modules", ".commandcode", ".zcode", "dist", "coverage", "release-staging"]);
 
 /** Distribution-surface files whose the old name must always be qualified. */
 const DISTRIBUTION_FILES = [
@@ -109,6 +109,7 @@ const RETAINED: Record<string, string> = {
   "test/regression-evidence-manifest.test.ts": "runtime-identifier (reads the shared harness verbose flag)",
   "test/unknown-bounds-manifest.test.ts": "runtime-identifier (reads the shared harness verbose flag)",
   "test/independent-audit-manifest.test.ts": "runtime-identifier (reads the shared harness verbose flag)",
+  "test/release-manifest.test.ts": "runtime-identifier (reads the shared harness verbose flag)",
   "THREAT_MODEL.md": "outside the rename surface (current document, stable anchors)",
   "docs/CONFIGURATION-AUTHORIZATION.md": "outside the rename surface (stable anchors)",
   "docs/MONOTONIC-POLICY-AUTHORITY.md": "outside the rename surface (stable anchors)",

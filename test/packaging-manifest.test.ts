@@ -109,6 +109,20 @@ const CHANGED_IN_INDEPENDENT_AUDIT: Record<string, true> = {
   "test/ci-manifest.test.ts": true,
   "test/compatibility-manifest.test.ts": true,
 };
+/**
+ * Artifacts whose bytes the release Goal (`20260924-release-v1`) changed:
+ * the P17/PACKAGING revision, the release workflow and staging scripts, the
+ * adapted + new safeguard suites, and this declaration. Their entries here
+ * stay historical; docs/release-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_RELEASE: Record<string, true> = {
+  "README.md": true,
+  "SECURITY.md": true,
+  "docs/COMPATIBILITY.md": true,
+  "docs/PACKAGING.md": true,
+  "test/packaging-identity.test.ts": true,
+  "test/packaging-manifest.test.ts": true,
+};
 
 
 const COVERED_FILES = [
@@ -175,6 +189,7 @@ test("the packaging artifact hash manifest matches the final working tree", asyn
     if (CHANGED_IN_REGRESSION_EVIDENCE[file] === true) continue; // new P17 absence regression; the regression-evidence manifest binds the current bytes
     if (CHANGED_IN_UNKNOWN_BOUNDS[file] === true) continue; // unknowns bound; the unknown-bounds manifest binds the current bytes
     if (CHANGED_IN_INDEPENDENT_AUDIT[file] === true) continue; // independent audit; the independent-audit manifest binds the current bytes
+    if (CHANGED_IN_RELEASE[file] === true) continue; // release v1; the release manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });
