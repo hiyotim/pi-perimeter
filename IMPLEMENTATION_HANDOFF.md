@@ -1,58 +1,56 @@
 # Implementation Handoff
 
-Task ID: `20260924-unknowns-bound`
-Baseline: `5da9e22efe4026d2940779879c90e8ae37fc6933` (index empty; working tree clean)
-Scope Gate: HISTORICAL (step 3 committed as 82a5c4b; review + owner acceptance pending)
+Task ID: `20260924-v1-independent-audit`
+Baseline: `b1bab7561131e5e49371bdd303f913928187065c` (index empty; working tree clean)
+Scope Gate: READY
 
 ## Goal
 
-Resolve or explicitly bound every release-blocking known unknown: close only the Phase 7 checklist item "Resolve or explicitly bound release-blocking known unknowns".
+Complete an independent audit appropriate to the claimed v1.0 boundary: close only the Phase 7 checklist item "Complete an independent audit appropriate to the claimed boundary".
 
 ## Context
 
-- Steps 1–2 accepted: `docs/V1-GUARANTEES.md` P1–P18 + R1–R11 is the single stabilized record (manifest `2d59ca09…`, commit `24da69f`, hosted run `35740981632`); per-promise biting regressions bound by `docs/regression-evidence-hashes.json` SHA-256 `8a42fd593997b38a08fd1376add072fab5c4053a09684236602e22394e52687e` (16 entries), commit `c01b53d`, hosted run `35977693960` green (tests 398 / fail 0 / skipped 54), acceptance commit `5da9e22` with hosted run `35979221142` green.
-- The known-unknown set is `docs/V1-GUARANTEES.md` §7 (R1–R11); the evidence index is §9; the doc-agreement record is §8.
+- Steps 1–3 accepted on `main`: stabilized guarantees P1–P18 + R1–R11 (`docs/V1-GUARANTEES.md`, manifest `2d59ca09…`, commit `24da69f`, hosted run `35740981632`); per-promise biting regressions (manifest `8a42fd59…`, 16 entries, commit `c01b53d`, hosted run `35977693960`); R1–R11 dispositions with blocker verdict none open (`docs/UNKNOWN-BOUNDS-AUDIT.md`, manifest `2b7ad6b5…`, 16 entries, commit `82a5c4b`, hosted run `35984659993`); acceptance docs commit `b1bab75` (hosted run green, tests 404 / fail 0 / skipped 54).
+- The claimed boundary is `docs/V1-GUARANTEES.md` P1–P18 (promises with exact platform/operation/threat bounds) plus R1–R11 (explicit non-promises); evidence index §9, doc agreement §8.
 - Declared target unchanged: macOS 27.0 (26A428) arm64, pinned `/usr/bin/sandbox-exec` identity, Pi `0.84.4` only verified peer, Node `26.8.1` (target) / `22.19.0` (hosted Linux floor); hosted CI covers the platform-independent Linux suite only and is never containment evidence (P18/R11).
-- Phase 7 order (owner decision): 1 stabilize (done) → 2 regression-per-guarantee (done) → 3 unknowns bound (this Goal) → 4 independent audit → publication as a separate maintainer decision. This Goal is step 3 only.
+- Phase 7 order (owner decision): 1 stabilize (done) → 2 regression-per-guarantee (done) → 3 unknowns bound (done) → 4 independent audit (this Goal) → gate decision and publication as separate maintainer decisions. This Goal is step 4 only.
 
 ## Scope
 
-- Disposition of each R1–R11: either new biting evidence resolving it into a demonstrated bound, or an explicit bound statement with no new claim; per-residual disposition table in a new audit doc.
-- New or strengthened regressions under `test/` only where a residual's bound lacks biting evidence; each must defend an observable contract and fail on a plausible bypass.
-- Manifest binding for this Goal's artifacts following the repository's manifest-plus-test pattern: new `docs/*-hashes.json` entry/entries plus suite(s), `CHANGED_IN_*` declarations in every earlier suite whose covered bytes change, explicit `test/ci-test-budget.json` update if and only if the collected set changes, retention-list update in `test/packaging-identity.test.ts` if and only if new files carry old-name mentions.
-- Re-read of `docs/V1-GUARANTEES.md` §8 doc agreement against the disposition; disagreements listed, never smoothed by rewording evidence away.
-- Release-blocker verdict: any open bypass of a claimed P-protection found during this work is recorded as a blocker with its biting regression.
-- Narrow source fix under `src/` if and only if this Goal's work exposes an open bypass of a claimed P-protection; each such fix stays inside this Goal with its biting regression and fresh checks.
+- Independent audit of the exact final snapshot in fresh context(s): re-derive every manifest hash against the working tree, re-run the reviewer-owned checks (typecheck, manifest suites, affected regression suites, `git diff --check`), adversarial code reading of the enforcement chain (authorizer, controlled tools, containment, broker, approvals, freeze/measure/export), and a verdict per P1–P18 (promise holds on its boundary) and per R1–R11 (bound stands with no new claim).
+- Audit record as a new doc (executor-run vs reviewer-run sections kept distinct) plus manifest binding for this Goal's artifacts following the repository's manifest-plus-test pattern: new `docs/*-hashes.json` entry/entries plus suite(s), `CHANGED_IN_*` declarations in every earlier suite whose covered bytes change, explicit `test/ci-test-budget.json` update if and only if the collected set changes, retention-list update in `test/packaging-identity.test.ts` if and only if new files carry old-name mentions.
+- Adversarial findings and their fixes stay inside this Goal; every fix carries its biting regression and fresh checks, and the affected evidence is re-reviewed (no stale PASS transfers to different bytes).
+- Narrow source fix under `src/` if and only if the audit exposes an open bypass of a claimed P-protection (release blocker); each such fix stays inside this Goal with its biting regression and fresh checks.
 
 ## Out of Scope
 
-- Closing any other Phase 7 item (independent v1 audit), closing the Phase 7 gate, releasing, tagging, publishing, removing `private: true`, wiring provenance, pushing, or installing into a real Pi profile.
-- Rewording the stabilized P1–P18 set beyond corrections this Goal's evidence forces; rewriting accepted evidence bytes without a manifest declaration.
-- Extending platform support, adding a hosted macOS job, verifying new Pi/Node versions, narrowing `peerDependencies: "*"`, or making any mount/B3/descendant/Keychain claim beyond the inherited bound unless its Risk Gate evidence is met.
+- Closing the Phase 7 gate, releasing, tagging, publishing, removing `private: true`, wiring provenance, pushing, or installing into a real Pi profile.
+- Rewording the stabilized P1–P18 set beyond corrections the audit forces; rewriting accepted evidence bytes without a manifest declaration; smoothing a disagreement by rewording evidence away.
+- Extending platform support, adding a hosted macOS job, verifying new Pi/Node versions, resolving the Class 1 Linux question, or making any mount/B3/descendant/Keychain claim beyond the inherited bound.
 - Refactors, dependency changes, packaging/CI behavior changes, or padding the suite with non-biting tests.
 - Acceptance recording itself (`STATE.md`/`ROADMAP.md` acceptance entries and the manifest binding SHA-256, which is recorded in `STATE.md` at acceptance to avoid a self-referential hash cycle, not in the bound audit).
 
 ## Risk Gates
 
-- A Linux-support or Class 1 runtime claim requires recorded Linux runtime execution against the accepted bytes; otherwise R4 stays bound with no support claim and none is committed to.
-- A narrowed peer/dependency range requires its own verification evidence and decision; otherwise R10 stays bound as declared-not-verified.
-- Any mount-isolation, same-user-writer, descendant-termination, Keychain-beyond-probe, or exfiltration-resistance claim requires fixtures and evidence that do not currently exist; without them R1–R3 and R5–R6 stay explicit bounds, never promises.
+- The audit must run in fresh context(s) against the exact final bytes; an audit reusing prior-context evidence or transferring a stale PASS to different bytes is invalid.
+- Review evidence must distinguish reviewer-run checks from executor-run checks; acceptance binds to exact bytes/hashes of the reviewed snapshot.
+- Any Linux-support, mount-isolation, same-user-writer, descendant-termination, Keychain-beyond-probe, or exfiltration-resistance claim requires fixtures and evidence that do not currently exist; without them the inherited R-bounds stand.
 
 ## Acceptance Criteria
 
-1. Every R1–R11 carries a disposition: either a named biting regression proving the resolved bound on its declared boundary, or an explicit bound statement with no new claim.
-2. No open bypass of a claimed P-protection remains unrecorded: each found bypass is filed as a release blocker with its biting regression, or the verdict records none open.
-3. P1–P18 wording is unchanged except corrections this Goal's evidence forces; the §8 doc-agreement re-read lists any disagreement instead of rewording evidence away.
+1. A fresh-context independent audit of the exact final snapshot returns PASS with no blocking findings, covering every P1–P18 against its cited evidence and every R1–R11 against its bound.
+2. Every audit finding was fixed inside this Goal with its biting regression and re-verified; no open bypass of a claimed protection remains unrecorded.
+3. P1–P18 wording is unchanged except corrections the audit forces; the doc-agreement re-read lists any disagreement instead of rewording evidence away.
 4. This Goal's artifacts are bound by a manifest and its test; `npm run check`, all manifest suites, and `git diff --check` pass locally, and the hosted run for the final commit is green with the declared counts.
-5. A fresh independent review of the final snapshot returns PASS with no blocking findings before owner acceptance; acceptance closes only the "Resolve or explicitly bound release-blocking known unknowns" item.
+5. Owner acceptance closes only the "Complete an independent audit appropriate to the claimed boundary" item; the Phase 7 gate decision and publication remain separate explicit maintainer decisions.
 
 ## Verification
 
-- Criterion 1: read each R1–R11 against its disposition row (named regression with mutation/bite note, or bound statement) and the artifact each cites.
-- Criterion 2: for each new/strengthened regression, restore the guarded defect (or apply the recorded mutation) and confirm the affected suite fails; re-apply the accepted bytes and confirm it passes; read the blocker verdict.
-- Criterion 3: diff `docs/V1-GUARANTEES.md` P1–P18 against the step-1 accepted bytes; read the §8 re-read table for unlisted disagreements.
+- Criterion 1: read the audit verdict, its scope (exact commit SHA), and the per-promise/per-residual coverage against `docs/V1-GUARANTEES.md` §§1–9.
+- Criterion 2: for each finding, read the fix, its biting regression, and the re-verification (mutation fail / accepted-bytes pass); read the blocker verdict.
+- Criterion 3: diff `docs/V1-GUARANTEES.md` P1–P18 against the step-1 accepted bytes; read the doc-agreement table for unlisted disagreements.
 - Criterion 4: `npm run check`, the manifest suites, `git diff --check`; confirm the hosted run for the final commit is green and the count assertion reports the declared numbers; `package.json` still `private: true`, no lifecycle scripts, CI never publishes.
-- Criterion 5: independent review of the exact final bytes; owner acceptance recorded in `STATE.md`.
+- Criterion 5: owner acceptance recorded in `STATE.md`; no gate closure or publication claimed.
 
 ## Constraints
 
@@ -64,7 +62,7 @@ Resolve or explicitly bound every release-blocking known unknown: close only the
 
 ## Escalate If
 
-- A residual cannot be resolved or explicitly bounded without changing a P-promise (potential release blocker or guarantee change, not a silent bound edit).
-- The work exposes a real bypass of a claimed protection needing implementation beyond a narrow in-Goal fix, a support commitment, a platform claim, or publication authority.
-- The Goal splits into independently reviewable/acceptable outcomes (e.g. per-layer residual groups shippable separately) — stop, do not expand; that is a decomposition signal.
+- The audit surfaces a bypass needing implementation beyond a narrow in-Goal fix, a support commitment, a platform claim, or publication authority.
+- A residual cannot stay bounded without changing a P-promise (potential release blocker or guarantee change, not a silent bound edit).
+- The Goal splits into independently reviewable/acceptable outcomes (e.g. per-layer audits shippable separately) — stop, do not expand; that is a decomposition signal.
 - Baseline, ownership, attribution, or overwrite authority becomes ambiguous; stop without changing the handoff.

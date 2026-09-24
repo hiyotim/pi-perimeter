@@ -92,6 +92,17 @@ const CHANGED_IN_UNKNOWN_BOUNDS: Record<string, true> = {
   "test/hash-manifest.test.ts": true,
 };
 
+/**
+ * Artifacts whose bytes the independent-audit Goal
+ * (`20260924-v1-independent-audit`) changed: the raised declared test count,
+ * the retention-list entry, and this declaration. Their entries here stay
+ * historical; docs/independent-audit-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_INDEPENDENT_AUDIT: Record<string, true> = {
+  "test/ci-test-budget.json": true,
+  "test/ci-manifest.test.ts": true,
+};
+
 const COVERED_FILES = [
   ".github/workflows/ci.yml",
   "scripts/assert-test-outcome.mjs",
@@ -113,6 +124,7 @@ test("the hosted-CI artifact hash manifest matches the final working tree", asyn
     if (CHANGED_IN_V1_GUARANTEES[file] === true) continue; // stabilized wording; the v1-guarantees manifest binds the current bytes
     if (CHANGED_IN_REGRESSION_EVIDENCE[file] === true) continue; // regression evidence; the regression-evidence manifest binds the current bytes
     if (CHANGED_IN_UNKNOWN_BOUNDS[file] === true) continue; // unknowns bound; the unknown-bounds manifest binds the current bytes
+    if (CHANGED_IN_INDEPENDENT_AUDIT[file] === true) continue; // independent audit; the independent-audit manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

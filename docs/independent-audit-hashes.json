@@ -1,0 +1,14 @@
+{
+  "docs/INDEPENDENT-AUDIT.md": "9bfde6e23827f8e7b6388847e6987c4524b4d391317f7023a844f9e9c8aa574a",
+  "test/ci-test-budget.json": "c142e6c79b95c51a89ebe37ea094ed8ff75b3d607ad3d1c4a1a7db4b33493059",
+  "test/packaging-identity.test.ts": "b6bb654f447d71fa19d931a60b92c6f4630793ba2c7470212bd6523056b07ba2",
+  "test/ci-manifest.test.ts": "8da682d6e06a010e46214bb213cc5ca3f1a55f3fc6acf343f1d314c357121c21",
+  "test/compatibility-manifest.test.ts": "ca5b3a894dfb3f65f52979da4186ec2047038b867f38b8f44262d196b79497a4",
+  "test/packaging-manifest.test.ts": "710efb37d2057597b2db569abbb1f5f5d3b3e04f6828cbaec85c9e3432559ff4",
+  "test/post-transfer-manifest.test.ts": "3eba6e08d70263c3a93eb139ca69feb55a93a452727b7974495de02686ccc8b6",
+  "test/release-review-manifest.test.ts": "f6edde8f6459bdb675831899e3578d2e1837f3d0120d7f03f3b683167316aa4a",
+  "test/v1-guarantees-manifest.test.ts": "59fc60aee348186358693b9bb436ecf095d8b67733c4cfa24c8d1ef190d54d13",
+  "test/regression-evidence-manifest.test.ts": "a848000daed82b2bb7c7e068c8b00971d2b2d579f9cc42bf8cd129b254396545",
+  "test/unknown-bounds-manifest.test.ts": "33957ccf0042e3990ff2b299cdf989b0df4abc5d7ce068d6826e25f4de16dc7a",
+  "test/independent-audit-manifest.test.ts": "8c67ba57ba355e6d81cfb4548f430c4e992a023d24ca08d0dfa0e41002d24467"
+}

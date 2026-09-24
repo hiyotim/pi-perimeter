@@ -134,6 +134,23 @@ const CHANGED_IN_UNKNOWN_BOUNDS: Record<string, true> = {
   "test/release-review-manifest.test.ts": true,
   "test/v1-guarantees-manifest.test.ts": true,
 };
+/**
+ * Artifacts whose bytes the independent-audit Goal
+ * (`20260924-v1-independent-audit`) changed: the raised declared test count,
+ * the retention-list entry, and this declaration. Their entries here stay
+ * historical; docs/independent-audit-hashes.json binds the current bytes.
+ */
+const CHANGED_IN_INDEPENDENT_AUDIT: Record<string, true> = {
+  "test/ci-test-budget.json": true,
+  "test/packaging-identity.test.ts": true,
+  "test/packaging-manifest.test.ts": true,
+  "test/compatibility-manifest.test.ts": true,
+  "test/post-transfer-manifest.test.ts": true,
+  "test/ci-manifest.test.ts": true,
+  "test/release-review-manifest.test.ts": true,
+  "test/v1-guarantees-manifest.test.ts": true,
+};
+
 
 test("the v1-guarantees artifact hash manifest matches the final working tree", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
@@ -141,6 +158,7 @@ test("the v1-guarantees artifact hash manifest matches the final working tree", 
   for (const file of COVERED_FILES) {
     if (CHANGED_IN_REGRESSION_EVIDENCE[file] === true) continue; // regression evidence; the regression-evidence manifest binds the current bytes
     if (CHANGED_IN_UNKNOWN_BOUNDS[file] === true) continue; // unknowns bound; the unknown-bounds manifest binds the current bytes
+    if (CHANGED_IN_INDEPENDENT_AUDIT[file] === true) continue; // independent audit; the independent-audit manifest binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });
