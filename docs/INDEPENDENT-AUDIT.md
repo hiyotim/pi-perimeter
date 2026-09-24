@@ -209,10 +209,9 @@ none exists, and refactors/non-biting tests are out of scope):
   and the new suite itself), asserted by
   `test/independent-audit-manifest.test.ts` (3 tests, copied from the
   unknown-bounds manifest-suite template with the same enforcement
-  strength).
-  SHA-256
-  `c829dcdd568998a5b785a35d6052355be44a469a99556bd04d6534fb726e4293`
-  (12 entries).
+  strength). File-level SHA-256 of `docs/independent-audit-hashes.json`
+  is bound at owner acceptance in STATE.md (not quoted here, to avoid a
+  self-referential hash cycle); entry count 12.
 - `CHANGED_IN_INDEPENDENT_AUDIT` (named exactly so) declared in every
   earlier suite whose covered bytes change: `ci`, `compatibility`,
   `packaging`, `post-transfer`, `release-review`, `v1-guarantees`,
