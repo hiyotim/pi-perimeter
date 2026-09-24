@@ -211,7 +211,7 @@ none exists, and refactors/non-biting tests are out of scope):
   unknown-bounds manifest-suite template with the same enforcement
   strength).
   SHA-256
-  `de7443fa4f9d73dc0daa3fbb941ce318e2857ff7fdee8698041e3b7590a12ca0`
+  `c829dcdd568998a5b785a35d6052355be44a469a99556bd04d6534fb726e4293`
   (12 entries).
 - `CHANGED_IN_INDEPENDENT_AUDIT` (named exactly so) declared in every
   earlier suite whose covered bytes change: `ci`, `compatibility`,
