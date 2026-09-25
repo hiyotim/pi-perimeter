@@ -1,12 +1,20 @@
 #!/usr/bin/env node
 /**
- * Build the deterministic staging artifact for `20260924-release-v1`.
+ * Build the deterministic staging artifact for a versioned release.
  *
  * Copies the exact release-commit tree (tracked files only) into
  * `release-staging/`, then applies ONLY the publishable-manifest transform:
- * `version` → `1.0.0`, `private` removed. The source tree is never mutated;
- * the script refuses to run when the working tree is dirty, so staging bytes
- * are exactly the committed release bytes plus the manifest transform.
+ * `version` → the resolved release version, `private` removed. The source
+ * tree is never mutated; the script refuses to run when the working tree is
+ * dirty, so staging bytes are exactly the committed release bytes plus the
+ * manifest transform.
+ *
+ * The release version resolves as `argv --release-version=X` over
+ * `env RELEASE_VERSION` over the `DEFAULT_RELEASE_VERSION` default, and must
+ * match X.Y.Z. The resolved version is the single source the verifier
+ * checks: the builder records it in `release-staging/.release-version`
+ * alongside the transformed manifest, so a version the builder did not write
+ * can never verify.
  *
  * Determinism: sorted file order, fixed manifest key order is preserved from
  * the source file (only the two fields change), no timestamps are embedded
@@ -15,55 +23,82 @@
 import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const REPO_ROOT = process.cwd();
 const STAGING = path.join(REPO_ROOT, "release-staging");
-export const RELEASE_VERSION = "1.0.0";
+/** Default release version; keeps the 1.0.0 staging bytes reproducible. */
+const DEFAULT_RELEASE_VERSION = "1.0.0";
+const VERSION_PATTERN = /^\d+\.\d+\.\d+$/;
+/** Staging-local record of the resolved version; the verifier reads it back. */
+const VERSION_FILE_NAME = ".release-version";
+
+/** Resolve the release version: argv `--release-version=X` > env `RELEASE_VERSION` > default. */
+export function resolveReleaseVersion(argv = process.argv.slice(2), env = process.env) {
+  const flag = argv.find((arg) => arg.startsWith("--release-version="));
+  const raw =
+    flag !== undefined ? flag.slice("--release-version=".length) : (env["RELEASE_VERSION"] ?? DEFAULT_RELEASE_VERSION);
+  if (!VERSION_PATTERN.test(raw)) {
+    console.error(`refusing: release version ${JSON.stringify(raw)} is not X.Y.Z`);
+    process.exit(1);
+  }
+  return raw;
+}
+
+/** Compatibility alias: the resolved release version. */
+export const RELEASE_VERSION = resolveReleaseVersion();
 
 function git(args) {
   return execSync(`git ${args}`, { cwd: REPO_ROOT, encoding: "utf-8" }).trim();
 }
 
-const status = git("status --porcelain");
-if (status !== "") {
-  console.error(`refusing: working tree is dirty:\n${status}`);
-  process.exit(1);
-}
-const head = git("rev-parse HEAD");
-console.log(`staging from HEAD ${head}`);
+function main() {
+  const status = git("status --porcelain");
+  if (status !== "") {
+    console.error(`refusing: working tree is dirty:\n${status}`);
+    process.exit(1);
+  }
+  const head = git("rev-parse HEAD");
+  console.log(`staging from HEAD ${head}`);
 
-rmSync(STAGING, { recursive: true, force: true });
-mkdirSync(STAGING, { recursive: true });
+  rmSync(STAGING, { recursive: true, force: true });
+  mkdirSync(STAGING, { recursive: true });
 
-const tracked = git("ls-files -z").split("\0").filter((entry) => entry.length > 0);
-const ordered = [...tracked].sort();
-for (const file of ordered) {
-  const source = path.join(REPO_ROOT, file);
-  const target = path.join(STAGING, file);
-  mkdirSync(path.dirname(target), { recursive: true });
-  cpSync(source, target);
+  const tracked = git("ls-files -z").split("\0").filter((entry) => entry.length > 0);
+  const ordered = [...tracked].sort();
+  for (const file of ordered) {
+    const source = path.join(REPO_ROOT, file);
+    const target = path.join(STAGING, file);
+    mkdirSync(path.dirname(target), { recursive: true });
+    cpSync(source, target);
+  }
+
+  const manifestPath = path.join(STAGING, "package.json");
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  if (manifest.private !== true) {
+    console.error("refusing: source manifest must carry private: true");
+    process.exit(1);
+  }
+  if (manifest.version !== "0.0.0") {
+    console.error("refusing: source manifest must carry version 0.0.0");
+    process.exit(1);
+  }
+  delete manifest.private;
+  manifest.version = RELEASE_VERSION;
+  writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  writeFileSync(path.join(STAGING, VERSION_FILE_NAME), `${RELEASE_VERSION}\n`);
+
+  const hash = createHash("sha256");
+  for (const file of [...ordered, VERSION_FILE_NAME]) {
+    const bytes = readFileSync(path.join(STAGING, file));
+    hash.update(file);
+    hash.update(bytes);
+  }
+  console.log(`release-staging: ${ordered.length} files, tree sha256 ${hash.digest("hex")}`);
+  console.log(`publishable manifest: pi-perimeter@${RELEASE_VERSION}, private removed`);
 }
 
-const manifestPath = path.join(STAGING, "package.json");
-const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-if (manifest.private !== true) {
-  console.error("refusing: source manifest must carry private: true");
-  process.exit(1);
+if (path.resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {
+  main();
 }
-if (manifest.version !== "0.0.0") {
-  console.error("refusing: source manifest must carry version 0.0.0");
-  process.exit(1);
-}
-delete manifest.private;
-manifest.version = RELEASE_VERSION;
-writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-
-const hash = createHash("sha256");
-for (const file of ordered) {
-  const bytes = readFileSync(path.join(STAGING, file));
-  hash.update(file);
-  hash.update(bytes);
-}
-console.log(`release-staging: ${ordered.length} files, tree sha256 ${hash.digest("hex")}`);
-console.log(`publishable manifest: pi-perimeter@${RELEASE_VERSION}, private removed`);

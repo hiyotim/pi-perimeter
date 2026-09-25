@@ -34,6 +34,21 @@ const CHANGED_IN_STARTUP_READINESS = new Set<string>([
   "test/release-review-manifest.test.ts",
 ]);
 
+/** Artifacts whose bytes the 1.0.1 staging-preparation Goal changed; their entries here stay historical; docs/release-hashes-1.0.1.json binds the current bytes. */
+const CHANGED_IN_1_0_1 = new Set<string>([
+  "README.md",
+  "SECURITY.md",
+  "ARCHITECTURE.md",
+  "THREAT_MODEL.md",
+  "docs/COMPATIBILITY.md",
+  "test/ci-test-budget.json",
+  "test/packaging-manifest.test.ts",
+  "test/compatibility-manifest.test.ts",
+  "test/post-transfer-manifest.test.ts",
+  "test/ci-manifest.test.ts",
+  "test/release-review-manifest.test.ts",
+]);
+
 const COVERED_FILES = [
   "README.md",
   "SECURITY.md",
@@ -191,6 +206,7 @@ test("the release-review artifact hash manifest matches the final working tree",
     if (CHANGED_IN_INDEPENDENT_AUDIT[file] === true) continue; // independent audit; the independent-audit manifest binds the current bytes
     if (CHANGED_IN_RELEASE[file] === true) continue; // release v1; the release manifest binds the current bytes
     if (CHANGED_IN_STARTUP_READINESS.has(file)) continue; // current snapshot bound by the startup-readiness manifest
+    if (CHANGED_IN_1_0_1.has(file)) continue; // 1.0.1 staging preparation; docs/release-hashes-1.0.1.json binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

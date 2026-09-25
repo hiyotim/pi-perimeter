@@ -4,8 +4,7 @@ Task ID: `20260920-compatibility-matrix`. Phase 6 checklist item: "Publish a Pi,
 macOS, and Linux compatibility matrix".
 
 This matrix reports only combinations that were actually exercised, plus the
-combinations the implementation refuses by design. It is not a support commitment: this
-project is pre-alpha, has no release, and no supported installation path. See
+combinations the implementation refuses by design. It is not a support commitment. Historical status: `pi-perimeter@1.0.0` was published 2026-09-24 as a macOS-only v1.0 (see Distribution below and [PACKAGING.md](PACKAGING.md)); a fresh-install audit then found the published bytes fail to load in Pi `0.84.4`, and the unreleased source-tree correction is not accepted or released. The current candidate is therefore the corrected source tree, verified only as recorded in the rows below. See
 [ROADMAP.md](../ROADMAP.md) for the release gates and [SECURITY.md](../SECURITY.md) for
 the current security status.
 
@@ -28,7 +27,7 @@ the current security status.
 | Pi (`@earendil-works/pi-coding-agent`) | `0.84.4` | — | every other version, including the locally installed `0.86.1` |
 | Node | `26.8.1` (macOS target, full local suite) and `22.19.0` (hosted Linux CI, platform-independent suite) | below the declared `engines` floor `>=22.19.0` (declared only, not enforced at runtime) | every other version in `>=22.19.0` |
 | OS / architecture | macOS 27.0 (build `26A428`), arm64 | any other Darwin major, any other architecture, the shell route off the declared target, and Windows in every respect | Linux file-gate runtime evidence (Class 1 question open); platform-independent policy suite on hosted Linux CI (exercised, not a support claim); Windows in every respect |
-| Distribution | none | installing `npm:pi-warden` installs another maintainer's package | publishing `pi-perimeter` |
+| Distribution | historical: `pi-perimeter@1.0.0` published 2026-09-24 (macOS-only v1.0; fails to load in Pi `0.84.4` — see Pi row) | installing `npm:pi-warden` installs another maintainer's package | current candidate (unreleased source-tree correction): not published, no install evidence |
 
 ## Pi
 
@@ -48,9 +47,9 @@ This correction is not evidence that the published `1.0.0` works.
 evidence covers: no audit, test suite, or hosted run has exercised this extension
 against it. `package.json` declares `peerDependencies:
 { "@earendil-works/pi-coding-agent": "*" }` — that is a declared range, not a
-verification, and it is deliberately not being narrowed while the project is pre-alpha
-and unpublished (owner decision, 2026-09-20).
-
+verification. It stays `*` deliberately while the only verified version is `0.84.4`
+(owner decision, 2026-09-20; `test/package-compat.test.ts` pins this): install-time
+acceptance of a wider range must not be read as support.
 **Consequence:** installing or relying on this extension against a Pi version other than
 `0.84.4` is outside every guarantee this repository has demonstrated. See
 [docs/DEVELOPMENT.md](DEVELOPMENT.md) for the compatibility checks a change to the
@@ -107,7 +106,13 @@ approximating them.
 
 ## Distribution
 
-**Verified: `pi-perimeter@1.0.0`** (macOS-only v1.0, 2026-09-24). Published from the deterministic staging artifact; the source tree on `main` stays `private: true` and unpublished. Installation is supported on the declared containment target only; nothing has been installed into a real Pi profile as evidence.
+### Historical status: `pi-perimeter@1.0.0`
+
+**Published 2026-09-24** (macOS-only v1.0) from the deterministic staging artifact; the source tree on `main` stays `private: true` and unpublished. History is preserved, not rewritten: see [PACKAGING.md](PACKAGING.md), [RELEASE-AUDIT.md](RELEASE-AUDIT.md), `docs/release-hashes.json`.
+
+### Current candidate status
+
+**Not published; no install evidence.** A fresh-install audit found the published `1.0.0` fails to load in Pi `0.84.4` (`pi.getAllTools()` throws `Extension runtime not initialized` at extension load), so installation of `1.0.0` is not supported on any target, including the declared containment target. The unreleased source-tree correction (ownership observed only after `session_start`) is not accepted or released, and nothing has been installed into a real Pi profile as evidence. Evidence: [STARTUP-READINESS-AUDIT.md](STARTUP-READINESS-AUDIT.md).
 
 **Blocked:** the unscoped npm name `pi-warden` — this project's former name — is already
 published by another maintainer, so it can never be used here, and installing
@@ -132,6 +137,7 @@ the publication safeguards and the release record.
 
 | Row | Evidence |
 | --- | --- |
+| Published `1.0.0` load failure | [STARTUP-READINESS-AUDIT.md](STARTUP-READINESS-AUDIT.md) |
 | Pi `0.84.4` integration surface | [docs/SHELL-GATE-AUDIT.md](SHELL-GATE-AUDIT.md), [docs/NETWORK-GATE-AUDIT.md](NETWORK-GATE-AUDIT.md), [docs/SHELL-GATE.md](SHELL-GATE.md) |
 | Node `26.8.1` on macOS 27.0 arm64 | [docs/PHASE-1B-AUDIT.md](PHASE-1B-AUDIT.md), [docs/FILE-GATE-AUDIT.md](FILE-GATE-AUDIT.md), [docs/SHELL-GATE-AUDIT.md](SHELL-GATE-AUDIT.md) |
 | Node `22.19.0` on hosted Linux CI | [docs/CI-EVIDENCE.md](CI-EVIDENCE.md) (run identifiers and counts) |

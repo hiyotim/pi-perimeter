@@ -15,16 +15,18 @@ accepted within its declared target and limitations on 2026-09-20, with evidence
 [docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md). Sections below that
 still say "planned" describe work that later Goals would own.
 
-## Remaining implementation boundaries
+## Implementation status
 
-The four-Goal plan in [ROADMAP.md](ROADMAP.md) assigns related implementation, tests, documentation, and review to one cycle per boundary:
-
-1. **Configuration authorization:** untrusted configuration data becomes validated restrictions through a trusted loading context, then combines with accepted baseline decisions. Keep filesystem loading separate from deterministic interpretation/composition; project data never supplies its own authority. The bounded initial model has one user/global source, one project source, and exact read/write/edit operation scopes. No Pi enforcement is part of this Goal.
-2. **Pi file gates and scoped approvals:** the trusted host binds a complete file operation to central policy, matching approval, and execution-time resource identity. Recursive tools must mediate their actual resources, and host control-plane state must remain protected. An approved directory is not blanket authority over descendants. Unsupported tools and shell routes fail closed.
-3. **Sandboxed shell with network closed:** establish the separate OS boundary around untrusted subprocesses, including environment construction, shell policy and inherited restrictions. Validate the backend and claimed platform guarantees before dependent implementation. No network permission is granted at this checkpoint.
-4. **Restricted networking and end-to-end security evidence:** extend accepted containment with narrow actual-destination permissions and approvals; demonstrate that egress cannot weaken the other boundaries.
-
-Each Goal requires independent review and acceptance before the next dependent boundary is enabled. Phase 5 hardening work belongs to its affected boundary; public-beta and v1 gates remain separate release decisions. These assignments replace future micro-Goal scheduling, not accepted security contracts. Delete/rename APIs and general path-selector frameworks are not extra Phase 1 prerequisites; complete effects/resources of supported tools must be handled in their owning Goal, while unsupported operations remain denied/unavailable.
+Goals 1–4 are implemented and accepted within their documented contracts and
+declared limitations ([STATE.md](STATE.md) binds the acceptance and exact
+evidence): Goal 1 completes the configuration authority chain (unenforced
+primitive); Goal 2 mediates every supported Pi file operation through central
+authorization with matching approval and execution-time identity; Goal 3 runs
+model and user shell only inside verified OS containment with a constructed
+environment and closed networking; Goal 4 extends that route with narrow
+actual-destination permissions and approvals. Unsupported operations stay
+denied/unavailable. What follows describes the implemented boundaries; any
+section still saying "planned" belongs to a later, unselected Goal.
 
 ## Trust zones and data flow
 
@@ -58,38 +60,38 @@ The Pi host process and sandboxed operations are different trust zones. Provider
 
 ## 1. Pi integration
 
-**Implemented for the six supported file tools plus the contained shell routes; planned for any future tool.** A thin extension entry point connects Pi lifecycle and tool events to the central policy model. It covers `read`, `write`, `edit`, `grep`, `find`, `ls`, `bash`, and `user_bash`. Coverage must be re-checked whenever Pi adds or changes model-facing tools.
+**Implemented for the six supported file tools plus the contained shell routes; any future tool stays denied until integrated and tested.** A thin extension entry point connects Pi lifecycle and tool events to the central policy model. It covers `read`, `write`, `edit`, `grep`, `find`, `ls`, `bash`, and `user_bash`. Coverage must be re-checked whenever Pi adds or changes model-facing tools. Extension startup observes controlled-tool ownership only after Pi `0.84.4` emits `session_start` (unreleased correction, not yet accepted); until readiness plus ownership, every model-facing call is blocked fail-closed.
 Pi hooks are authorization interception points, but hook execution in the host process is not OS isolation. Where interception cannot reliably cover a tool, the integration layer must replace or route that tool through controlled operations, or fail closed.
 
 ## 2. Path normalization
 
-**Implemented as a policy primitive; not integrated with Pi tools.** `src/policy/paths.ts` resolves model-facing relative paths against an explicitly supplied canonical workspace, canonicalizes existing targets through the filesystem, and resolves creation targets from their longest existing ancestor. Broken links and filesystem-resolution failures produce typed errors that callers must treat as failed security checks. Decisions do not use raw string prefixes.
+**Implemented as the enforced path primitive, consumed by the Goal 2 gate.** `src/policy/paths.ts` resolves model-facing relative paths against an explicitly supplied canonical workspace, canonicalizes existing targets through the filesystem, and resolves creation targets from their longest existing ancestor. Broken links and filesystem-resolution failures produce typed errors that the gate treats as denials. Decisions do not use raw string prefixes.
 
-Normalization surfaces ambiguity and errors rather than guessing. It intentionally preserves path components until the existing prefix is resolved so traversal after a symlink follows filesystem semantics. Time-of-check/time-of-use and symlink replacement risks remain unresolved and require enforcement-time containment or descriptor-based techniques in a later phase.
+Normalization surfaces ambiguity and errors rather than guessing. It intentionally preserves path components until the existing prefix is resolved so traversal after a symlink follows filesystem semantics. Check-to-use races are bounded by the Goal 2 execution-time object binding and the Goal 3 descriptor-bound freeze/measure chain; declared residuals are in the gate contracts.
 
 ## 3. Workspace boundary
 
-**Path-membership and default decisions implemented; enforcement remains planned.** A canonical workspace root defines the default allow zone. The path layer reports membership using a path-component relationship, not a text prefix. Fixed default decisions for ordinary external read/write/edit paths return `ASK` where the operation's existence requirements hold; no Pi tool consumes these decisions.
+**Path-membership and default decisions implemented and enforced through the Goal 2 gate.** A canonical workspace root defines the default allow zone. The path layer reports membership using a path-component relationship, not a text prefix. Fixed default decisions for ordinary external read/write/edit paths return `ASK` where the operation's existence requirements hold.
 
 Workspace membership never overrides a secret classification or a stronger global restriction.
 
 ## 4. Secret classification
 
-**Implemented as a classification primitive; not integrated or enforced.** `src/policy/resources.ts` classifies selected high-confidence secret paths and potentially sensitive resource paths from Phase 1A's canonical target and normalized lexical path. It returns stable categories, reasons, sensitivities, and evidence without reading file contents or making an authorization decision. `sensitive` identifies security-relevant ambiguity and is not equivalent to `secret`.
+**Implemented as the enforced classification input, consumed by the effective policy and the Goal 2 gate.** `src/policy/resources.ts` classifies selected high-confidence secret paths and potentially sensitive resource paths from Phase 1A's canonical target and normalized lexical path. It returns stable categories, reasons, sensitivities, and evidence without reading file contents or making an authorization decision. `sensitive` identifies security-relevant ambiguity and is not equivalent to `secret`.
 
 Ordinary filenames can still contain secrets, and Phase 1A's filesystem limitations still apply. Environment-variable classification and macOS Keychain protection remain unimplemented. Classification is defense in depth, not proof that all secrets can be identified.
 
 ## 5. Policy engine
 
-**Fixed path decisions, outcome composition, and bounded configuration-aware evaluation implemented; enforcement planned.** The implemented engine is pure and deterministic after loading. It accepts an exact operation, genuine canonical resource, internally derived classification, and a privately issued two-source configuration snapshot. Authorization produces structured `ALLOW`, `ASK`, or `DENY` decisions with baseline and source explanations. Future Goals add command risk, network intent, approvals, and containment availability. `SANDBOX` represents an orthogonal containment requirement, never a fourth authorization outcome.
+**Fixed path decisions, outcome composition, and bounded configuration-aware evaluation implemented and enforced through the Goal 2 gate.** The implemented engine is pure and deterministic after loading. It accepts an exact operation, genuine canonical resource, internally derived classification, and a privately issued two-source configuration snapshot. Authorization produces structured `ALLOW`, `ASK`, or `DENY` decisions with baseline and source explanations. Command risk, network intent, and containment availability arrived with Goals 3–4. `SANDBOX` represents an orthogonal containment requirement, never a fourth authorization outcome.
 
 Global/default policy is authoritative. Both trusted user/global and project configuration may only preserve or strengthen the baseline. User decisions through the separate approval layer may satisfy a specific matching `ASK`; configuration cannot grant approval. Invalid or ambiguous security configuration fails closed where it affects protected access.
 
-The accepted [monotonic policy authority contract](docs/MONOTONIC-POLICY-AUTHORITY.md) fixes the composition model: authorization restrictions are ordered `ALLOW < ASK < DENY`, the strictest applicable result wins, and both trusted user/global and project-controlled contributions may only preserve or strengthen the baseline. Goal 1 implements the bounded configuration chain without changing those limits: [the configuration contract](docs/CONFIGURATION-AUTHORIZATION.md) defines the strict v1 schema, fixed locations, trusted source association, whole-source failure domains, and structured result. Approval, enforcement, and Pi integration remain absent. Any future mechanism that relaxes `ASK` requires an explicit contract change and separate review.
+The accepted [monotonic policy authority contract](docs/MONOTONIC-POLICY-AUTHORITY.md) fixes the composition model: authorization restrictions are ordered `ALLOW < ASK < DENY`, the strictest applicable result wins, and both trusted user/global and project-controlled contributions may only preserve or strengthen the baseline. Goal 1 implements the bounded configuration chain without changing those limits: [the configuration contract](docs/CONFIGURATION-AUTHORIZATION.md) defines the strict v1 schema, fixed locations, trusted source association, whole-source failure domains, and structured result. Approval and enforcement arrived with Goals 2–4, not Goal 1. Any future mechanism that relaxes `ASK` requires an explicit contract change and separate review.
 
-The accepted first decision primitive is the [read-path default decision contract](docs/READ-PATH-DECISIONS.md): a fixed default rule over one genuine resolver result, with internal classification and no configuration or approval inputs. Its `ALLOW` is only a default path-rule result and cannot bypass later stronger restrictions. It is not integrated with Pi tools. Goal 1 composes these baseline outcomes with validated configuration; Goal 2 adds enforcement.
+The accepted first decision primitive is the [read-path default decision contract](docs/READ-PATH-DECISIONS.md): a fixed default rule over one genuine resolver result, with internal classification and no configuration or approval inputs. Its `ALLOW` is only a default path-rule result and cannot bypass later stronger restrictions. Goal 1 composes these baseline outcomes with validated configuration; Goal 2 enforces them through the gate.
 
-The accepted write-path and edit-path default decision contracts add the same fixed-rule approach for one write path and one edit path. For write, an ordinary missing target inside the workspace is an acceptable creation target and an ordinary external target asks. For edit, every ordinary missing target denies because an edit requires an existing target; ordinary existing inside targets allow and ordinary existing external targets ask. Secret and sensitive targets deny for both. The write-path independent verdict is recorded in [docs/WRITE-PATH-DECISIONS-AUDIT.md](docs/WRITE-PATH-DECISIONS-AUDIT.md) and the edit-path verdict in [docs/EDIT-PATH-DECISIONS-AUDIT.md](docs/EDIT-PATH-DECISIONS-AUDIT.md). Their `ALLOW` is only a default path-rule result and cannot bypass later stronger restrictions. Read, write, and edit default path primitives are implemented and accepted but not integrated with Pi tools. Multi-resource effects needed by supported file tools belong to Goal 2; shell effects belong to Goal 3. No generic delete/rename API is selected by the four-Goal plan.
+The accepted write-path and edit-path default decision contracts add the same fixed-rule approach for one write path and one edit path. For write, an ordinary missing target inside the workspace is an acceptable creation target and an ordinary external target asks. For edit, every ordinary missing target denies because an edit requires an existing target; ordinary existing inside targets allow and ordinary existing external targets ask. Secret and sensitive targets deny for both. The write-path independent verdict is recorded in [docs/WRITE-PATH-DECISIONS-AUDIT.md](docs/WRITE-PATH-DECISIONS-AUDIT.md) and the edit-path verdict in [docs/EDIT-PATH-DECISIONS-AUDIT.md](docs/EDIT-PATH-DECISIONS-AUDIT.md). Their `ALLOW` is only a default path-rule result and cannot bypass later stronger restrictions. Goal 2 enforces these primitives through the gate for all supported file tools. Per-Goal scope assignments for the four-Goal plan are retained as completed contracts in [ROADMAP.md](ROADMAP.md).
 
 ## 6. Approvals
 

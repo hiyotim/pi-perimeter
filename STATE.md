@@ -10,10 +10,10 @@ Result (2026-09-24): step 3 snapshot ready for authorized commit+push — Task I
 
 ## Continuation
 
-- Current: pi-perimeter@1.0.0 published 2026-09-24; binding ca0fb1c3…, tag v1.0.0, run 36031377325.
-- Review: Release review PASS, no blocking findings.
-- Limits: macOS-only; Linux/Windows unsupported; installed nowhere as evidence.
-- Next: No further Goal selected; v1.x work needs a new roadmap decision.
+- Current: 1.0.1 staging prep committed locally (Task 20260925-release-v101-prep, base 8365b34); 1.0.0 binding/tag/run unchanged.
+- Review: 1.0.1 prep review PASS 2026-09-25, no blocking findings; local gate 425/424/0/1.
+- Limits: macOS-only; unpushed; no tag/run/publish; staging bytes unverified on CI.
+- Next: Owner selects release Goal (tag/publish) or next fix; no auto-advance.
 
 ## Release acceptance (pi-perimeter@1.0.0, macOS-only, 2026-09-24)
 

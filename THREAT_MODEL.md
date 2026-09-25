@@ -2,7 +2,7 @@
 
 ## Status
 
-This is the incremental threat model for `pi-perimeter` (formerly `pi-warden`). All responses in this document are **planned** unless explicitly marked otherwise. Phase 1A implements path canonicalization and workspace containment, and Phase 1B implements path-only resource classification, but no Pi tool currently enforces either result.
+This is the incremental threat model for `pi-perimeter` (formerly `pi-warden`). Goals 1–4 are implemented and accepted within their documented contracts and declared limitations: bounded configuration authorization (Goal 1, unenforced primitive), Pi file gates with scoped approvals (Goal 2, enforced), the contained shell route on the declared macOS target (Goal 3), and restricted networking through the per-invocation broker (Goal 4). Contracts: [docs/FILE-GATE.md](docs/FILE-GATE.md), [docs/SHELL-GATE.md](docs/SHELL-GATE.md), [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md); acceptance and exact evidence: [STATE.md](STATE.md). Sections below marked implemented describe those accepted bytes; anything still marked planned belongs to a later, unselected Goal.
 
 The decision vocabulary is:
 
@@ -37,10 +37,10 @@ The decision vocabulary is:
 
 ## Trusted components
 
-The planned design trusts, within their documented limits:
+The implemented design trusts, within their documented limits (Goals 1–4 accepted):
 
 - the Pi host process and the exact Pi APIs validated for a supported version;
-- the small `pi-warden` policy core and enforcement adapters;
+- the small `pi-perimeter` (formerly `pi-warden`) policy core and enforcement adapters;
 - user/global security configuration that has not been modified by the repository;
 - the selected OS containment mechanism after successful initialization;
 - the user making an informed decision from an accurate approval prompt;
@@ -85,15 +85,15 @@ The attacker is not assumed to already have arbitrary code execution as the user
 - Kernel, hypervisor, OS sandbox, or trusted Pi-host compromise.
 - Physical access and attacks against the user's login session.
 - Perfect identification of every possible secret format.
-- Guaranteed protection of macOS Keychain before a proven design exists.
+- Guaranteed protection of macOS Keychain (synthetic probe only; no isolation claim).
 - Side channels not controllable by the selected OS boundary.
-- Actions the user intentionally performs outside Pi and `pi-warden`.
+- Actions the user intentionally performs outside Pi and `pi-perimeter` (formerly `pi-warden`).
 
 Out of scope does not mean safe; it means no guarantee is planned without expanding the design.
 
 ## Attack matrix
 
-| Attack class | Example | Planned response | Rationale / required control |
+| Attack class | Example | Response (implemented unless noted) | Rationale / required control |
 |---|---|---:|---|
 | Relative traversal | `../../private.txt` | ASK or DENY | Canonicalize before workspace comparison; secret rules override approval. |
 | Absolute external path | `/Users/alice/Documents/file` | ASK or DENY | External access requires explicit policy; sensitive paths are denied. |
@@ -135,17 +135,17 @@ Out of scope does not mean safe; it means no guarantee is planned without expand
 
 ### Canonical identity
 
-Raw input is not a resource identity. The implemented Phase 1A path primitive resolves relative paths against an explicit canonical workspace, canonicalizes existing objects, and handles non-existent destinations through the longest verified existing ancestor. Workspace membership is checked by components on canonical paths. Typed resolution failures are fail-closed inputs for future policy callers; no tool gate consumes them yet.
+Raw input is not a resource identity. The implemented Phase 1A path primitive resolves relative paths against an explicit canonical workspace, canonicalizes existing objects, and handles non-existent destinations through the longest verified existing ancestor. Workspace membership is checked by components on canonical paths. Typed resolution failures are fail-closed inputs for policy callers; the Goal 2 gate (`src/gate/authorizer.ts`) denies on them.
 
 The Phase 1A result describes containment of a canonical pathname, not isolation of the underlying inode or filesystem object. A hard-linked name inside the workspace can share an inode with a name outside it, and a mount point below the workspace can expose objects from another filesystem while retaining an in-workspace pathname. POSIX APIs treat a macOS Finder alias as an ordinary file rather than traversing it; any application-specific alias resolution would require separate policy at the operation that performs it. Case behavior, Unicode normalization, and mount/filesystem semantics still need platform-specific investigation.
 
-Canonicalization does not keep a file descriptor open, so filesystem state can change between checking and use. Time-of-check/time-of-use races, including replacement of an inspected directory with a symlink, remain unresolved. Failure to obtain a reliable identity must be a deny condition once protected access is integrated.
+Canonicalization does not keep a file descriptor open, so filesystem state can change between checking and use. Time-of-check/time-of-use races are bounded by the Goal 2 execution-time object binding (descriptor-relative chain on platforms with `/proc/self/fd`-style traversal, verified direct-leaf binding plus creation refusal on macOS) and the Goal 3 descriptor-bound freeze/measure chain; declared residuals remain. Failure to obtain a reliable identity denies.
 
 ### Symlinks
 
-Every relevant path component may be a symlink. Phase 1A resolves existing symlink components, including the parent of a non-existent creation target; broken links fail with an explicit error. Future operation policy must evaluate every source and destination path, including rename and create operations. A link located inside the workspace does not make its external target internal. Phase 1B classifies both the resolved target and Phase 1A's normalized lexical path, but does not enforce the result.
+Every relevant path component may be a symlink. Phase 1A resolves existing symlink components, including the parent of a non-existent creation target; broken links fail with an explicit error. Operation policy evaluates every source and destination path: the Goal 2 gate captures an execution-time object binding before approval and verifies it at effect time (descriptor-relative on Linux-class platforms, verified direct-leaf plus creation refusal on macOS). A link located inside the workspace does not make its external target internal. Phase 1B classification feeds the effective decision consumed by the gates.
 
-Canonicalization alone may not prevent a symlink from changing after a decision. Future implementation must investigate descriptor-relative operations, no-follow flags, sandbox restrictions, and post-open verification.
+A symlink changing after a decision is handled by the same binding: descriptor-relative opens with `O_NOFOLLOW`, post-open identity checks, and sandbox restrictions; declared residuals are in the gate contracts ([docs/FILE-GATE.md](docs/FILE-GATE.md), [docs/SHELL-GATE.md](docs/SHELL-GATE.md)).
 
 ### Writes and destructive changes
 
@@ -153,19 +153,17 @@ Creation, overwrite, rename, link, permission change, and deletion have distinct
 
 ## Shell threats
 
-Shell text can conceal behavior through quoting, expansion, variables, functions, aliases, `eval`, sourced files, substitutions, redirections, pipelines, nested interpreters, and child processes. Executables can perform operations unrelated to their names or arguments. Therefore:
-
-- regex matching is only an advisory signal;
-- parsing must preserve shell structure and recursively inspect known nested shells;
-- redirection targets and working directories are resources;
-- an unknown or highly dynamic command may require approval or denial;
-- every permitted shell command still runs in OS-level containment;
+- regex matching is never the security boundary: the Goal 3 bounded lexer/parser (`src/policy/shell-grammar.ts`), plan builder (`src/policy/shell-plan.ts`), and fixed command-risk tables decide approval requirements and early refusals;
+- parsing preserves shell structure and recursively inspects known nested shells; command substitution and backticks are denied rather than parsed;
+- redirection targets and working directories are evaluated as resources;
+- an unknown or highly dynamic command requires approval or denial;
+- every permitted shell command still runs in OS-level containment (Goal 3 Seatbelt route, macOS 27 arm64 only);
 - sandbox initialization failure blocks execution;
-- user `!` and `!!` paths require the same containment as model `bash`.
+- user `!` and `!!` paths require the same containment as model `bash` (Goal 3).
 
 ## Network threats
 
-Network access can exfiltrate files, environment variables, prompts, source code, or credentials. It can also reach loopback services, cloud metadata endpoints, Unix-socket bridges, DNS, proxies, or redirect chains. The policy starts restricted, permits known development endpoints narrowly, and asks for unknown representable destinations; an approval is tied to the actual destination set and session scope. OS-level enforcement is required because pre-execution command classification cannot prove eventual network behavior.
+Implemented (Goal 4, accepted 2026-09-20; contract [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md), evidence [docs/NETWORK-GATE-AUDIT.md](docs/NETWORK-GATE-AUDIT.md)). Network access can exfiltrate files, environment variables, prompts, source code, or credentials, and can reach loopback services, cloud metadata endpoints, Unix-socket bridges, DNS, proxies, or redirect chains. The policy starts restricted, permits narrowly allowed trusted destinations plus per-invocation approvals for representable destinations tied to the actual destination set and session scope; pre-execution command classification cannot prove eventual network behavior, so the per-invocation host-side broker is the enforcement boundary.
 
 **Implemented (Goal 4, accepted 2026-09-20; contract
 [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md), evidence
@@ -189,7 +187,7 @@ boundary). Everything in this section not marked implemented remains planned.
 
 ## Credential threats
 
-Known credential paths and environment-variable names are intended to be normally hard-denied by future policy. Phase 1B only classifies a small path-based subset; it does not classify environment variables or deny access. The sandbox environment should exclude provider keys and Pi state by default. Credentials must not be copied into temporary fixtures or audit logs. A narrow future capability that genuinely requires a credential needs a separate design, minimum privilege, explicit user intent, and evidence that child processes cannot reuse it beyond scope.
+Known credential paths are hard-denied by the effective policy consumed by the Goal 2 file gate (Phase 1B path-based classification of a small high-confidence subset; content-blind, environment variables out of scope). The Goal 3 shell route constructs its child environment from `{}`, so provider keys and Pi state are absent by construction. Credentials must not be copied into temporary fixtures or audit logs. A narrow future capability that genuinely requires a credential needs a separate design, minimum privilege, explicit user intent, and evidence that child processes cannot reuse it beyond scope.
 
 Secret classification cannot guarantee discovery of arbitrary secrets embedded in ordinary files. Documentation and UI must state this limitation.
 
@@ -201,11 +199,11 @@ Repository text, source comments, issue content, tool output, and downloaded mat
 
 A malicious repository may combine configuration, symlinks, scripts, dependencies, filenames, and prompt injection. It may change files between inspection and execution or make a normal build run a hostile lifecycle script. Project Trust prevents some unapproved resource loading in Pi, but once a project is trusted it is not a runtime sandbox.
 
-`pi-warden` therefore plans a monotonic authority model: built-in secure defaults and user/global policy are authoritative; project-local configuration may only make the effective policy stricter. Repository executables and package scripts run as untrusted child code and require containment.
+`pi-perimeter` (formerly `pi-warden`) enforces a monotonic authority model, implemented in Goal 1 and consumed by the Goal 2 gate: built-in secure defaults and user/global policy are authoritative; project-local configuration may only make the effective policy stricter. Repository executables and package scripts run as untrusted child code and require containment.
 
 ## Approval limitations
 
-Users can misunderstand prompts, become habituated, or approve malicious actions. An approval UI must show canonical resources, operation type, side effects, duration, and whether containment remains active. It must avoid bundled unrelated requests and must not offer routine overrides for hard-denied secrets or privilege escalation.
+Users can misunderstand prompts, become habituated, or approve malicious actions. Implemented: file-tool grants cover one tool call; shell grants (`src/approvals/shell-approvals.ts`) additionally bind the exact command text, parsed form, workspace/cwd, runtime instance and session epoch, policy states, containment profile, constructed environment, sealed script inputs and static resource outcomes, with 60-second expiry and single use. An approval UI must show canonical resources, operation type, side effects, duration, and whether containment remains active. It must avoid bundled unrelated requests and must not offer routine overrides for hard-denied secrets or privilege escalation.
 
 Approval state is not a sandbox, must not be writable by repository code, and must not silently persist beyond its displayed scope. Races that substitute a target after approval require enforcement at execution time, not better wording alone.
 
@@ -213,11 +211,11 @@ Approval state is not a sandbox, must not be writable by repository code, and mu
 
 An OS sandbox is only as strong as its configuration, coverage, and underlying platform. In-process Pi tools are not contained merely because shell children are. Allowed workspace writes can still destroy workspace data. Allowed network endpoints can receive sensitive workspace content. Compiler, package-manager, and child-process behavior must remain inside the same boundary.
 
-The selected sandbox runtime will be re-evaluated during Phase 3. Unsupported platforms, initialization failures, and unverified weakening options cannot trigger unrestricted fallback.
+The selected sandbox backend is the Goal 3 Seatbelt projection design (deny-default profile, private workspace projection, descriptor-envelope native launcher, `sandbox-exec`; declared target only). Unsupported platforms, initialization failures, and unverified weakening options cannot trigger unrestricted fallback. Descendant termination is not guaranteed (accepted variant-B boundary); unattributable survivors stay confined to the disposable projection but their lifetime and resource consumption are unbounded.
 
 ## macOS assumptions
 
-The initial target is current macOS on Apple Silicon. The design expects a supported OS-level process containment mechanism and canonical filesystem APIs, but exact guarantees remain unknown until implementation and testing. macOS sandbox behavior, filesystem case sensitivity, aliases, network enforcement, process inheritance, and Keychain access need explicit validation. No complete Keychain-isolation claim is made.
+The declared target is macOS 27.0 (build `26A428`) on Apple Silicon, enforced by `verifyPlatform` plus a pinned `/usr/bin/sandbox-exec` identity. Validated on that target: Seatbelt projection containment, closed networking (Goal 3) extended by the per-invocation broker (Goal 4), descriptor-bound export, constructed environment. Declared residuals and bounds: synthetic-Keychain probe only (no isolation claim), mount isolation unverified, same-user host writers outside the boundary, inode/metadata-replay substitution residual. No complete Keychain-isolation claim is made.
 
 ## Known unknowns
 

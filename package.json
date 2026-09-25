@@ -1,7 +1,7 @@
 {
   "name": "pi-perimeter",
   "version": "0.0.0",
-  "description": "Planned workspace-first security extension for Pi (formerly pi-warden)",
+  "description": "Workspace-first security extension for Pi (formerly pi-warden): bounded configuration authorization, Pi file gates with scoped approvals, contained shell, restricted networking (macOS-only v1.0.0 published; see SECURITY.md and docs/COMPATIBILITY.md for status)",
   "private": true,
   "type": "module",
   "keywords": [

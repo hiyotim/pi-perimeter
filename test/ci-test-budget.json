@@ -1,6 +1,6 @@
 {
   "linux": {
-    "tests": 420,
+    "tests": 425,
     "fail": 0,
     "skipped": 54
   }

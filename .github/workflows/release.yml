@@ -5,6 +5,11 @@ on:
     tags:
       - "v*.*.*"
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version in X.Y.Z (required; on a tag push it must equal the tag without its leading v)"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -17,6 +22,45 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Guard the release version (tag == version; dispatch input required)
+        id: release-guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          EVENT="${{ github.event_name }}"
+          INPUT_VERSION="${{ inputs.version }}"
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            if [ -z "$INPUT_VERSION" ]; then
+              echo "refusing: workflow_dispatch requires an explicit version input in X.Y.Z"
+              exit 1
+            fi
+            VERSION="$INPUT_VERSION"
+          else
+            TAG="${{ github.ref_name }}"
+            case "$TAG" in
+              v*) VERSION="${TAG#v}" ;;
+              *)
+                echo "refusing: release tag must carry a leading v (got $TAG)"
+                exit 1
+                ;;
+            esac
+            if [ -n "$INPUT_VERSION" ] && [ "$INPUT_VERSION" != "$VERSION" ]; then
+              echo "refusing: tag $TAG without its leading v ($VERSION) diverges from the version input ($INPUT_VERSION)"
+              exit 1
+            fi
+          fi
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "refusing: release version $VERSION is not X.Y.Z"
+            exit 1
+          fi
+          if [ "$VERSION" = "1.0.0" ]; then
+            MANIFEST="docs/release-hashes.json"
+          else
+            MANIFEST="docs/release-hashes-$VERSION.json"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "manifest=$MANIFEST" >> "$GITHUB_OUTPUT"
+          echo "guarded release version $VERSION with manifest $MANIFEST"
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22.19.0
@@ -33,14 +77,20 @@ jobs:
       - name: Assert the declared test outcome
         run: node scripts/assert-test-outcome.mjs "$RUNNER_TEMP/check.log" test/ci-test-budget.json linux
       - name: Build the deterministic staging artifact
-        shell: bash
+        env:
+          RELEASE_VERSION: ${{ steps.release-guard.outputs.version }}
+          RELEASE_MANIFEST_PATH: ${{ steps.release-guard.outputs.manifest }}
         run: node scripts/build-release-staging.mjs
       - name: Verify the staging bytes against the release manifest
+        env:
+          RELEASE_VERSION: ${{ steps.release-guard.outputs.version }}
+          RELEASE_MANIFEST_PATH: ${{ steps.release-guard.outputs.manifest }}
         run: node scripts/verify-release-staging.mjs
       - name: Dry-run pack of the staging artifact
         shell: bash
         working-directory: release-staging
         run: npm pack --dry-run
       - name: Publish the staging artifact with provenance
+        if: github.event_name == 'push'
         working-directory: release-staging
         run: npm publish --provenance --access public
