@@ -12,11 +12,12 @@ import { test } from "node:test";
  * historical evidence; this additive binding covers the exact current bytes
  * of every file the postpublication update creates or modifies, plus the
  * frozen final binding and final audit as references. Every entry lists the
- * sha256 of the current file and the test recomputes each hash every run,
- * with no exception sets. This binding must never list itself: no file it
- * covers may record its own hash.
+ * sha256 of that revision. The later owner-acceptance binding covers the
+ * three superseding current files without rewriting this historical manifest.
+ * Neither binding lists itself.
  */
 const MANIFEST_PATH = "docs/release-hashes-1.0.1-postpublication.json";
+const ACCEPTANCE_MANIFEST_PATH = "docs/release-hashes-1.0.1-acceptance.json";
 const COVERED_FILES = [
   "README.md",
   "SECURITY.md",
@@ -44,6 +45,13 @@ const COVERED_FILES = [
   "test/user-install-onboarding-manifest.test.ts",
   "test/v1-guarantees-manifest.test.ts",
   "test/startup-readiness-manifest.test.ts",
+] as const;
+
+/** Owner acceptance supersedes only these current bytes; the postpublication binding stays frozen. */
+const ACCEPTANCE_CHANGED = [
+  "STATE.md",
+  "ROADMAP.md",
+  "test/release-1.0.1-postpublication-manifest.test.ts",
 ] as const;
 
 /** The exact postpublication change set each earlier manifest suite must declare. */
@@ -230,12 +238,16 @@ const POSTPUBLICATION_DECLARATIONS: Record<string, readonly string[]> = {
   ],
 };
 
-test("release-1.0.1-postpublication manifest binds every updated file with no exceptions", async () => {
+test("postpublication and owner-acceptance bindings cover the exact current bytes", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   assert.deepEqual(Object.keys(manifest).sort(), [...COVERED_FILES].sort());
   assert.ok(!Object.hasOwn(manifest, MANIFEST_PATH), "the binding must not list itself");
+  for (const file of ACCEPTANCE_CHANGED) {
+    assert.ok((COVERED_FILES as readonly string[]).includes(file), `${file} must be postpublication-bound historically`);
+  }
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if ((ACCEPTANCE_CHANGED as readonly string[]).includes(file)) continue;
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });
@@ -245,6 +257,24 @@ test("release-1.0.1-postpublication manifest binds every updated file with no ex
     mismatches.length,
     0,
     `hash manifest mismatch for:\n${mismatches
+      .map((entry) => `${entry.file}: current ${entry.current} recorded ${entry.expected}`)
+      .join("\n")}`,
+  );
+
+  const acceptance = JSON.parse(await readFile(ACCEPTANCE_MANIFEST_PATH, "utf8")) as Record<string, string>;
+  assert.deepEqual(Object.keys(acceptance).sort(), [...ACCEPTANCE_CHANGED].sort());
+  assert.ok(!Object.hasOwn(acceptance, ACCEPTANCE_MANIFEST_PATH), "acceptance binding must not list itself");
+  const acceptanceMismatches: { file: string; current: string; expected: string | null }[] = [];
+  for (const file of ACCEPTANCE_CHANGED) {
+    const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
+    if (acceptance[file] !== current) {
+      acceptanceMismatches.push({ file, current, expected: acceptance[file] ?? null });
+    }
+  }
+  assert.equal(
+    acceptanceMismatches.length,
+    0,
+    `owner acceptance hash mismatch for:\n${acceptanceMismatches
       .map((entry) => `${entry.file}: current ${entry.current} recorded ${entry.expected}`)
       .join("\n")}`,
   );

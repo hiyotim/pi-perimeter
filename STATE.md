@@ -2,11 +2,15 @@
 
 Updated: 2026-09-25
 Branch at planning update: `codex/operation-policy-contribution-contract`
-Current branch: `main` at `1bfabc5e5aed482f7c0685f8eef0670d4b709d7d`, three commits ahead of `origin/main`; this acceptance reconciliation changes only `STATE.md` and `ROADMAP.md` without a commit. `codex/mac-migration-snapshot` is not the working branch.
+Current branch: `main`; the released result is `0fa75fd2fe32473edf012a410660666ba5da67ce` and the accepted tag is `v1.0.1`. Earlier branch snapshots below are historical.
 Goal 3 implementation start baseline: `b9060dad829a92d3699da3b689fe909446a1e810` (accepted Goal 2 corrective pass and Goal 3 research). The subsequent preparation commit changes only STATE, ROADMAP, and IMPLEMENTATION_HANDOFF. Historical Goal 1 planning baseline: `c10e8f384e678c41792937d340d716d25e592e28`.
 Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c276e2154e2910e6`
 Result (2026-09-24): step 2 snapshot committed as c01b53d45e58dcf210610f18d4b98af564406459 on main, hosted run 35977693960 green.
 Result (2026-09-24): step 3 snapshot ready for authorized commit+push — Task ID 20260924-unknowns-bound; manifest docs/unknown-bounds-hashes.json SHA-256 2b7ad6b55bfd654f5d42dd9a24e9e2b3927a85136eafec223399bc094ae83bd9 (16 entries); local `npm run check` 404 tests / 403 pass / 0 fail / 1 declared platform skip; hosted run id to be filled after push. Owner authorized commit+push of ONLY this Phase 7 step 3 snapshot in-session 2026-09-24. No acceptance claimed here.
+
+## Owner acceptance (pi-perimeter@1.0.1, 2026-09-25)
+
+The owner accepted Task `20260925-release-v101` on 2026-09-25 after the reported fresh FULL and VERIFY reviews passed without blocking findings. The accepted result commit is `0fa75fd2fe32473edf012a410660666ba5da67ce`; the published tag `v1.0.1` points to `041b4e89b4bb5cc5988fda5ce5a51f85488c6a52`. Acceptance covers the published npm artifact, its provenance, the isolated Pi `0.84.4` installation and startup evidence, and the public installation wording recorded in the release result below and [docs/RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md](docs/RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md). The completed [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md) is **HISTORICAL**: its baseline remains `8c1e5b09bb14e4c3e9e7c6be550fb50a3ee8c41d`, and its result commit is recorded separately above. Its released bytes and all earlier release manifests stay unchanged. Support remains limited to the declared macOS target and Pi peer; the non-blocking wording/test-comment observations do not expand the release guarantee.
 
 ## Release result (pi-perimeter@1.0.1, 2026-09-25)
 
@@ -14,10 +18,10 @@ Task ID: `20260925-release-v101`. **The `1.0.1` release is executed and this ent
 
 ## Continuation
 
-- Current: `20260925-user-install-onboarding` accepted 2026-09-25; result commit `1bfabc5` on clean local `main`.
-- Review: Owner-reported fresh FULL PASS, no blockers; local manifest binding independently rechecked 19/19 and 2/2.
-- Limits: Three commits unpushed; no `v1.0.1` tag, hosted CI run, or published-artifact verification.
-- Next: Prepare one bounded `v1.0.1` release handoff; publication remains a separate maintainer decision.
+- Current: `20260925-release-v101` accepted 2026-09-25; published `pi-perimeter@1.0.1`; result `0fa75fd`.
+- Review: Fresh FULL and VERIFY reviews PASS per release report; verify-only, publish, and final CI runs succeeded.
+- Limits: Only the declared macOS target and Pi `0.84.4` are verified; other platforms and peers remain outside the claim.
+- Next: No further release Goal selected; preserve this accepted state until the owner requests new work.
 
 The owner accepted `20260925-user-install-onboarding` on 2026-09-25 after the reported fresh independent review PASS. The completed [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md) is **HISTORICAL**: its original baseline is `b308ed8b8ab1526e5b8287032e56867829279ce3`, and its separate result commit is `1bfabc5e5aed482f7c0685f8eef0670d4b709d7d`. The handoff bytes remain unchanged because [docs/user-install-onboarding-hashes.json](docs/user-install-onboarding-hashes.json) binds them. The accepted scope is README onboarding, the direct npm package link, and isolated Pi `0.84.4` install/list/remove evidence. The owner-reported checks were 428 tests / 427 pass / 0 fail / 1 declared skip; the local closure rechecked the committed 19/19 manifest hashes and 2/2 onboarding manifest tests. No push, tag, publication, live npm `1.0.1` install, or hosted CI run is accepted by this decision.
 
