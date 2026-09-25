@@ -219,6 +219,26 @@ const CHANGED_IN_1_0_1_RELEASE = new Set<string>([
   "test/v1-guarantees-manifest.test.ts",
 ]);
 
+/** Artifacts whose bytes the 1.0.1 postpublication Goal changed; their entries here stay historical; docs/release-hashes-1.0.1-postpublication.json binds the current bytes. */
+const CHANGED_IN_1_0_1_POSTPUBLICATION = new Set<string>([
+  "README.md",
+  "docs/COMPATIBILITY.md",
+  "docs/PACKAGING.md",
+  "test/ci-test-budget.json",
+  "test/ci-manifest.test.ts",
+  "test/compatibility-manifest.test.ts",
+  "test/independent-audit-manifest.test.ts",
+  "test/packaging-identity.test.ts",
+  "test/packaging-manifest.test.ts",
+  "test/post-transfer-manifest.test.ts",
+  "test/regression-evidence-manifest.test.ts",
+  "test/release-manifest.test.ts",
+  "test/release-review-manifest.test.ts",
+  "test/startup-readiness-manifest.test.ts",
+  "test/unknown-bounds-manifest.test.ts",
+  "test/v1-guarantees-manifest.test.ts",
+]);
+
 test("startup-readiness manifest binds every changed artifact", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   assert.deepEqual(Object.keys(manifest).sort(), [...COVERED_FILES].sort());
@@ -226,6 +246,7 @@ test("startup-readiness manifest binds every changed artifact", async () => {
     if (CHANGED_IN_1_0_1.has(file)) continue; // 1.0.1 staging preparation; docs/release-hashes-1.0.1.json binds the current bytes
     if (CHANGED_IN_USER_INSTALL_ONBOARDING.has(file)) continue; // user-install onboarding; docs/user-install-onboarding-hashes.json binds the current bytes
     if (CHANGED_IN_1_0_1_RELEASE.has(file)) continue; // 1.0.1 final release; docs/release-hashes-1.0.1-final.json binds the current bytes
+    if (CHANGED_IN_1_0_1_POSTPUBLICATION.has(file)) continue; // 1.0.1 postpublication wording; docs/release-hashes-1.0.1-postpublication.json binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     assert.equal(current, manifest[file], `${file} differs from the startup-readiness snapshot`);
   }

@@ -2,12 +2,13 @@
 
 ## Current status
 
-`pi-perimeter` (formerly `pi-warden`) is at **v1.0.0 (macOS-only)**. Goals 1–4 — bounded configuration
+`pi-perimeter` (formerly `pi-warden`) is at **v1.0.1 (macOS-only)**. Goals 1–4 — bounded configuration
 authorization, Pi file gates with scoped approvals, contained shell execution,
 and restricted networking — are implemented, verified on the declared macOS
 target, and accepted within their documented contracts and declared
-limitations. Phase 7 gate is closed as macOS-only v1.0; `pi-perimeter@1.0.0`
-is the controlled published distribution (see [docs/PACKAGING.md](docs/PACKAGING.md)).
+limitations. Phase 7 gate is closed as macOS-only v1.0; `pi-perimeter@1.0.1`
+is the current published distribution and `pi-perimeter@1.0.0` is broken and
+superseded (see [docs/PACKAGING.md](docs/PACKAGING.md)).
 
 Do not rely on it as a general-purpose security boundary. It is neither a
 virtual machine nor a Docker wrapper and is not a general malware-containment
@@ -73,6 +74,6 @@ What helps the investigation: the affected invariant; expected versus observed b
 
 Use synthetic data only. Never test against someone else's system, and never include real credentials, tokens, keys, or another person's data. Until an advisory is published, treat the report as confidential: do not post exploit details, reproduction steps, or affected-system specifics publicly.
 
-Urgent or especially sensitive reports: `pi-perimeter@1.0.0` is published (macOS-only v1.0), but a fresh-install audit found the published bytes fail to load in Pi `0.84.4` (`Extension runtime not initialized` at extension load), so there is no known enforced deployment; the startup correction in this source tree is unreleased and unaccepted. If a report is urgent or especially sensitive, say so in the first line and keep every sensitive detail in the single private report rather than splitting it between a public and a private channel.
+Urgent or especially sensitive reports: `pi-perimeter@1.0.1` is published (macOS-only v1.0 with the startup correction), but a fresh-install audit found the earlier published `1.0.0` bytes fail to load in Pi `0.84.4` (`Extension runtime not initialized` at extension load), so there is no known enforced deployment of `1.0.0`. If a report is urgent or especially sensitive, say so in the first line and keep every sensitive detail in the single private report rather than splitting it between a public and a private channel.
 
 See [THREAT_MODEL.md](THREAT_MODEL.md) for implemented coverage and [ROADMAP.md](ROADMAP.md) for the gates required before stronger claims are made.

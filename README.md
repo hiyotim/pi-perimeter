@@ -4,13 +4,13 @@
 
 > **Status and support target.** `pi-perimeter` gates Pi file and shell tools by workspace policy, explicit approval, and macOS containment. Supported target: macOS 27.0 (build `26A428`) arm64; Pi `0.84.4` verified peer; Node `>=22.19.0`.
 >
-> **Broken published version.** `pi-perimeter@1.0.0` is the only published version and it fails to load in Pi `0.84.4` before its gates activate — do not rely on it. A corrected `1.0.1` is not published or downloadable.
+> **Broken published version.** `pi-perimeter@1.0.0` fails to load in Pi `0.84.4` before its gates activate — do not rely on it. It is superseded by `pi-perimeter@1.0.1`, which carries the startup correction and is the current published version.
 >
 > Package page: <https://www.npmjs.com/package/pi-perimeter>
 >
-> Install path in order: install → verify loading → build native helper → first use → remove (see below). Each command notes whether it is verified in the isolated Pi `0.84.4` exercise or awaits publication.
+> Install path in order: install → verify loading → build native helper → first use → remove (see below). Step 1 below is verified against the published `1.0.1` in an isolated Pi `0.84.4` exercise; the manual packed-source route beside it is the isolated dev alternative.
 
-> **Project status: Goals 1–4 accepted; Phase 7 gate closed as macOS-only v1.0; `pi-perimeter@1.0.0` published.**
+> **Project status: Goals 1–4 accepted; Phase 7 gate closed as macOS-only v1.0; `pi-perimeter@1.0.0` published and broken; `pi-perimeter@1.0.1` published with the startup correction.**
 
 Goals 1–4 (bounded configuration authorization, Pi file gates with scoped
 approvals, contained shell execution, and restricted networking) are accepted
@@ -99,7 +99,7 @@ Declared containment target: macOS 27.0 (build `26A428`), arm64 — full require
 - Node `>=22.19.0` (`engines` floor); verified `26.8.1` on the macOS target and `22.19.0` on hosted Linux CI for the platform-independent suites.
 - A platform toolchain for the native helper build below (only needed for the contained shell route).
 
-> **Status warning.** `pi-perimeter@1.0.0` (macOS-only v1.0) is published on npm, but a fresh-install audit found that this published version fails to load in Pi `0.84.4`: it calls `getAllTools()` before Pi initializes the extension runtime (`Extension runtime not initialized`), so its gates never become active. Do not rely on `1.0.0` for enforcement. The startup correction in this source tree (ownership observed only after `session_start`) has not been released or accepted. Evidence: [docs/STARTUP-READINESS-AUDIT.md](docs/STARTUP-READINESS-AUDIT.md).
+> **Status warning.** `pi-perimeter@1.0.0` (macOS-only v1.0) is published on npm, but a fresh-install audit found that this published version fails to load in Pi `0.84.4`: it calls `getAllTools()` before Pi initializes the extension runtime (`Extension runtime not initialized`), so its gates never become active. Do not rely on `1.0.0` for enforcement — it is superseded by `pi-perimeter@1.0.1`, which observes tool ownership only after `session_start` and passed the isolated published-package exercise. Evidence: [docs/STARTUP-READINESS-AUDIT.md](docs/STARTUP-READINESS-AUDIT.md), [docs/RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md](docs/RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md).
 
 The package identity is `pi-perimeter` (formerly `pi-warden`); the unscoped npm
 name `pi-warden` belongs to another maintainer, so installing `npm:pi-warden`
@@ -110,13 +110,13 @@ Do not rely on this package as a security control beyond the stabilized P1–P18
 
 ## Installation
 
-1. Install (awaits publication — only broken `1.0.0` is published today; `1.0.1` is not published or downloadable, so do not run this against the registry yet):
+1. Install (published — verified against `pi-perimeter@1.0.1` from the real npm registry in an isolated Pi `0.84.4` profile; evidence: [docs/RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md](docs/RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md)):
 
 ```sh
-pi install npm:pi-perimeter@<version>
+pi install npm:pi-perimeter@1.0.1
 ```
 
-Isolated/dev route (verified in the Pi `0.84.4` package-manager exercise — packed tarball served over a loopback registry, isolated profile, no real-profile install): the same `pi install` route is demonstrated by `test/user-install-onboarding.test.ts`; the packed-source runtime smoke uses a manual install instead (see below). Evidence: [docs/INSTALL-ONBOARDING-AUDIT.md](docs/INSTALL-ONBOARDING-AUDIT.md).
+Isolated/dev route (packed tarball served over a loopback registry in the Pi `0.84.4` package-manager exercise, isolated profile, no real-profile install — the dev alternative to the published path above, not published-artifact proof): the same `pi install` route is demonstrated by `test/user-install-onboarding.test.ts`; the packed-source runtime smoke uses a manual install instead (see below). Evidence: [docs/INSTALL-ONBOARDING-AUDIT.md](docs/INSTALL-ONBOARDING-AUDIT.md).
 
 ```sh
 npm pack <repo> --pack-destination <tmp>/tarballs

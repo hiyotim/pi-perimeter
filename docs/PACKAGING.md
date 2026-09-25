@@ -1,6 +1,6 @@
 # Packaging
 
-Task ID: `20260920-npm-packaging` (identity), release `20260924-release-v1` (Task ID in [RELEASE-AUDIT.md](RELEASE-AUDIT.md)). Status: **`pi-perimeter@1.0.0` published from the deterministic staging artifact; the source tree on `main` stays `private: true` and unpublished.**
+Task ID: `20260920-npm-packaging` (identity), release `20260924-release-v1` (Task ID in [RELEASE-AUDIT.md](RELEASE-AUDIT.md)), release `20260925-release-v101` (Task ID in [RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md](RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md)). Status: **`pi-perimeter@1.0.1` published from the deterministic staging artifact; the source tree on `main` stays `private: true` and unpublished. `pi-perimeter@1.0.0` remains published but is broken and superseded.**
 
 This document owns the publishable identity, the packaged contents, the publication
 safeguards and the release checklist. See [COMPATIBILITY.md](COMPATIBILITY.md) for the
@@ -12,11 +12,11 @@ verified platform rows and [ROADMAP.md](../ROADMAP.md) for the Phase 6 release g
 | --- | --- |
 | Package name | `pi-perimeter` |
 | Former name | `pi-warden` — already published on npm by another maintainer, so it can never be used here; installing `npm:pi-warden` installs that other project |
-| Version | `1.0.0` (published 2026-09-24; source tree carries no release version — the staging artifact sets it) |
+| Version | `1.0.1` (published 2026-09-25, current; source tree carries no release version — the staging artifact sets it); `1.0.0` (published 2026-09-24, broken and superseded) |
 | License | MIT (`LICENSE`, "pi-perimeter contributors") |
 | Node floor | `engines.node` `>=22.19.0`; verified versions are in [COMPATIBILITY.md](COMPATIBILITY.md) |
 | Pi peer | `peerDependencies["@earendil-works/pi-coding-agent"] = "*"` — a declared range, **not** a verified one; `0.84.4` is the only verified version |
-| Pi manifest | `pi.extensions` = `./src/index.ts` (a path, unchanged by the rename); the unreleased source correction waits for Pi `0.84.4` `session_start` before observing tool ownership |
+| Pi manifest | `pi.extensions` = `./src/index.ts` (a path, unchanged by the rename); the `1.0.1` staging artifact carries the source correction that waits for Pi `0.84.4` `session_start` before observing tool ownership |
 
 `package.json` carries `repository`, `homepage` and `bugs`, all pointing at
 `github.com/hiyotim/pi-perimeter` — the canonical location since the repository was
@@ -63,8 +63,8 @@ Notes on the contents:
   For an npm installation, run that script against the installed package directory
   reported by `pi list` (for the default user profile:
   `npm --prefix "$HOME/.pi/agent/npm/node_modules/pi-perimeter" run build:native`).
-  This does not repair the published `1.0.0` startup failure; the corrected source
-  needs a separately reviewed release.
+   This does not repair the published `1.0.0` startup failure; the published
+   `1.0.1` carries the corrected source.
   `test/packaging-identity.test.ts` asserts that exclusion.
 - The audits and contracts under `docs/` ship with the package, deliberately: the
   documented guarantees and their declared limitations are part of the artifact.
@@ -85,9 +85,9 @@ Run only after an explicit release decision; every step is recorded in [RELEASE-
 1. Phase 7 gate closed (macOS-only v1.0, 2026-09-24).
 2. Repository at its canonical location (`repository`, `homepage`, `bugs`, reporting route).
 3. `npm pack --dry-run` of the staging artifact matches this document; the packaged README and `SECURITY.md` read as a consumer would.
-4. Version `1.0.0`, dist-tag `latest` (a `1.0.1` candidate run uses version `1.0.1` with `docs/release-hashes-1.0.1-final.json`); `private: true` stays on source, removed only inside staging.
+4. Version `1.0.0`, dist-tag `latest` (executed 2026-09-24); version `1.0.1`, dist-tag `latest` (executed 2026-09-25 with `docs/release-hashes-1.0.1-final.json`); `private: true` stays on source, removed only inside staging.
 5. Publish from the release workflow over Trusted Publishing (GitHub OIDC) with provenance and no publish token — never from a developer machine — and confirm the attested artifact identity.
-6. Record the published name, version, integrity and provenance attestation in [STATE.md](../STATE.md), bound by `docs/release-hashes.json`.
+6. Record the published name, version, integrity and provenance attestation in [STATE.md](../STATE.md), bound by the version's release manifest (`docs/release-hashes.json` for `1.0.0`, `docs/release-hashes-1.0.1-final.json` for `1.0.1`).
 
 ## Outstanding
 
@@ -96,4 +96,4 @@ Run only after an explicit release decision; every step is recorded in [RELEASE-
   redirects to it, and the reporting channel and its recorded advisory moved with the
   repository. The `pi-warden` organization still exists and is no longer used by this
   project; nothing here depends on it.
-- `pi-perimeter@1.0.0` is published (macOS-only v1.0); no compatibility or security guarantee beyond the stabilized P1–P18/R1–R11 boundary is created by this document.
+- `pi-perimeter@1.0.1` is published (macOS-only v1.0 with the startup correction); `pi-perimeter@1.0.0` remains published but is broken and superseded; no compatibility or security guarantee beyond the stabilized P1–P18/R1–R11 boundary is created by this document.

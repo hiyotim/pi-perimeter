@@ -138,6 +138,12 @@ const CHANGED_IN_1_0_1_RELEASE = new Set<string>([
   "test/ci-manifest.test.ts",
 ]);
 
+/** Artifacts whose bytes the 1.0.1 postpublication Goal changed; their entries here stay historical; docs/release-hashes-1.0.1-postpublication.json binds the current bytes. */
+const CHANGED_IN_1_0_1_POSTPUBLICATION = new Set<string>([
+  "test/ci-test-budget.json",
+  "test/ci-manifest.test.ts",
+]);
+
 const COVERED_FILES = [
   ".github/workflows/ci.yml",
   "scripts/assert-test-outcome.mjs",
@@ -165,6 +171,7 @@ test("the hosted-CI artifact hash manifest matches the final working tree", asyn
     if (CHANGED_IN_1_0_1.has(file)) continue; // 1.0.1 staging preparation; docs/release-hashes-1.0.1.json binds the current bytes
     if (CHANGED_IN_USER_INSTALL_ONBOARDING.has(file)) continue; // user-install onboarding; docs/user-install-onboarding-hashes.json binds the current bytes
     if (CHANGED_IN_1_0_1_RELEASE.has(file)) continue; // 1.0.1 final release; docs/release-hashes-1.0.1-final.json binds the current bytes
+    if (CHANGED_IN_1_0_1_POSTPUBLICATION.has(file)) continue; // 1.0.1 postpublication wording; docs/release-hashes-1.0.1-postpublication.json binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

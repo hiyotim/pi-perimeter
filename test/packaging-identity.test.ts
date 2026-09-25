@@ -106,6 +106,7 @@ const RETAINED: Record<string, string> = {
   "docs/shell-gate-hashes.json": "evidence-bound (records the helper source path)",
   "docs/VULNERABILITY-REPORTING-AUDIT.md": "evidence-bound (records the reporting route)",
   "docs/RELEASE-REVIEW-AUDIT.md": "evidence-bound (this Goal's audit; records the former-name finding)",
+  "docs/RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md": "evidence-bound (postpublication record; quotes the observed contained-run output)",
   "test/release-review-manifest.test.ts": "declares the old-name pattern retention and the earlier-manifest change records",
   "test/v1-guarantees-manifest.test.ts": "runtime-identifier (reads the shared harness verbose flag)",
   "test/regression-evidence-manifest.test.ts": "runtime-identifier (reads the shared harness verbose flag)",
