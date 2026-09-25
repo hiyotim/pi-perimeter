@@ -1,8 +1,8 @@
 # Project State
 
-Updated: 2026-09-22
+Updated: 2026-09-25
 Branch at planning update: `codex/operation-policy-contribution-contract`
-Current branch: `main` (`main` == `origin/main`, ahead/behind 0/0; the current local commits are pushed; `codex/mac-migration-snapshot` still exists but is no longer the working branch)
+Current branch: `main` at `1bfabc5e5aed482f7c0685f8eef0670d4b709d7d`, three commits ahead of `origin/main`; this acceptance reconciliation changes only `STATE.md` and `ROADMAP.md` without a commit. `codex/mac-migration-snapshot` is not the working branch.
 Goal 3 implementation start baseline: `b9060dad829a92d3699da3b689fe909446a1e810` (accepted Goal 2 corrective pass and Goal 3 research). The subsequent preparation commit changes only STATE, ROADMAP, and IMPLEMENTATION_HANDOFF. Historical Goal 1 planning baseline: `c10e8f384e678c41792937d340d716d25e592e28`.
 Accepted merge implementation baseline (historical): `6622dce90ddad2fa60b9a7b9c276e2154e2910e6`
 Result (2026-09-24): step 2 snapshot committed as c01b53d45e58dcf210610f18d4b98af564406459 on main, hosted run 35977693960 green.
@@ -10,10 +10,12 @@ Result (2026-09-24): step 3 snapshot ready for authorized commit+push — Task I
 
 ## Continuation
 
-- Current: 1.0.1 staging prep committed locally (Task 20260925-release-v101-prep, base 8365b34); 1.0.0 binding/tag/run unchanged.
-- Review: 1.0.1 prep review PASS 2026-09-25, no blocking findings; local gate 425/424/0/1.
-- Limits: macOS-only; unpushed; no tag/run/publish; staging bytes unverified on CI.
-- Next: Owner selects release Goal (tag/publish) or next fix; no auto-advance.
+- Current: `20260925-user-install-onboarding` accepted 2026-09-25; result commit `1bfabc5` on clean local `main`.
+- Review: Owner-reported fresh FULL PASS, no blockers; local manifest binding independently rechecked 19/19 and 2/2.
+- Limits: Three commits unpushed; no `v1.0.1` tag, hosted CI run, or published-artifact verification.
+- Next: Prepare one bounded `v1.0.1` release handoff; publication remains a separate maintainer decision.
+
+The owner accepted `20260925-user-install-onboarding` on 2026-09-25 after the reported fresh independent review PASS. The completed [IMPLEMENTATION_HANDOFF.md](IMPLEMENTATION_HANDOFF.md) is **HISTORICAL**: its original baseline is `b308ed8b8ab1526e5b8287032e56867829279ce3`, and its separate result commit is `1bfabc5e5aed482f7c0685f8eef0670d4b709d7d`. The handoff bytes remain unchanged because [docs/user-install-onboarding-hashes.json](docs/user-install-onboarding-hashes.json) binds them. The accepted scope is README onboarding, the direct npm package link, and isolated Pi `0.84.4` install/list/remove evidence. The owner-reported checks were 428 tests / 427 pass / 0 fail / 1 declared skip; the local closure rechecked the committed 19/19 manifest hashes and 2/2 onboarding manifest tests. No push, tag, publication, live npm `1.0.1` install, or hosted CI run is accepted by this decision.
 
 ## Release acceptance (pi-perimeter@1.0.0, macOS-only, 2026-09-24)
 
