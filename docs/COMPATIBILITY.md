@@ -27,7 +27,7 @@ the current security status.
 | Pi (`@earendil-works/pi-coding-agent`) | `0.84.4` | — | every other version, including the locally installed `0.86.1` |
 | Node | `26.8.1` (macOS target, full local suite) and `22.19.0` (hosted Linux CI, platform-independent suite) | below the declared `engines` floor `>=22.19.0` (declared only, not enforced at runtime) | every other version in `>=22.19.0` |
 | OS / architecture | macOS 27.0 (build `26A428`), arm64 | any other Darwin major, any other architecture, the shell route off the declared target, and Windows in every respect | Linux file-gate runtime evidence (Class 1 question open); platform-independent policy suite on hosted Linux CI (exercised, not a support claim); Windows in every respect |
-| Distribution | historical: `pi-perimeter@1.0.0` published 2026-09-24 (macOS-only v1.0; fails to load in Pi `0.84.4` — see Pi row) | installing `npm:pi-warden` installs another maintainer's package | current candidate (unreleased source-tree correction): not published, no install evidence |
+| Distribution | historical: `pi-perimeter@1.0.0` published 2026-09-24 (macOS-only v1.0; fails to load in Pi `0.84.4` — see Pi row) | installing `npm:pi-warden` installs another maintainer's package | current candidate (unreleased source-tree correction): not published; isolated Pi package-manager install/list/remove evidence in [INSTALL-ONBOARDING-AUDIT.md](INSTALL-ONBOARDING-AUDIT.md), no published-artifact install proof |
 
 ## Pi
 
@@ -112,7 +112,7 @@ approximating them.
 
 ### Current candidate status
 
-**Not published; no install evidence.** A fresh-install audit found the published `1.0.0` fails to load in Pi `0.84.4` (`pi.getAllTools()` throws `Extension runtime not initialized` at extension load), so installation of `1.0.0` is not supported on any target, including the declared containment target. The unreleased source-tree correction (ownership observed only after `session_start`) is not accepted or released, and nothing has been installed into a real Pi profile as evidence. Evidence: [STARTUP-READINESS-AUDIT.md](STARTUP-READINESS-AUDIT.md).
+**Not published; isolated package-manager evidence only.** A fresh-install audit found the published `1.0.0` fails to load in Pi `0.84.4` (`pi.getAllTools()` throws `Extension runtime not initialized` at extension load), so installation of `1.0.0` is not supported on any target, including the declared containment target. The unreleased source-tree correction (ownership observed only after `session_start`) is not accepted or released, and nothing has been installed into a real Pi profile as evidence. Isolated `pi install` / `pi list` / `pi remove` behavior for the packed candidate is demonstrated in [INSTALL-ONBOARDING-AUDIT.md](INSTALL-ONBOARDING-AUDIT.md); that is not published-artifact install proof. Evidence: [STARTUP-READINESS-AUDIT.md](STARTUP-READINESS-AUDIT.md).
 
 **Blocked:** the unscoped npm name `pi-warden` — this project's former name — is already
 published by another maintainer, so it can never be used here, and installing

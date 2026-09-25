@@ -2,6 +2,14 @@
 
 `pi-perimeter` (formerly `pi-warden`) is an early lightweight security extension/package for [Pi](https://pi.dev/), focused on workspace-scoped authorization and OS-level containment without requiring Docker or a full virtual machine.
 
+> **Status and support target.** `pi-perimeter` gates Pi file and shell tools by workspace policy, explicit approval, and macOS containment. Supported target: macOS 27.0 (build `26A428`) arm64; Pi `0.84.4` verified peer; Node `>=22.19.0`.
+>
+> **Broken published version.** `pi-perimeter@1.0.0` is the only published version and it fails to load in Pi `0.84.4` before its gates activate — do not rely on it. A corrected `1.0.1` is not published or downloadable.
+>
+> Package page: <https://www.npmjs.com/package/pi-perimeter>
+>
+> Install path in order: install → verify loading → build native helper → first use → remove (see below). Each command notes whether it is verified in the isolated Pi `0.84.4` exercise or awaits publication.
+
 > **Project status: Goals 1–4 accepted; Phase 7 gate closed as macOS-only v1.0; `pi-perimeter@1.0.0` published.**
 
 Goals 1–4 (bounded configuration authorization, Pi file gates with scoped
@@ -102,31 +110,59 @@ Do not rely on this package as a security control beyond the stabilized P1–P18
 
 ## Installation
 
-No `pi install` one-liner is evidenced in this repository. The confirmed path — exercised only against isolated fixtures, never installed into a real profile as evidence — is npm plus a Pi package entry:
+1. Install (awaits publication — only broken `1.0.0` is published today; `1.0.1` is not published or downloadable, so do not run this against the registry yet):
 
 ```sh
-npm install pi-perimeter@1.0.0 --prefix "$HOME/.pi/agent/npm" --legacy-peer-deps --ignore-scripts --no-audit --no-fund
+pi install npm:pi-perimeter@<version>
 ```
 
-(Registry name and version are the published identity; `--prefix`/`--legacy-peer-deps`/`--ignore-scripts` match `test/startup-readiness.test.ts`, which installs the packed tarball — not the registry — the same way. `--no-audit --no-fund` are added here for registry installs and are not part of that test.)
+Isolated/dev route (verified in the Pi `0.84.4` package-manager exercise — packed tarball served over a loopback registry, isolated profile, no real-profile install): the same `pi install` route is demonstrated by `test/user-install-onboarding.test.ts`; the packed-source runtime smoke uses a manual install instead (see below). Evidence: [docs/INSTALL-ONBOARDING-AUDIT.md](docs/INSTALL-ONBOARDING-AUDIT.md).
+
+```sh
+npm pack <repo> --pack-destination <tmp>/tarballs
+npm install <tmp>/tarballs/pi-perimeter-<version>.tgz --prefix "<agentDir>/npm" --legacy-peer-deps --ignore-scripts
+```
 
 Then declare the package in the agent settings file (`<agentDir>/settings.json`; default user profile: `$HOME/.pi/agent/settings.json`):
 
 ```json
-{ "packages": ["npm:pi-perimeter@1.0.0"] }
+{ "packages": ["npm:pi-perimeter@<installed>"] }
 ```
 
-(This `packages` entry shape is the one exercised by `test/startup-readiness.test.ts`; `<agentDir>` is Pi's own agent directory.)
+(`pi install` writes this entry for you; the manual route writes it by hand. `<agentDir>` is Pi's own agent directory.)
 
 ## Verify loading
+
+2. Verify (verified in the isolated Pi `0.84.4` exercise):
 
 ```sh
 pi list
 ```
 
-Expect `npm:pi-perimeter@<installed>` and the installed root. If the entry is missing, Pi never loads the extension: re-check the `packages` entry and the npm prefix. On Pi `0.84.4` the published `1.0.0` additionally fails at factory load (see the status warning above), before any gate becomes active.
+Expect `npm:pi-perimeter@<installed>` and the installed root (`<agentDir>/npm/node_modules/pi-perimeter`). If the entry is missing, Pi never loads the extension: re-check the `packages` entry and the install root. The published `1.0.0` additionally fails at factory load before any gate becomes active (see the status warning above).
+
+## Building the native helper
+
+3. Build the helper explicitly (verified build location in the isolated Pi `0.84.4` exercise on the declared target; explicit only — no implicit compilation or download):
+
+```sh
+npm --prefix "<package root reported by pi list>" run build:native
+```
+
+For the default user-level Pi profile:
+
+```sh
+npm --prefix "$HOME/.pi/agent/npm/node_modules/pi-perimeter" run build:native
+```
+
+Contained shell execution needs the small native helper described in
+[docs/SHELL-GATE.md](docs/SHELL-GATE.md). There is no implicit compilation at runtime, no download, and no privileged
+step. If the helper is missing or does not match its recorded build identity,
+every shell route is blocked with an actionable reason.
 
 ## Quick start
+
+4. First use (behavior list; configuration stays restriction-only — see [docs/CONFIGURATION-AUTHORIZATION.md](docs/CONFIGURATION-AUTHORIZATION.md); limits in [SECURITY.md](SECURITY.md)):
 
 The intended user experience is:
 
@@ -138,7 +174,7 @@ dangerous operation    -> approval / deny
 sandbox unavailable    -> block
 ```
 
-Try it: read an ordinary file inside the workspace (allowed); read a path outside the workspace (a scoped, single-use approval dialog — refusal, timeout, or a missing UI blocks); read a `.env` file or an SSH key (denied, never approvable). An ordinary build or test shell command runs only inside containment — a private workspace projection under a deny-default Seatbelt profile with closed networking — and its changes return to the host only after per-target re-authorization. Internal contracts and per-Goal evidence are linked, not repeated here: [docs/FILE-GATE.md](docs/FILE-GATE.md), [docs/SHELL-GATE.md](docs/SHELL-GATE.md), [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md), [STATE.md](STATE.md).
+Try it: read an ordinary file inside the workspace (allowed); read a path outside the workspace (a scoped, single-use approval dialog — refusal, timeout, or a missing UI blocks); read a `.env` file or an SSH key (denied, never approvable). An ordinary build or test shell command runs only inside containment — a private workspace projection under a deny-default Seatbelt profile with closed networking — and its changes return to the host only after per-target re-authorization. Those limits and the per-Goal gate contracts are linked, not repeated here: [docs/FILE-GATE.md](docs/FILE-GATE.md), [docs/SHELL-GATE.md](docs/SHELL-GATE.md), [docs/NETWORK-GATE.md](docs/NETWORK-GATE.md), [STATE.md](STATE.md).
 
 ## Security notice
 
@@ -146,21 +182,6 @@ Try it: read an ordinary file inside the workspace (allowed); read a path outsid
 controls apply only within their documented platform, operation and threat
 model limits; do not use real credentials in tests or infer protection outside
 those limits. See [SECURITY.md](SECURITY.md) for the current reporting policy.
-
-## Building the native helper
-
-Contained shell execution needs the small native helper described in
-[docs/SHELL-GATE.md](docs/SHELL-GATE.md). Build it explicitly with the
-platform toolchain **in the installed package directory shown by `pi list`**.
-For the default user-level Pi profile, the command is:
-
-```sh
-npm --prefix "$HOME/.pi/agent/npm/node_modules/pi-perimeter" run build:native
-```
-
-There is no implicit compilation at runtime, no download, and no privileged
-step. If the helper is missing or does not match its recorded build identity,
-every shell route is blocked with an actionable reason.
 
 ## Configuration
 
@@ -187,7 +208,13 @@ Values are exactly `ALLOW`, `ASK`, or `DENY` per operation (`read`, `write`, `ed
 
 ## Removal and diagnostics
 
-Removal is the inverse of installation (no real-profile install exists as evidence, so no installer does this for you):
+5. Remove (verified in the isolated Pi `0.84.4` exercise):
+
+```sh
+pi remove npm:pi-perimeter
+```
+
+This runs the package-manager uninstall and removes the settings entry. Fallback (manual route):
 
 ```sh
 npm uninstall pi-perimeter --prefix "$HOME/.pi/agent/npm" --no-audit --no-fund

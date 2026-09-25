@@ -1,0 +1,21 @@
+{
+  "IMPLEMENTATION_HANDOFF.md": "6eb5e8556047a464399daa20dc91094a6a6a998b877e57bdbd26caa222cb774f",
+  "README.md": "9c6392b1beb55a9b59bb552acce722eb693d6def6ba25dc3b3b646bc25e02807",
+  "docs/COMPATIBILITY.md": "df7861d0b1dd93a174126e853f450a9709bea96b854a8e36cbe542cddc045ed5",
+  "docs/INSTALL-ONBOARDING-AUDIT.md": "0954549ab8b6ecfbeef6a699fad641df7158750be8c64cd2ff470f1dc7a7e069",
+  "test/ci-manifest.test.ts": "8f8ed66dcceeebf1235785e94a62fbef121d80810c79673900ea50d696919a01",
+  "test/ci-test-budget.json": "6a5cb594f6dad3724740bb4e7e37f0786bd90c336eec2ed6a48aa43aaffe1ad1",
+  "test/compatibility-manifest.test.ts": "38bca299f38f1907056c33ec063d4ff5699b124f5839444c47c7616cc8574f5a",
+  "test/independent-audit-manifest.test.ts": "aac884b9ffa2a5a09c9f908712778fca1a1039cc4ae85c20f39e907de08f9333",
+  "test/packaging-manifest.test.ts": "effe0a79a3cba17bfcd26e55fc56ee0db02e06923308b63beb6eb1bcc2335113",
+  "test/post-transfer-manifest.test.ts": "514b2a3f164c54d2549b056f258874981125cd86a7730907fb935735c343edb3",
+  "test/regression-evidence-manifest.test.ts": "5dd8b0bcecba095fd19f51f35928655d9a9cedc88d90f2e0183d77990643847e",
+  "test/release-1.0.1-manifest.test.ts": "3df0cc3eba283e462c30b6329af8c602ce321e4fdc42216cb3b1f66705ca2dee",
+  "test/release-manifest.test.ts": "a1541d80fbce1b3006ba788d19c3029dde7e5224df14436b5ad0860eb3148e16",
+  "test/release-review-manifest.test.ts": "7e61281d0d828becce58561c67f521187e2cfbd18d45d17800c9d1a22c7c09c7",
+  "test/startup-readiness-manifest.test.ts": "68d896da286a8507fe1a01f94992a61b62394ab8a1f24ecb326fbb45bf1f633d",
+  "test/unknown-bounds-manifest.test.ts": "9829a7d90bfc538af3ce64c7adc0634cfafe434d20beb0f614f8fa6337dda5e8",
+  "test/user-install-onboarding-manifest.test.ts": "6e8589bd63d744976cfed0acd5e30d1f0e7c9d0ad2989db0608dd3bf5b43b61d",
+  "test/user-install-onboarding.test.ts": "728f8abea2e252a111a4ba142c0ab59c8cb36f132aa4fb565cfcaeb1da794634",
+  "test/v1-guarantees-manifest.test.ts": "92a09b0479337d557e22c691d1581c1f3d2a35988fc4b4540ae2c3151a7cbe0f"
+}
