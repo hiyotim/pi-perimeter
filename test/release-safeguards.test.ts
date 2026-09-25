@@ -161,6 +161,37 @@ test("the release workflow pins one guarded version and publishes only on tag pu
   }
 });
 
+test("the release workflow selects the final 1.0.1 binding and keeps the historical 1.0.0 binding", () => {
+  const workflow = readFileSync(RELEASE_WORKFLOW, "utf8");
+  assert.ok(
+    workflow.includes('if [ "$VERSION" = "1.0.0" ]; then'),
+    "the guard must keep the explicit 1.0.0 branch",
+  );
+  assert.ok(
+    workflow.includes('MANIFEST="docs/release-hashes.json"'),
+    "the guard must keep selecting the historical manifest for 1.0.0",
+  );
+  assert.ok(
+    workflow.includes('[ "$VERSION" = "1.0.1" ]'),
+    "the guard must carry an explicit 1.0.1 branch instead of the version-formula fallback",
+  );
+  assert.ok(
+    workflow.includes('MANIFEST="docs/release-hashes-1.0.1-final.json"'),
+    "the guard must select the final 1.0.1 binding for 1.0.1",
+  );
+  assert.ok(
+    workflow.includes('MANIFEST="docs/release-hashes-$VERSION.json"'),
+    "other versions must keep the version-formula fallback",
+  );
+  const steps = workflow.split(/^ {6}- /m);
+  const verifyStep = steps.find((chunk) => chunk.includes("scripts/verify-release-staging.mjs"));
+  assert.ok(verifyStep !== undefined, "the release workflow must contain the staging verify step");
+  assert.ok(
+    verifyStep.includes("RELEASE_MANIFEST_PATH: ${{ steps.release-guard.outputs.manifest }}"),
+    "the staging verifier must be given the guard-selected manifest, so the final binding is the one enforced for 1.0.1",
+  );
+});
+
 test("a non-X.Y.Z release version refuses instead of staging", () => {
   const builder = spawnSync(process.execPath, ["scripts/build-release-staging.mjs", "--release-version=bad"], {
     encoding: "utf8",

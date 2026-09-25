@@ -1,60 +1,62 @@
 # Implementation Handoff
 
-Task ID: 20260925-user-install-onboarding
-Baseline: b308ed8b8ab1526e5b8287032e56867829279ce3 on main; staged and unstaged changes absent (git status --short empty). The baseline includes the committed startup fix and 1.0.1 staging preparation; local main is two commits ahead of origin/main. No v1.0.1 tag or published pi-perimeter@1.0.1 exists.
+Task ID: 20260925-release-v101
+Baseline: 8c1e5b09bb14e4c3e9e7c6be550fb50a3ee8c41d on main; staged, unstaged, and untracked changes absent. Local main is four commits ahead of origin/main; no local v1.0.1 tag. The completed onboarding handoff is historical and hash-bound at SHA-256 6eb5e8556047a464399daa20dc91094a6a6a998b877e57bdbd26caa222cb774f.
 Scope Gate: READY
 
 ## Goal
 
-Make the supported installation and first-use path understandable from README and demonstrate Pi package-manager behavior in an isolated profile. A new user should be able to identify the package, follow a short installation path, build the native helper, verify loading, and remove it without repository-internal knowledge. Distinguish a locally verified candidate from an actually published working version.
+Release a verified pi-perimeter@1.0.1 that contains the startup correction and accepted onboarding, then demonstrate that a new user can obtain the published package through Pi 0.84.4 and use its supported macOS route. The result is the exact published artifact and an accurate public installation path, not merely a green local candidate.
 
 ## Context
 
-- Published pi-perimeter@1.0.0 fails to load in Pi 0.84.4 before its gates activate. The correction and 1.0.1 staging preparation are committed locally, but unpushed and unpublished. README currently has no direct npm package-page link or demonstrated pi install route, and its manual installation sequence names broken 1.0.0.
-- The installed Pi 0.84.4 package documentation describes pi install npm:<package>@<version>, pi list, and pi remove npm:<package>. Documentation alone does not prove the corrected, unpublished package works through that route.
-- test/startup-readiness.test.ts covers loader ownership, ordinary read, .env denial, missing-helper refusal, and contained shell after explicit helper build from an isolated packed-source install. It does not obtain the candidate with pi install or test an npm-published 1.0.1.
-- README and this handoff are hash-bound in earlier Goal suites. Accepted historical manifest values are frozen evidence.
-- The retained `pi-warden` spelling in `native/piwarden-helper` identifies the existing runtime helper path; this Goal does not rename that helper.
+- Published 1.0.0 fails at factory load in Pi 0.84.4 before its gates activate. The session_start readiness correction, versioned release machinery, and isolated package-manager onboarding are committed locally in 8365b34, b308ed8, and 1bfabc5; acceptance is recorded in STATE.md at 8c1e5b0. No v1.0.1 release evidence exists in this baseline.
+- docs/release-hashes-1.0.1.json binds the earlier staging-preparation bytes, not the final release tree. Fifteen of its 28 recorded paths now differ after onboarding. The accepted historical manifest values and the completed onboarding handoff bytes remain in Git history; this active handoff replaces the working-tree file and must be declared as changed in the next binding. The final candidate needs an additive, version-specific binding selected by the release workflow.
+- The repository release workflow publishes only on a matching vX.Y.Z tag push through npm Trusted Publishing with provenance; workflow_dispatch is verify-only. Source package.json remains private at 0.0.0 and only deterministic release-staging/ is publishable.
+- The retained pi-warden spelling in native/piwarden-helper is an accepted helper-path identity, not a package name to publish or install.
 
 ## Scope
 
-- Rework the public onboarding portions of README.md: concise early status and target warning, direct canonical npm link, short install/verify/helper-build/first-use/remove steps, and links to detailed configuration and security limits. Keep the broken-1.0.0 warning prominent until a working version is published.
-- Add or adapt isolated evidence for Pi 0.84.4 package-manager install/list/remove behavior, package location, and helper build location. Relate it explicitly to the existing packed-candidate runtime smoke; do not conflate either route with post-publication proof.
-- Make only forced current-doc corrections if another public page would contradict README. Bind changed bytes with an additive manifest and explicit changed-file declarations in older suites; preserve historical manifest values. Adjust the CI test budget only for added tests.
+- Reconcile the current final-candidate file set and hashes with an additive v1.0.1 release binding. Make the smallest workflow/verifier/test changes needed to select and enforce that binding without changing historical 1.0.0 or staging-preparation manifest values. Include the new onboarding files, this replaced handoff, and any changed release metadata in the candidate assessment.
+- Prepare a clean, reviewable release candidate with accurate versioned README instructions, exact supported target and limitations, and a release audit that separates prepublication checks from later hosted and registry evidence. Do not state that 1.0.1 is downloadable before registry proof.
+- Verify the deterministic staging artifact and publish safeguards on the exact candidate, complete the repository checks on the declared target, and obtain fresh independent review of the candidate bytes and release path.
+- After explicit maintainer authorization for the concrete candidate, use the existing protected release route. Record the tag/commit, hosted workflow result, npm metadata and provenance, then exercise an isolated Pi 0.84.4 install/list/helper-build/startup/remove flow using the actual npm-hosted 1.0.1 bytes. Update current public status and installation wording only to claims supported by those observations.
 
 ## Out of Scope
 
-- Push, tag, publish, dist-tag change, release acceptance, or a claim that a live pi-perimeter@1.0.1 installation works. The later release Goal must verify the exact published artifact and update live-version wording.
-- Changes to published 1.0.0 bytes, its tag, historical accepted manifests/audits, P1–P18/R1–R11 guarantees, supported platforms or peer range, runtime enforcement, policy, or native-helper trust.
-- A new installer, implicit native build, lifecycle script, runtime dependency, or installation into the real Pi profile as test evidence.
+- Rewriting or republishing 1.0.0, its tag, accepted historical manifest values/audits, or the committed historical onboarding handoff in Git history. Do not silently rewrite the prep binding to match later bytes.
+- Runtime enforcement or native-helper behavior changes, new dependencies, lifecycle scripts, implicit builds/downloads, platform or peer-version widening, or a real user Pi-profile install as test evidence.
+- Publishing by local npm publish, token-based publishing, workflow_dispatch, a second publish step, or any route other than the guarded tag-push workflow.
 
 ## Risk Gates
 
-- Before making pi install the primary README path, verify the exact Pi 0.84.4 CLI/package-manager contract in installed source/docs and exercise install/list/remove in a disposable agent directory. If the package manager cannot install a local candidate through an equivalent npm-package route, state the evidence split; CLI syntax alone does not establish candidate installation.
-- Confirm that the package root Pi reports is the root used by the explicit build:native command. The runtime must continue resolving its helper from its own module URL without catalog fallback.
-- Verify the npm package identity and destination of the public link. While 1.0.0 is the only published version, do not present it as a functioning security control or present 1.0.1 as downloadable.
+- Before a release action, verify the remote branch/tag state and npm package/version ownership and availability. A conflicting remote head, existing v1.0.1 tag, or existing npm 1.0.1 requires stopping and reconciliation; never force-push or overwrite a release.
+- Confirm the final release binding is additive and that the workflow actually selects it for v1.0.1. The tag/version guard, dispatch verify-only behavior, OIDC provenance, source private: true, and staged-only publish path must still hold. A green manifest unit test alone is not staging proof.
+- Build and verify staging from a clean, committed candidate; run the full relevant checks and a verify-only hosted run when available. Put the candidate diff, manifest, staging result, review verdict, and exact proposed external actions before the maintainer before requesting release authorization. No push or tag is authorized by this handoff.
+- After publication, obtain fresh registry metadata and the exact tarball. Isolated published-package behavior must use that tarball through Pi's npm-package route rather than a loopback registry or local pack substitute.
 
 ## Acceptance Criteria
 
-1. Near the start, README tells a new reader what the package does, its exact supported target, the broken published-version status, and the canonical clickable npm link.
-2. README gives a short, ordered, copyable install/verify/helper-build/first-use/remove path grounded in verified Pi 0.84.4 behavior. Version availability and any unverified step appear beside the relevant command; configuration and security detail remain accessible through links.
-3. Isolated evidence demonstrates Pi package-manager installation, pi list package root, and removal without touching the user's Pi profile. Candidate runtime behavior remains covered by the packed-source smoke. The evidence distinguishes these routes and records what must wait for published 1.0.1.
-4. An additive manifest binds the exact changed file set, including this handoff where earlier suites cover it. Historical values stay unchanged; relevant tests and the full declared-target checks pass with only documented platform skips.
+1. The final 1.0.1 candidate has an additive exact-file binding that the release workflow selects and the staging verifier enforces; historical 1.0.0, prep, startup, and onboarding evidence remains unchanged or explicitly superseded without rewriting accepted bytes.
+2. The clean committed candidate passes full relevant checks on the declared target, deterministic staging verification, publish-path safeguards, and fresh independent review with no release-blocking findings. A verify-only hosted run passes before any publishing tag is pushed.
+3. After explicit approval of that candidate and release action, the matching v1.0.1 tag-push workflow succeeds and publishes pi-perimeter@1.0.1 with provenance. The npm version, dist-tag, tarball shasum/integrity, tag commit, and workflow run agree with the reviewed candidate.
+4. A disposable Pi 0.84.4 profile installs pi-perimeter@1.0.1 from the actual npm registry, pi list reports the expected package root, the explicit helper build works on the declared macOS target, representative startup/authorization/containment checks pass, and pi remove cleans the isolated profile. README and current status then give a direct, copyable 1.0.1 install path and record the observed limits.
 
 ## Verification
 
-- Criteria 1–2: read README as a first-time user; check its npm and local documentation links; compare each command, profile path, helper path, and version claim with Pi 0.84.4 source/docs and isolated results; run git diff --check.
-- Criterion 3: run isolated Pi package-manager install/list/remove evidence and the packed-source startup regression on the declared macOS target. npm run test:package supplies supporting pack/install/uninstall evidence, not proof of Pi CLI behavior. Preserve temporary-fixture cleanup and the canonical-tmpdir preload used by npm test.
-- Criterion 4: run all manifest suites and npm run check, then compare Git status including untracked files with the additive binding. Obtain fresh independent review of final bytes before acceptance; an earlier PASS does not transfer after changed hashes.
+- Criterion 1: compare the candidate manifest's exact key set and hashes with tracked release files; run the relevant manifest suites; inspect the workflow's selected path, tag/version guard, and publish condition. Check historical manifest and tag diffs are empty.
+- Criterion 2: run npm run check, git diff --check, the existing release-staging builder/verifier for 1.0.1, and the release safeguard tests on the declared target; compare the staged file set with the manifest. Review exact final bytes independently. Confirm the verify-only workflow result before a tag push.
+- Criterion 3: compare the pushed tag commit and successful release workflow log with npm metadata, integrity, and provenance for 1.0.1. Record the values and links in the release audit and STATE.md; do not infer publication from a local pack or a queued workflow.
+- Criterion 4: run an isolated Pi install/list/build/startup/remove exercise against npm-hosted 1.0.1, using synthetic fixtures and the existing startup-readiness behavior checks as the reference. Check README links and commands against the observed registry/package root; distinguish installer evidence from the existing loopback and manually installed candidate smokes.
 
 ## Constraints
 
-- Use synthetic files and isolated HOME, npm cache, workspace, and Pi agent directory. Never install into or inspect the real user profile or real credentials.
-- Preserve source private: true and version 0.0.0, the staged-only publishable manifest, fail-closed behavior, and the absence of implicit native compilation/download.
-- Keep README user-facing and concise. Link to detailed Goal evidence instead of copying internal history into quick start. Claim only behavior shown for Pi 0.84.4 on the declared macOS 27.0 arm64 target.
+- Preserve P1–P18/R1–R11 and the documented macOS 27.0 arm64, Pi 0.84.4 boundary. Unknown or failed containment, ownership, helper trust, network, or approval conditions must fail closed. No credential fixtures from a real profile.
+- Maintain one publish path: protected tag push, npm Trusted Publishing/OIDC, provenance, no token or local publish. The source remains private: true at 0.0.0; do not install development code into the real Pi profile.
+- Treat candidate preparation, authorization to push/tag, hosted publishing, and postpublication verification as distinct evidence states. An earlier PASS does not transfer after relevant bytes change. Keep claims of downloadable functionality conditional until the actual npm artifact passes the published-package checks.
 
 ## Escalate If
 
-- Pi package-manager behavior cannot be exercised safely in isolation, reports an ambiguous package root, or differs materially from the manual install route; stop before advertising it as verified.
-- Working onboarding requires runtime/security changes, a new dependency, lifecycle build, or wider platform/version guarantees; do not expand this Goal.
-- Baseline, changed-file ownership, or authority to replace historical evidence becomes ambiguous; preserve the existing work and stop.
+- The final candidate requires changing runtime/security behavior, broadening supported targets, or replacing accepted historical bytes rather than adding a release binding; stop and seek a new scope decision.
+- The remote/tag/registry state differs from the baseline, the dry-run/hosted checks fail, release review has blocking findings, or OIDC/provenance/publish gates do not hold; do not push the publishing tag.
+- Postpublication metadata or installed behavior diverges from the reviewed candidate; report the exact mismatch and do not claim a working release or attempt to overwrite the immutable npm version.

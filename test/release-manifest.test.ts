@@ -73,6 +73,21 @@ const CHANGED_IN_USER_INSTALL_ONBOARDING = new Set<string>([
   "test/release-manifest.test.ts",
 ]);
 
+/** Artifacts whose bytes the 1.0.1 final-release Goal changed; their entries here stay historical; docs/release-hashes-1.0.1-final.json binds the current bytes. */
+const CHANGED_IN_1_0_1_RELEASE = new Set<string>([
+  "docs/PACKAGING.md",
+  ".github/workflows/release.yml",
+  "test/ci-test-budget.json",
+  "test/release-safeguards.test.ts",
+  "test/packaging-manifest.test.ts",
+  "test/post-transfer-manifest.test.ts",
+  "test/release-review-manifest.test.ts",
+  "test/v1-guarantees-manifest.test.ts",
+  "test/ci-manifest.test.ts",
+  "test/independent-audit-manifest.test.ts",
+  "test/release-manifest.test.ts",
+]);
+
 const COVERED_FILES = [
   "docs/RELEASE-AUDIT.md",
   "docs/V1-GUARANTEES.md",
@@ -203,6 +218,7 @@ test("the release artifact hash manifest matches the final working tree", async 
     if (CHANGED_IN_STARTUP_READINESS.has(file)) continue; // current snapshot bound by the startup-readiness manifest
     if (CHANGED_IN_1_0_1.has(file)) continue; // 1.0.1 staging preparation; docs/release-hashes-1.0.1.json binds the current bytes
     if (CHANGED_IN_USER_INSTALL_ONBOARDING.has(file)) continue; // user-install onboarding; docs/user-install-onboarding-hashes.json binds the current bytes
+    if (CHANGED_IN_1_0_1_RELEASE.has(file)) continue; // 1.0.1 final release; docs/release-hashes-1.0.1-final.json binds the current bytes
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

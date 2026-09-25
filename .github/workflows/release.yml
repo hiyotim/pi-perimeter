@@ -55,6 +55,8 @@ jobs:
           fi
           if [ "$VERSION" = "1.0.0" ]; then
             MANIFEST="docs/release-hashes.json"
+          elif [ "$VERSION" = "1.0.1" ]; then
+            MANIFEST="docs/release-hashes-1.0.1-final.json"
           else
             MANIFEST="docs/release-hashes-$VERSION.json"
           fi
