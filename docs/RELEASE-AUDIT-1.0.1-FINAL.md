@@ -1,6 +1,11 @@
 # Release audit 1.0.1 (final candidate, unpublished)
 
 Task ID: `20260925-release-v101`. Baseline: `8c1e5b09bb14e4c3e9e7c6be550fb50a3ee8c41d` on `main`.
+Candidate identity: the final candidate was committed locally as `d84d51e`
+(full `d84d51e901bd7b643cfcf382f746f5f1ba92a7e0`) on top of baseline
+`8c1e5b0`; that commit is local and unpushed. This narrow audit/binding
+correction is currently UNCOMMITTED on top of `d84d51e`, so the corrected
+bytes must be committed and re-reviewed before any tag is created.
 This record binds the exact final 1.0.1 candidate. No tag, no release run,
 no commit, no push, and no publication are performed or authorized by this
 record. Version `1.0.1` is not published or downloadable; nothing below
@@ -98,32 +103,38 @@ Node `v26.8.1`, Pi `0.84.4` boundary):
 - `npm run test:manifest` and every manifest suite PASS, including the new
   `release-1.0.1-final-manifest` suite (exact key set plus per-file hashes
   plus exact `CHANGED_IN_1_0_1_RELEASE` declarations, 2/2) and the extended
-  safeguard suite (6/6, including the new selection test); `git diff --check`
+  safeguard suite (7/7, including the new selection test); `git diff --check`
   clean.
 - Deterministic staging verification on a clean committed-candidate copy
   (working tree copied to a disposable directory excluding `.git`,
   `release-staging`, `node_modules`, `.zcode`, `.DS_Store`; committed as a
   snapshot; status empty): `RELEASE_VERSION=1.0.1
   RELEASE_MANIFEST_PATH=docs/release-hashes-1.0.1-final.json node
-  scripts/build-release-staging.mjs` → `release-staging: 167 files, tree
-  sha256 3d996c657f8910d35a1b3172d39763c0300ed1251932318a75c4748be4359b21;
-  publishable manifest: pi-perimeter@1.0.1, private removed`; the same
-  environment with `scripts/verify-release-staging.mjs` → `staging
-  verified: 36 files match docs/release-hashes-1.0.1-final.json;
-  publishable pi-perimeter@1.0.1`; `npm pack --dry-run` inside
-  `release-staging` → `pi-perimeter-1.0.1.tgz`, 105 files, 394.4 kB packed
-  / 1.3 MB unpacked, shasum
-  `b6c77a5d6c550c94551d967a6555dab284807186`. Bite: flipping one covered
-  byte in the copy's staging made the verifier refuse (exit 1:
-  `README.md: current
+  scripts/build-release-staging.mjs`, the same environment with
+  `scripts/verify-release-staging.mjs`, and `npm pack --dry-run` inside
+  `release-staging`. Snapshot-run record (PRE-FINALIZATION — see below):
+  build `release-staging: 167 files, tree sha256
+  3d996c657f8910d35a1b3172d39763c0300ed1251932318a75c4748be4359b21;
+  publishable manifest: pi-perimeter@1.0.1, private removed`; verify
+  `staging verified: 36 files match docs/release-hashes-1.0.1-final.json;
+  publishable pi-perimeter@1.0.1`; pack `pi-perimeter-1.0.1.tgz`, 105
+  files, 394.4 kB packed / 1.3 MB unpacked, shasum
+  `b6c77a5d6c550c94551d967a6555dab284807186`. Bite on the same snapshot:
+  flipping one covered byte in the copy's staging made the verifier refuse
+  (exit 1: `README.md: current
   dfdde35e65f583d06a582549812cd41f88dd7e1ca9a86e2795a7935f656dd537
   recorded 9c6392b1beb55a9b59bb552acce722eb693d6def6ba25dc3b3b646bc25e02807`);
   restoring the byte made it pass again (exit 0, 36 files verified). The
-  real repository was left untouched throughout. The snapshot differed from
-  the final tree only in this audit's evidence values (recorded here) and
-  the binding's entry for this audit (rehashed afterward to match); all
-  workflow, code, test, machinery, and budget bytes were identical, and the
-  manifest suite re-passes on the final tree.
+  real repository was left untouched throughout. The tree sha256 and the
+  pack shasum above come from a PRE-FINALIZATION snapshot copy made before
+  this audit was frozen: this audit and its binding entry have changed
+  since, so the pack content differs by the audit bytes. They are retained
+  here only as a snapshot-run record and must NOT be quoted as the final
+  staging or tarball identity. The final staging identity is deliberately
+  NOT recorded inside this audit because this audit is itself covered by
+  the binding — any self-recorded value would be stale by construction —
+  and it will be recorded outside the hashed tree (commit/release record)
+  from the committed candidate.
 - Frozen bytes: `docs/release-hashes.json`, `docs/release-hashes-1.0.1.json`,
   `docs/user-install-onboarding-hashes.json`, and
   `docs/startup-readiness-hashes.json` recompute to their pinned sha256

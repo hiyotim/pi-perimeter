@@ -7,7 +7,7 @@
   "docs/COMPATIBILITY.md": "df7861d0b1dd93a174126e853f450a9709bea96b854a8e36cbe542cddc045ed5",
   "docs/INSTALL-ONBOARDING-AUDIT.md": "0954549ab8b6ecfbeef6a699fad641df7158750be8c64cd2ff470f1dc7a7e069",
   "docs/PACKAGING.md": "bd83dc6fe9ec9722de048ca857926db24e5215b68ab7faedf363c7f3089dbc8e",
-  "docs/RELEASE-AUDIT-1.0.1-FINAL.md": "2d3aa744c7ccf5305502883253183a57d3fc717482884e68f1ac74bc31f85250",
+  "docs/RELEASE-AUDIT-1.0.1-FINAL.md": "413d7672c9b5f3027abf0b4fecd8a30a6b89c9dd5fc20d1423f36ccac7d48bce",
   "docs/STARTUP-READINESS-AUDIT.md": "63d9f238f9886b3ea5231faf4cc3529c4f1dff6e04f4f8d5628a563e5ec9d0b2",
   "docs/release-hashes-1.0.1.json": "4a0fad66763b64d3c40e0a5e20b25c96d7e14e19ada4aa98a235a66305966d8f",
   "scripts/build-release-staging.mjs": "0cffd6ef86a5925816c53d3ba73be514f288522d2f6765ddf1145336bb8e6a4c",
