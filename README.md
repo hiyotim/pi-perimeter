@@ -21,13 +21,13 @@ The extension loads into Pi and replaces the supported tool routes for that sess
 ## Requirements and tested versions
 
 - **Apple Silicon Mac.** Containment was exercised on macOS `27.0` (`26A428`) and `27.0.1` (`26A434`), arm64. Other platforms carry no support claim; shell execution is blocked on Linux and Windows.
-- **Pi:** the published `pi-perimeter@1.0.1` was exercised with Pi `0.84.4` and, on 2026-10-02, Pi `1.0.0`. The newer exercise is recorded evidence pending independent review and formal support acceptance.
+- **Pi:** the published `pi-perimeter@1.0.1` was exercised with Pi `0.84.4` and, on 2026-10-02, Pi `1.0.0`. The newer exercise covers the recorded operations; it does not establish full UI/provider compatibility or a broader formally accepted guarantee.
 - **Node:** declared minimum `22.19.0`; the macOS runtime exercises used `26.8.1`.
 - **Apple command line build tools** for the native helper used by shell containment.
 
 The shell guard checks Darwin major `27`, arm64, and a pinned `sandbox-exec` identity. It does not compare the exact macOS marketing version or build number. Passing that guard alone does not prove compatibility with an untested OS update or Pi version. See the [compatibility matrix](docs/COMPATIBILITY.md) for exact evidence and limits.
 
-**Use `pi-perimeter@1.0.1`.** The older `1.0.0` fails to load before its protections activate. Package: [npm](https://www.npmjs.com/package/pi-perimeter).
+**Install `pi-perimeter@1.0.2` (this release).** `1.0.2` updates documentation and packaging with unchanged runtime code. The older `1.0.0` fails to load before its protections activate. Package: [npm](https://www.npmjs.com/package/pi-perimeter).
 
 ## Install and use
 
@@ -36,7 +36,7 @@ To try it without changing your ordinary Pi profile, follow the [separate-profil
 For installation in Pi's default user profile:
 
 ```sh
-pi install npm:pi-perimeter@1.0.1
+pi install npm:pi-perimeter@1.0.2
 pi list
 npm --prefix "$HOME/.pi/agent/npm/node_modules/pi-perimeter" run build:native
 ```

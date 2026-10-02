@@ -1,6 +1,6 @@
 # Security policy
 
-`pi-perimeter` (formerly `pi-warden`) provides bounded authorization and macOS shell containment for supported Pi tool routes. The published package is `1.0.1`; `1.0.0` is broken and must not be used for protection. See the [compatibility matrix](docs/COMPATIBILITY.md) for exercised versions and review status.
+`pi-perimeter` (formerly `pi-warden`) provides bounded authorization and macOS shell containment for supported Pi tool routes. This `1.0.2` release updates documentation and packaging with unchanged runtime code; `1.0.0` is broken and must not be used for protection. See the [compatibility matrix](docs/COMPATIBILITY.md) for exercised versions and review status.
 
 ## Security boundary
 

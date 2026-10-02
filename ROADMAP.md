@@ -231,3 +231,7 @@ The owner authorized cleanup of current user documentation within the maintenanc
 ### Authorized delivery and source review (2026-10-02)
 
 The owner approved independent review, GitHub commit/push/PR/merge after CI, and a separate patch release. A fresh read-only reviewer returned PASS with no blocking findings for the source maintenance snapshot (manifest SHA-256 `b30788b2b93052a3c48505033e7a5a5e95ac65bf5f26466412d3c1611b68313b`), independently checking 52 manifest/identity tests and 94 local links. Runtime tests were not repeated by the reviewer. Next delivery: the maintenance PR with green hosted CI; then the owner-selected `1.0.2` release through version-specific staging and real-registry verification. No broader platform/security guarantee is selected.
+
+### Maintenance delivered; patch release selected (2026-10-02)
+
+PR #1 merged as `16f869b654ec68c747ad00a51fcb07ca562fd39f` after independent FULL/VERIFY PASS and green push/PR CI (435 tests / 381 pass / 0 fail / 54 skips). Reviewed maintenance source commit: `28d5ae83bc4266cc61d8076fbc00c4adb74e51b9`; Actions runs `37037094572` and `37037223800`. The user-authorized `20261002-release-v102` now prepares a version-specific staging manifest and install instructions for `1.0.2`. No production runtime, lockfile or workflow change is included. Candidate review, verify-only staging, publication and real-registry verification remain required.

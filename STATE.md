@@ -1,5 +1,14 @@
 # Project State
 
+## Patch release preparation (2026-10-02)
+
+### Continuation
+
+- Current: `20261002-release-v102`; main result `16f869b`; reviewed maintenance source `28d5ae8`; source PR #1 merged after both CI checks passed.
+- Review: Maintenance FULL/VERIFY PASS; release delta review pending; source baseline and historical release manifests preserved.
+- Limits: New version-specific staging and actual npm archive verification pending; production behavior and formal platform guarantees unchanged.
+- Next: Review and commit the `1.0.2` candidate; require green CI and verify-only staging before publishing its tag.
+
 ## Authorized GitHub delivery (2026-10-02)
 
 The owner explicitly authorized the proposed independent review, commit/push, pull request, merge after CI, and separate patch release. The selected patch is `1.0.2`; npm and GitHub currently contain only `1.0.0` and `1.0.1`. This supersedes earlier “commit/push/release not authorized” records for this bounded maintenance and release work. Production behavior and accepted platform guarantees remain unchanged.
