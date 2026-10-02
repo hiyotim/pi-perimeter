@@ -1,79 +1,35 @@
-# Security Policy
+# Security policy
 
-## Current status
+`pi-perimeter` (formerly `pi-warden`) provides bounded authorization and macOS shell containment for supported Pi tool routes. The published package is `1.0.1`; `1.0.0` is broken and must not be used for protection. See the [compatibility matrix](docs/COMPATIBILITY.md) for exercised versions and review status.
 
-`pi-perimeter` (formerly `pi-warden`) is at **v1.0.1 (macOS-only)**. Goals 1–4 — bounded configuration
-authorization, Pi file gates with scoped approvals, contained shell execution,
-and restricted networking — are implemented, verified on the declared macOS
-target, and accepted within their documented contracts and declared
-limitations. Phase 7 gate is closed as macOS-only v1.0; `pi-perimeter@1.0.1`
-is the current published distribution and `pi-perimeter@1.0.0` is broken and
-superseded (see [docs/PACKAGING.md](docs/PACKAGING.md)).
+## Security boundary
 
-Do not rely on it as a general-purpose security boundary. It is neither a
-virtual machine nor a Docker wrapper and is not a general malware-containment
-system, and its controls do not extend beyond the limits below. See
-[README.md](README.md) for the accepted contracts and [ROADMAP.md](ROADMAP.md)
-for the release gates.
+The implemented controls are:
 
-## What to trust
+- Canonical path classification and workspace-first authorization for supported file tools, including known-secret denial and protection of Pi's control-plane files.
+- Scoped, single-use approvals for approvable operations. Missing UI, refusal, timeout, or an invalid binding blocks the operation.
+- Restriction-only file policy: project configuration can tighten global policy and cannot override a baseline denial.
+- A contained route for model `bash` and user `!` / `!!`: a private workspace projection, constructed environment, deny-default macOS Seatbelt profile, and reauthorized export.
+- Closed networking by default, with a per-invocation broker enforcing narrow pinned destination scopes where configured or approved.
+- Fail-closed handling of unsupported tools and unavailable containment. A sandbox failure does not fall back to unrestricted shell execution.
 
-The accepted goals apply only inside their documented platform, operation, and
-threat-model limits. Within those limits the project provides:
+Policy decides whether an operation is allowed; approval records a narrow user decision; containment limits a running process. An approval alone is not a sandbox. The accepted promises and residual risks are in [V1-GUARANTEES.md](docs/V1-GUARANTEES.md), with the [file](docs/FILE-GATE.md), [shell](docs/SHELL-GATE.md), and [network](docs/NETWORK-GATE.md) contracts providing details.
 
-- a monotonic configuration authority in which project-controlled
-  configuration can only tighten global policy;
-- one authorizer for the supported model-facing file tools (`read`, `write`,
-  `edit`, `grep`, `find`, `ls`), with exact single-use scoped approvals for
-  effective `ASK` outcomes and fail-closed handling of unknown tools;
-- one contained shell route for model `bash` and user `!`/`!!` on macOS 27
-  arm64, using a private workspace projection, a constructed environment, and a
-  deny-default Seatbelt profile with closed networking; and
-- destination-exact, host-pinned enforcement for narrowly allowed outbound
-  connections through a per-invocation broker.
+## Limitations
 
-Do not trust the current code to:
+- The Pi host process, provider requests, arbitrary extension code, and trusted direct SDK calls are outside shell containment. Only load extensions you trust. MCP and `codemode` tools are currently blocked as unintegrated.
+- Secret classification is path-based and does not scan contents. An ordinary path can contain a secret. An allowed endpoint can receive data the contained process can read.
+- Other platforms carry no containment support claim. The shell guard checks Darwin major `27`, arm64, and the pinned sandbox executable; it does not validate every macOS build or Pi release.
+- A private projection changes shell behavior. Host delete and rename effects are not exported; direct macOS file-tool creation is unavailable.
+- Protection against an independent same-user host writer and mount isolation remain unverified. No macOS Keychain isolation or general malware-containment guarantee is made.
+- A failed extension load leaves its protections inactive. Package registration in `pi list` does not prove loading or enforcement.
 
-- contain shell commands on any platform other than the declared macOS target
-  (the shell route stays blocked there);
-- reach destinations outside the pinned scope, or prevent exfiltration to an
-  allowed endpoint: an allowed endpoint can receive any data the contained
-  process can read;
-- defend against an independent same-user host writer, including ordinary
-  tampering with the projection or the loopback broker endpoint, or provide
-  mount isolation (declared, unverified);
-- detect secret contents beyond path classification — an `ordinary` result
-  does not prove that a file contains no secret;
-- export host delete or rename effects, or create files directly through the
-  macOS file tools; or
-- isolate the macOS Keychain.
+Read the [threat model](THREAT_MODEL.md) for attacker assumptions. Exercise only the documented boundary; test results do not establish universal safety.
 
-## Three distinct controls
+## Report a vulnerability
 
-- **Policy enforcement** decides whether a requested operation is authorized.
-- **Approval** asks the user for a narrow exception or confirmation. It does not contain execution.
-- **OS containment** restricts what a running process can actually reach. It does not decide whether the user intended the action.
+Use [GitHub private vulnerability reporting](https://github.com/hiyotim/pi-perimeter/security/advisories/new) for suspected bypasses of a documented control. This is the project's confidential intake route, subject to GitHub's access controls. Reports are handled on a best-effort basis, without a promised response or remediation timeline.
 
-A mature design requires all applicable controls. None should be described as a substitute for another.
+Include the affected control, exact package/Pi/Node/macOS versions, expected and observed behavior, likely impact, and a minimal reproduction using temporary files and fake data. Mark urgent reports in the first line.
 
-## Responsible disclosure
-
-Report suspected vulnerabilities privately through GitHub private vulnerability reporting:
-
-<https://github.com/hiyotim/pi-perimeter/security/advisories/new>
-
-This is the only confidential intake route the project currently operates. The repository is public, so the route is publicly reachable; submitted reports are visible only to the repository's security managers and administrators (and to the reporter who filed the report) until maintainers publish an advisory. It is a reporting channel, not a service commitment: it promises no confidentiality beyond what GitHub private vulnerability reporting provides, and no particular acknowledgement, remediation, or disclosure timeline. Reports are handled on a best-effort basis.
-
-Do not post exploit details, real credentials, or sensitive user data publicly. A documentation error or non-sensitive design discussion may be raised through the repository issue tracker.
-
-## Reporting scope
-
-What to report: a suspected bypass or failure of a documented invariant — workspace containment, secret classification, the file gates and scoped approvals, the contained shell route, or the restricted-network boundary — or an error in the security documentation itself.
-
-What helps the investigation: the affected invariant; expected versus observed behavior; the declared platform and versions; a minimal reproduction built only from fake credentials, fake `.env`/SSH/cloud key material, and temporary files; and the likely impact.
-
-Use synthetic data only. Never test against someone else's system, and never include real credentials, tokens, keys, or another person's data. Until an advisory is published, treat the report as confidential: do not post exploit details, reproduction steps, or affected-system specifics publicly.
-
-Urgent or especially sensitive reports: `pi-perimeter@1.0.1` is published (macOS-only v1.0 with the startup correction), but a fresh-install audit found the earlier published `1.0.0` bytes fail to load in Pi `0.84.4` (`Extension runtime not initialized` at extension load), so there is no known enforced deployment of `1.0.0`. If a report is urgent or especially sensitive, say so in the first line and keep every sensitive detail in the single private report rather than splitting it between a public and a private channel.
-
-See [THREAT_MODEL.md](THREAT_MODEL.md) for implemented coverage and [ROADMAP.md](ROADMAP.md) for the gates required before stronger claims are made.
+Keep exploit details and sensitive system information in the private report. Do not submit real credentials, tokens, keys, or another person's data. Non-sensitive documentation problems and ordinary bugs can be reported through [GitHub issues](https://github.com/hiyotim/pi-perimeter/issues).

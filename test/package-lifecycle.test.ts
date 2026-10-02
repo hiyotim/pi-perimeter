@@ -68,6 +68,16 @@ test("isolated npm pack, install, and rollback cycle with no real-home or reposi
     assert.ok(contents.includes("src/index.ts"));
     assert.ok(contents.includes("README.md"));
     assert.ok(contents.includes("LICENSE"));
+    assert.ok(contents.includes("SECURITY.md"), "the security policy must ship with the package");
+    for (const document of ["README.md", "SECURITY.md"]) {
+      const text = await readFile(path.join(REPO_ROOT, document), "utf8");
+      for (const match of text.matchAll(/\]\(([^)]+)\)/g)) {
+        const target = match[1].split("#")[0];
+        if (!target || /^[a-z][a-z\d+.-]*:/i.test(target)) continue;
+        const relative = path.posix.normalize(path.posix.join(path.posix.dirname(document), target));
+        assert.ok(contents.includes(relative), `${document} links to unpackaged ${relative}`);
+      }
+    }
     assert.ok(contents.some((entry) => entry === "docs/FILE-GATE.md"));
     assert.equal(contents.some((entry) => entry.startsWith("test/")), false, `package must not ship tests: ${contents.join(", ")}`);
     assert.equal(contents.some((entry) => entry.startsWith("node_modules/")), false);

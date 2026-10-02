@@ -1,5 +1,11 @@
 # Packaging
 
+## Source packaging correction (2026-10-02, unreleased)
+
+The source manifest now explicitly includes `README.md`, `SECURITY.md`, `ARCHITECTURE.md`, `THREAT_MODEL.md`, `CONTRIBUTING.md`, `AGENTS.md`, `STATE.md`, `ROADMAP.md`, and `IMPLEMENTATION_HANDOFF.md`, alongside `src`, `scripts`, `docs`, `LICENSE`, and `package.json`. This includes the security policy and the root documentation referenced by the README and security notice without selecting arbitrary future root documents. The package lifecycle regression now checks those links against the actual packed file list. Build outputs, tests, dependencies, and credentials remain excluded.
+
+The description no longer embeds an obsolete release-status sentence. The repository README already records the published `1.0.1`; a future release will include its current wording. These source edits do not change the immutable `1.0.1` archive, whose README incorrectly says that `1.0.1` is unpublished. The historical file list and pack counts below describe the earlier artifact. See [MAINTENANCE-2026-10-02.md](MAINTENANCE-2026-10-02.md). The corrected source snapshot passed isolated packing/install/remove and packed-link checks; published `1.0.1` also passed the current-Pi exercise. Final release-artifact verification, independent review, and publication of the corrected artifact remain pending.
+
 Task ID: `20260920-npm-packaging` (identity), release `20260924-release-v1` (Task ID in [RELEASE-AUDIT.md](RELEASE-AUDIT.md)), release `20260925-release-v101` (Task ID in [RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md](RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md)). Status: **`pi-perimeter@1.0.1` published from the deterministic staging artifact; the source tree on `main` stays `private: true` and unpublished. `pi-perimeter@1.0.0` remains published but is broken and superseded.**
 
 This document owns the publishable identity, the packaged contents, the publication
@@ -15,7 +21,7 @@ verified platform rows and [ROADMAP.md](../ROADMAP.md) for the Phase 6 release g
 | Version | `1.0.1` (published 2026-09-25, current; source tree carries no release version — the staging artifact sets it); `1.0.0` (published 2026-09-24, broken and superseded) |
 | License | MIT (`LICENSE`, "pi-perimeter contributors") |
 | Node floor | `engines.node` `>=22.19.0`; verified versions are in [COMPATIBILITY.md](COMPATIBILITY.md) |
-| Pi peer | `peerDependencies["@earendil-works/pi-coding-agent"] = "*"` — a declared range, **not** a verified one; `0.84.4` is the only verified version |
+| Pi peer | `peerDependencies["@earendil-works/pi-coding-agent"] = "*"` — a declared range, **not** a verified one; `0.84.4` has accepted release evidence; `1.0.0` has an isolated 2026-10-02 exercise pending independent review and formal support acceptance (see the matrix) |
 | Pi manifest | `pi.extensions` = `./src/index.ts` (a path, unchanged by the rename); the `1.0.1` staging artifact carries the source correction that waits for Pi `0.84.4` `session_start` before observing tool ownership |
 
 `package.json` carries `repository`, `homepage` and `bugs`, all pointing at
@@ -36,6 +42,7 @@ re-verifying the containment and network evidence, or because they name another 
 - **Evidence-bound and accepted documents:** `docs/FILE-GATE.md`, `docs/SHELL-GATE.md`,
   `docs/NETWORK-GATE.md` and their audits, the hash manifests, and the Goal 1–4 contracts
   whose bytes the acceptance records bind.
+- **Runtime-source identity evidence:** `docs/pi-1.0.0-results-2026-10-02.json` records the retained native-helper source filename and its hash.
 - **Historical records:** the transition prompts, the sandbox backend proposal and the
   isolation feasibility report, and `STATE.md`/`ROADMAP.md`'s recorded history.
 - **The other maintainer's package:** every mention of the published `pi-warden` npm

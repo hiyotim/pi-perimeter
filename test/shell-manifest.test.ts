@@ -118,6 +118,12 @@ const COVERED_FILES = [
   "test/shell-manifest.test.ts",
 ] as const;
 
+/** Successor source bytes are bound by docs/maintenance-hashes-2026-10-02.json; historical manifests stay frozen. */
+const CHANGED_IN_MAINTENANCE = new Set<string>([
+  "package.json",
+  "test/shell-manifest.test.ts",
+]);
+
 test("the Goal 3 artifact hash manifest matches the final working tree", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
@@ -128,6 +134,7 @@ test("the Goal 3 artifact hash manifest matches the final working tree", async (
     if (CHANGED_IN_UNKNOWN_BOUNDS[file] === true) continue; // unknowns bound; the unknown-bounds manifest binds the current bytes
     if (CHANGED_IN_STARTUP_READINESS.has(file)) continue; // current snapshot bound by the startup-readiness manifest
     if (CHANGED_IN_1_0_1.has(file)) continue; // 1.0.1 staging preparation; docs/release-hashes-1.0.1.json binds the current bytes
+    if (CHANGED_IN_MAINTENANCE.has(file)) continue; // exact successor bytes are checked by the maintenance manifest suite
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

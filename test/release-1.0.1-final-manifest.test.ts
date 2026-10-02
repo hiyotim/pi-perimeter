@@ -222,6 +222,33 @@ const CHANGED_IN_1_0_1_POSTPUBLICATION = new Set<string>([
   "test/v1-guarantees-manifest.test.ts",
 ]);
 
+/** Successor source bytes are bound by docs/maintenance-hashes-2026-10-02.json; historical manifests stay frozen. */
+const CHANGED_IN_MAINTENANCE = new Set<string>([
+  "README.md",
+  "SECURITY.md",
+  "docs/COMPATIBILITY.md",
+  "docs/PACKAGING.md",
+  "test/ci-manifest.test.ts",
+  "test/ci-test-budget.json",
+  "test/compatibility-manifest.test.ts",
+  "test/hash-manifest.test.ts",
+  "test/independent-audit-manifest.test.ts",
+  "test/network-manifest.test.ts",
+  "test/packaging-identity.test.ts",
+  "test/packaging-manifest.test.ts",
+  "test/post-transfer-manifest.test.ts",
+  "test/regression-evidence-manifest.test.ts",
+  "test/release-1.0.1-final-manifest.test.ts",
+  "test/release-1.0.1-manifest.test.ts",
+  "test/release-manifest.test.ts",
+  "test/release-review-manifest.test.ts",
+  "test/shell-manifest.test.ts",
+  "test/startup-readiness-manifest.test.ts",
+  "test/unknown-bounds-manifest.test.ts",
+  "test/user-install-onboarding-manifest.test.ts",
+  "test/v1-guarantees-manifest.test.ts",
+]);
+
 test("release-1.0.1-final manifest binds every candidate file with no exceptions", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   assert.deepEqual(Object.keys(manifest).sort(), [...COVERED_FILES].sort());
@@ -229,6 +256,7 @@ test("release-1.0.1-final manifest binds every candidate file with no exceptions
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
     if (CHANGED_IN_1_0_1_POSTPUBLICATION.has(file)) continue; // 1.0.1 postpublication wording; docs/release-hashes-1.0.1-postpublication.json binds the current bytes
+    if (CHANGED_IN_MAINTENANCE.has(file)) continue; // exact successor bytes are checked by the maintenance manifest suite
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

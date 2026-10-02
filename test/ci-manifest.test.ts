@@ -154,6 +154,13 @@ const COVERED_FILES = [
   "docs/CI-EVIDENCE.md",
 ] as const;
 
+/** Successor source bytes are bound by docs/maintenance-hashes-2026-10-02.json; historical manifests stay frozen. */
+const CHANGED_IN_MAINTENANCE = new Set<string>([
+  "test/ci-manifest.test.ts",
+  "test/ci-test-budget.json",
+  "test/hash-manifest.test.ts",
+]);
+
 test("the hosted-CI artifact hash manifest matches the final working tree", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
@@ -172,6 +179,7 @@ test("the hosted-CI artifact hash manifest matches the final working tree", asyn
     if (CHANGED_IN_USER_INSTALL_ONBOARDING.has(file)) continue; // user-install onboarding; docs/user-install-onboarding-hashes.json binds the current bytes
     if (CHANGED_IN_1_0_1_RELEASE.has(file)) continue; // 1.0.1 final release; docs/release-hashes-1.0.1-final.json binds the current bytes
     if (CHANGED_IN_1_0_1_POSTPUBLICATION.has(file)) continue; // 1.0.1 postpublication wording; docs/release-hashes-1.0.1-postpublication.json binds the current bytes
+    if (CHANGED_IN_MAINTENANCE.has(file)) continue; // exact successor bytes are checked by the maintenance manifest suite
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });

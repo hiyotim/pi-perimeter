@@ -1,4 +1,31 @@
-# Compatibility Matrix
+# Compatibility matrix
+
+## Current tested combinations (2026-10-02)
+
+| Package | Pi | macOS / architecture | Node | Evidence |
+| --- | --- | --- | --- | --- |
+| Published `1.0.1` | `0.84.4` | `27.0` (`26A428`), arm64 | `26.8.1` | [Accepted published-package exercise](RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md). |
+| Published `1.0.1` | `1.0.0` | `27.0.1` (`26A434`), arm64 | `26.8.1` | [Isolated 2026-10-02 exercise](PI-1.0.0-AUDIT-2026-10-02.md); independent review and formal support acceptance pending. |
+
+[Pi `1.0.0`](https://github.com/earendil-works/pi/releases/tag/v1.0.0) was released on 2026-10-01. Its isolated exercise covered install/list/remove, loading/readiness, supported file operations and refusal cases, native-helper compilation, contained model shell and user-shell event routes, and controlled export. Typechecking and 433 applicable regressions passed (432 pass, 0 fail, 1 skip). The two `0.84.4`-pinned integrations passed in the separate 435-test suite. No provider-backed conversation or physical approval dialog was tested.
+
+## How to interpret support
+
+- Tested rows describe exact versions and methods, not arbitrary peers or OS updates. The declared Pi peer range `*` is an installation range, not a compatibility guarantee.
+- The Node engine floor is `>=22.19.0`. Hosted Linux CI exercised `22.19.0` for platform-independent suites; macOS runtime exercises used `26.8.1`. Other Node versions lack recorded runtime evidence.
+- Linux and Windows have no supported containment claim. Their shell route is refused. Linux CI passing does not demonstrate Linux sandbox support.
+- The macOS shell guard checks Darwin major `27`, arm64, and the pinned `/usr/bin/sandbox-exec` identity. It also verifies the built helper. It does not compare the exact marketing OS version or build number. An untested build passing these checks has not thereby been qualified.
+- Unknown tools, including MCP and `codemode`, stay blocked. Arbitrary extension code is outside containment.
+- Package `1.0.0` fails to load before its gates activate; use `1.0.1`. Prepared documentation changes do not replace the immutable published archive.
+
+See [usage](USAGE.md), [security](../SECURITY.md), and the [newest structured results](pi-1.0.0-results-2026-10-02.json).
+
+## Historical matrix
+
+The following record describes the earlier accepted checkpoint. Its “only verified peer” and “untested” statements are dated observations, superseded for the specifically exercised combination above. Acceptance remains tied to its original versions and evidence.
+
+<details>
+<summary>Earlier compatibility and release evidence (2026-09-20–25)</summary>
 
 Task ID: `20260920-compatibility-matrix`. Phase 6 checklist item: "Publish a Pi, Node,
 macOS, and Linux compatibility matrix".
@@ -145,3 +172,5 @@ the publication safeguards and the release record.
 | Declared containment target | [docs/SHELL-GATE.md](SHELL-GATE.md) declared-target table; `src/sandbox/containment.ts` |
 | Platform refusal behavior | `src/sandbox/containment.ts` (`verifyPlatform`), `scripts/build-native.mjs` |
 | Controlled published distribution | [PACKAGING.md](PACKAGING.md), [RELEASE-AUDIT.md](RELEASE-AUDIT.md), `docs/release-hashes.json` |
+
+</details>

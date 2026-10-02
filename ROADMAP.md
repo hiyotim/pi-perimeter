@@ -215,3 +215,19 @@ Task ID `20260925-release-v101`, Criterion 4: tag `v1.0.1` (annotated object `29
 ## v1.0.1 owner acceptance (2026-09-25)
 
 The owner accepted Task `20260925-release-v101` after the reported independent FULL and VERIFY reviews passed with no blocking findings. Acceptance binds to the published tag and result commit above and the postpublication evidence in [STATE.md](STATE.md). The completed release handoff is historical; its original baseline remains `8c1e5b0`, and its separate result commit is `0fa75fd`. No further release Goal is selected. The declared platform and peer boundaries remain unchanged; residual wording and test-comment observations are optional follow-up, not release blockers.
+
+## Publication maintenance (2026-10-02, in progress)
+
+The owner requested resolution of the publication-audit findings. Task `20261002-publication-maintenance` covers distribution documentation and packaging corrections from baseline `4f64eb7`, with the old release and accepted evidence preserved. [MAINTENANCE-2026-10-02.md](docs/MAINTENANCE-2026-10-02.md) owns the scope and closure checks. Source preparation is not release acceptance: external checks and independent review remain pending, and current Pi `1.0.0` is unverified. No platform expansion or next runtime Goal is selected.
+
+### Local verification result (2026-10-02)
+
+The owner subsequently authorized an isolated test on the current Mac. Locked-peer checks passed 435/434/0/1; current Pi `1.0.0` typechecking and applicable regressions passed 433/432/0/1, with a separate successful published-package lifecycle and tool/shell exercise. See [the exact qualification record](docs/PI-1.0.0-AUDIT-2026-10-02.md). This supersedes the external-environment blocker for the tested combination; final-byte checks, cleanup, independent review and release closure remain separately recorded in the maintenance record.
+
+### User documentation refresh (2026-10-02)
+
+The owner authorized cleanup of current user documentation within the maintenance scope. The README and usage guide describe purpose, installation, scoped behavior, separate-profile trials, verification, troubleshooting, and removal. A documentation index labels technical contracts and dated audit evidence; security, compatibility, and configuration wording is aligned. Historical records are preserved. No runtime Goal or stronger guarantee is introduced; independent review and publication gates remain pending.
+
+### Authorized delivery and source review (2026-10-02)
+
+The owner approved independent review, GitHub commit/push/PR/merge after CI, and a separate patch release. A fresh read-only reviewer returned PASS with no blocking findings for the source maintenance snapshot (manifest SHA-256 `b30788b2b93052a3c48505033e7a5a5e95ac65bf5f26466412d3c1611b68313b`), independently checking 52 manifest/identity tests and 94 local links. Runtime tests were not repeated by the reviewer. Next delivery: the maintenance PR with green hosted CI; then the owner-selected `1.0.2` release through version-specific staging and real-registry verification. No broader platform/security guarantee is selected.
