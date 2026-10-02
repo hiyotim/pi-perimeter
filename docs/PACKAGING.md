@@ -1,5 +1,9 @@
 # Packaging
 
+## Current published distribution (2026-10-02)
+
+`pi-perimeter@1.0.2` is published and verified as npm `latest`, with corrected user documentation, SECURITY.md and linked root documents included. The archive and installed files match the independently reviewed staging bytes; actual Pi `1.0.0` lifecycle/tool/shell checks passed and the disposable fixture was removed. [Publication identity and exact limits](RELEASE-1.0.2-RESULT.md). Production runtime remains unchanged. Version-specific release manifests are immutable; old 1.0.0/1.0.1 records below describe their dated checkpoints.
+
 ## Patch release preparation (2026-10-02)
 
 `1.0.2` is prepared from the merged maintenance result `16f869b654ec68c747ad00a51fcb07ca562fd39f` (PR #1, reviewed source commit `28d5ae83bc4266cc61d8076fbc00c4adb74e51b9`). Both PR/push CI checks passed with 435 tests, 381 pass, 0 fail, 54 platform skips. This release changes documentation and packaged files; production runtime, lockfile and workflows stay unchanged. [Release preparation record](RELEASE-1.0.2.md) owns the candidate boundary and version-specific manifest. Verify-only staging, tag publication and real-registry verification are separate required events; earlier published-version statements below are dated records.

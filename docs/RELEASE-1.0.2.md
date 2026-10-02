@@ -19,3 +19,7 @@ The source tree remains private at `0.0.0`. The existing staging builder copies 
 5. Merge the release PR after successful publication/verification so public main does not instruct users to install an unavailable version. Create the GitHub release for the verified tag and record exact source/tag/run/artifact/result identities.
 
 Maintenance source independent review passed, and its push/PR CI passed (435/381/0/54). The most recent macOS source check passed 435/434/0/1, with prior Pi `1.0.0` applicable checks 433/432/0/1 and a published `1.0.1` exercise. These are historical evidence for those snapshots, not verification of the forthcoming registry archive. Physical approval UI/provider conversations remain unverified. Candidate review, hosted release staging, publication, real-registry verification and final closure are pending at this preparation checkpoint.
+
+## Superseding publication result
+
+`1.0.2` was subsequently published from `dcf01cea7b0bbbe0a486fef4773879420734d756` and verified against the actual registry archive and a disposable Pi `1.0.0` lifecycle. [Final result](RELEASE-1.0.2-RESULT.md) supersedes the preparation checkpoint's pending events while preserving the original candidate and version-specific binding.
