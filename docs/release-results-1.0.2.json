@@ -1,0 +1,94 @@
+{
+  "date": "2026-10-02",
+  "package": "pi-perimeter@1.0.2",
+  "candidate": "dcf01cea7b0bbbe0a486fef4773879420734d756",
+  "sourceReview": "PASS",
+  "verifyOnlyRun": 37055631802,
+  "reviewedReleaseManifestSha256": "570715823e9a2d3660c95ae474540602c6d8ca9439269a86841492de69d1fc31",
+  "physicalApprovalUI": "UNVERIFIED",
+  "providerConversation": "UNVERIFIED",
+  "modelRequests": 0,
+  "registry": {
+    "latest": "1.0.2",
+    "shasum": "1778c6f516c81a112edb8bc6160798cb08ac5970",
+    "integrity": "sha512-YAr38wgJNiiHB5kodmCqqsOBTWiOswXSbRN9RuQgjzBjVpBQFsV5g1g9D7DuwffTSCrM1Fqpv5zo87AcWT112g==",
+    "tarballSha256": "20b13648bad0be9b352901ea31a5bfe6e452eb2046a17b0750dcd7a018989e0b",
+    "fileCount": 124,
+    "allFileHashesMatchReviewedStaging": true,
+    "packagedDocLinksChecked": 41,
+    "attestations": {
+      "url": "https://registry.npmjs.org/-/npm/v1/attestations/pi-perimeter@1.0.2",
+      "provenance": {
+        "predicateType": "https://slsa.dev/provenance/v1"
+      }
+    }
+  },
+  "runtimeFilesCompared": 38,
+  "provenance": {
+    "subjectMatchesArchive": true,
+    "sourceMatchesCandidate": true,
+    "predicateType": "https://slsa.dev/provenance/v1",
+    "signatureCryptographyIndependentlyVerified": false,
+    "resolvedDependencies": [
+      {
+        "uri": "git+https://github.com/hiyotim/pi-perimeter@refs/tags/v1.0.2",
+        "digest": {
+          "gitCommit": "dcf01cea7b0bbbe0a486fef4773879420734d756"
+        }
+      }
+    ],
+    "subjectSha512": "600af7f308093628870799287660aaaac3814d688eb305d26d137d46e4208f306356905016c57983583d0fb0eec1f7d3482accd45aa9bf9ce8f3b01c593d75da",
+    "exactResolvedSourceChecked": true
+  },
+  "environment": {
+    "macOS": "27.0.1",
+    "build": "26A434",
+    "architecture": "arm64",
+    "node": "v26.8.1",
+    "peer": "1.0.0"
+  },
+  "installedArchiveFileMismatches": 0,
+  "preHelperChecks": {
+    "peer": "1.0.0",
+    "helper": false,
+    "passed": 11,
+    "status": "PASS"
+  },
+  "withHelperChecks": {
+    "peer": "1.0.0",
+    "helper": true,
+    "passed": 13,
+    "status": "PASS"
+  },
+  "packageRemoved": true,
+  "personalInstallationPreservation": {
+    "originalChanges": [],
+    "credentialContentsRead": false,
+    "ordinaryProfilePackageInstalled": false
+  },
+  "status": "PASS",
+  "temporaryFixtureRemoved": true,
+  "tag": "v1.0.2",
+  "tagObject": "393a7461c1d3cacadff79a22ae3c84a71040ced8",
+  "publishRun": 37056068587,
+  "candidatePushCI": 37055400788,
+  "candidatePrCI": 37055549403,
+  "tagCI": 37056068574,
+  "hostedCounts": {
+    "tests": 435,
+    "pass": 381,
+    "fail": 0,
+    "skip": 54
+  },
+  "priorMacCandidateCounts": {
+    "tests": 435,
+    "pass": 434,
+    "fail": 0,
+    "skip": 1
+  },
+  "sourcePr": 2,
+  "sourcePrMerge": "847ee38da9cbb9296e7f6c16440c8849e71f7d70",
+  "sourceMainCI": 37057943914,
+  "githubRelease": "https://github.com/hiyotim/pi-perimeter/releases/tag/v1.0.2",
+  "githubReleasePublishedAt": "2026-10-02T20:02:37Z"
+}

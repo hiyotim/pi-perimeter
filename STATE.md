@@ -1,5 +1,16 @@
 # Project State
 
+## Verified 1.0.2 release (2026-10-02)
+
+### Continuation
+
+- Current: `20261002-release-v102`; published result `dcf01ce`, tag `v1.0.2`; actual npm archive/lifecycle verification PASS; PR #2 merged as `847ee38`; GitHub Release published.
+- Review: Fresh maintenance FULL/VERIFY and release-delta PASS; candidate/tag CI and verify-only/publish workflows succeeded; [exact result](docs/RELEASE-1.0.2-RESULT.md).
+- Limits: Physical approval UI/provider conversations unverified; no broader formal platform/security acceptance; provenance correspondence checked, signature cryptography not independently verified.
+- Next: Preserve this completed release; the maintainer selects any future bounded task separately. Do not install into the ordinary profile or advance runtime guarantees automatically.
+
+This result supersedes earlier pending publication/verification records for this patch. Original baseline `4f64eb7`, maintenance merge `16f869b`, released result `dcf01ce`; source PR #2 merged as `847ee38da9cbb9296e7f6c16440c8849e71f7d70` with green main CI `37057943914`; [GitHub Release](https://github.com/hiyotim/pi-perimeter/releases/tag/v1.0.2) is published. Later documentation commits preserve the immutable tag/archive and release manifest.
+
 ## Patch release preparation (2026-10-02)
 
 ### Continuation

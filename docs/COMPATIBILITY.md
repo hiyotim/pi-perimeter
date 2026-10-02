@@ -4,6 +4,7 @@
 
 | Package | Pi | macOS / architecture | Node | Evidence |
 | --- | --- | --- | --- | --- |
+| Published `1.0.2` | `1.0.0` | `27.0.1` (`26A434`), arm64 | `26.8.1` | [Actual-registry install/load/helper/tool/shell/remove exercise](RELEASE-1.0.2-RESULT.md), 11/11 and 13/13 probes; physical UI/provider conversations unverified. |
 | Published `1.0.1` | `0.84.4` | `27.0` (`26A428`), arm64 | `26.8.1` | [Accepted published-package exercise](RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md). |
 | Published `1.0.1` | `1.0.0` | `27.0.1` (`26A434`), arm64 | `26.8.1` | [Isolated 2026-10-02 exercise](PI-1.0.0-AUDIT-2026-10-02.md); independent review and formal support acceptance pending. |
 
@@ -16,9 +17,9 @@
 - Linux and Windows have no supported containment claim. Their shell route is refused. Linux CI passing does not demonstrate Linux sandbox support.
 - The macOS shell guard checks Darwin major `27`, arm64, and the pinned `/usr/bin/sandbox-exec` identity. It also verifies the built helper. It does not compare the exact marketing OS version or build number. An untested build passing these checks has not thereby been qualified.
 - Unknown tools, including MCP and `codemode`, stay blocked. Arbitrary extension code is outside containment.
-- Package `1.0.0` fails to load before its gates activate; use `1.0.1`. Prepared documentation changes do not replace the immutable published archive.
+- Package `1.0.0` fails to load before its gates activate; use `1.0.2`. Its documentation/packaging patch is published and verified; old archives remain immutable.
 
-See [usage](USAGE.md), [security](../SECURITY.md), and the [newest structured results](pi-1.0.0-results-2026-10-02.json).
+See [usage](USAGE.md), [security](../SECURITY.md), and the [newest structured results](release-results-1.0.2.json).
 
 ## Historical matrix
 
