@@ -23,6 +23,8 @@
 
 ## Verification records
 
+The [1.0.2 release preparation record](RELEASE-1.0.2.md) tracks the documentation/packaging patch and its artifact gates.
+
 The newest runtime exercise is the [2026-10-02 Pi 1.0.0 audit](PI-1.0.0-AUDIT-2026-10-02.md), with [structured results](pi-1.0.0-results-2026-10-02.json). The [maintenance record](MAINTENANCE-2026-10-02.md) distinguishes prepared source changes from publication and acceptance.
 
 Other `*-AUDIT.md`, release records, and `*-hashes*.json` files preserve the evidence for particular historical versions. Their dates, versions, and source identities matter; an old “unpublished” or “pending” statement describes that checkpoint. They are audit records rather than current installation instructions. Follow the user documents above for current guidance.

@@ -1,5 +1,9 @@
 # Packaging
 
+## Patch release preparation (2026-10-02)
+
+`1.0.2` is prepared from the merged maintenance result `16f869b654ec68c747ad00a51fcb07ca562fd39f` (PR #1, reviewed source commit `28d5ae83bc4266cc61d8076fbc00c4adb74e51b9`). Both PR/push CI checks passed with 435 tests, 381 pass, 0 fail, 54 platform skips. This release changes documentation and packaged files; production runtime, lockfile and workflows stay unchanged. [Release preparation record](RELEASE-1.0.2.md) owns the candidate boundary and version-specific manifest. Verify-only staging, tag publication and real-registry verification are separate required events; earlier published-version statements below are dated records.
+
 ## Source packaging correction (2026-10-02, unreleased)
 
 The source manifest now explicitly includes `README.md`, `SECURITY.md`, `ARCHITECTURE.md`, `THREAT_MODEL.md`, `CONTRIBUTING.md`, `AGENTS.md`, `STATE.md`, `ROADMAP.md`, and `IMPLEMENTATION_HANDOFF.md`, alongside `src`, `scripts`, `docs`, `LICENSE`, and `package.json`. This includes the security policy and the root documentation referenced by the README and security notice without selecting arbitrary future root documents. The package lifecycle regression now checks those links against the actual packed file list. Build outputs, tests, dependencies, and credentials remain excluded.

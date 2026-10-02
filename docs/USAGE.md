@@ -12,7 +12,7 @@ First, choose a fresh, empty trial directory. If the example path already contai
 (
   set -e
   export PI_CODING_AGENT_DIR="$HOME/.pi/perimeter-trial"
-  pi install npm:pi-perimeter@1.0.1
+  pi install npm:pi-perimeter@1.0.2
   pi list
   npm --prefix "$PI_CODING_AGENT_DIR/npm/node_modules/pi-perimeter" run build:native
 )
@@ -59,7 +59,7 @@ Optional [configuration](CONFIGURATION-AUTHORIZATION.md) can make file-operation
 | Symptom | What to check |
 | --- | --- |
 | No package in `pi list` | Use the same profile used during installation; confirm the install succeeded. |
-| Extension fails to load | Use package `1.0.1`, restart Pi, and compare your versions with the [matrix](COMPATIBILITY.md). A failed load leaves no active protection from this extension. |
+| Extension fails to load | Use package `1.0.2`, restart Pi, and compare your versions with the [matrix](COMPATIBILITY.md). A failed load leaves no active protection from this extension. |
 | `gate not ready` or tool-owner refusal | Start a fresh session; inspect loading errors and competing tool registrations. Do not assume a blocked or degraded gate is ready. |
 | Missing or unverified helper | Run `build:native` in the installed package root. Keep the build manifest with the helper. |
 | Unsupported platform or changed sandbox identity | Check the matrix. An OS update may need new qualification; do not bypass the guard. |
