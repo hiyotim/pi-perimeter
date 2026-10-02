@@ -1188,7 +1188,7 @@ test("a duplicate same-name tool observation degrades and blocks", async () => {
 });
 
 
-test("startup against the real 0.84.4 runtime stubs throws on early getAllTools and observes ownership only after bind", async () => {
+test("startup against the real Pi runtime stubs throws on early getAllTools and observes ownership only after bind", async () => {
   const runtime = createExtensionRuntime();
   let earlyError = "";
   try {
@@ -1196,12 +1196,13 @@ test("startup against the real 0.84.4 runtime stubs throws on early getAllTools 
   } catch (error) {
     earlyError = error instanceof Error ? error.message : String(error);
   }
-  assert.match(earlyError, /Extension runtime not initialized/, "early getAllTools must throw the exact 0.84.4 stub error");
+  assert.match(earlyError, /Extension runtime not initialized/, "early getAllTools must throw the exact pre-binding stub error");
   const observed = [createBashToolDefinition(process.cwd())].map((definition) => ({
     name: definition.name,
     description: definition.description,
     parameters: definition.parameters,
     promptGuidelines: definition.promptGuidelines,
+    exposure: "direct" as const,
     sourceInfo: createSyntheticSourceInfo("<startup-probe:read>", { source: "temporary" }),
   }));
   const sessionManager = SessionManager.inMemory(process.cwd());
@@ -1210,6 +1211,8 @@ test("startup against the real 0.84.4 runtime stubs throws on early getAllTools 
   runner.bindCore(
     {
       getAllTools: () => observed,
+      // Pi 1.0 adds this action; the spread keeps the 0.84.4 structural mock compatible.
+      ...{ getSettings: () => ({}) },
       getActiveTools: () => [],
       setActiveTools: () => {},
       refreshTools: () => {},

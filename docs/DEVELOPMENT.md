@@ -23,7 +23,7 @@ diagnosis; the full check already includes them. The contained shell route adds
 one more prerequisite and one target-specific suite: build the native helper
 explicitly with `npm run build:native` (no implicit compilation happens at
 runtime), then run `npm run test:containment`, which exercises real processes,
-the real profile and the real helper on the declared macOS target and is
+the real Seatbelt profile and the real helper on the declared macOS target and is
 skipped elsewhere. For documentation-only edits, verify affected claims, links, and the diff. Additional checks explicitly required by the task or handoff still apply.
 
 ## Code placement

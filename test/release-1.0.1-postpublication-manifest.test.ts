@@ -238,6 +238,33 @@ const POSTPUBLICATION_DECLARATIONS: Record<string, readonly string[]> = {
   ],
 };
 
+/** Successor source bytes are bound by docs/maintenance-hashes-2026-10-02.json; historical manifests stay frozen. */
+const CHANGED_IN_MAINTENANCE = new Set<string>([
+  "README.md",
+  "ROADMAP.md",
+  "SECURITY.md",
+  "STATE.md",
+  "docs/COMPATIBILITY.md",
+  "docs/PACKAGING.md",
+  "test/ci-manifest.test.ts",
+  "test/ci-test-budget.json",
+  "test/compatibility-manifest.test.ts",
+  "test/independent-audit-manifest.test.ts",
+  "test/packaging-identity.test.ts",
+  "test/packaging-manifest.test.ts",
+  "test/post-transfer-manifest.test.ts",
+  "test/regression-evidence-manifest.test.ts",
+  "test/release-1.0.1-final-manifest.test.ts",
+  "test/release-1.0.1-manifest.test.ts",
+  "test/release-1.0.1-postpublication-manifest.test.ts",
+  "test/release-manifest.test.ts",
+  "test/release-review-manifest.test.ts",
+  "test/startup-readiness-manifest.test.ts",
+  "test/unknown-bounds-manifest.test.ts",
+  "test/user-install-onboarding-manifest.test.ts",
+  "test/v1-guarantees-manifest.test.ts",
+]);
+
 test("postpublication and owner-acceptance bindings cover the exact current bytes", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   assert.deepEqual(Object.keys(manifest).sort(), [...COVERED_FILES].sort());
@@ -248,6 +275,7 @@ test("postpublication and owner-acceptance bindings cover the exact current byte
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
     if ((ACCEPTANCE_CHANGED as readonly string[]).includes(file)) continue;
+    if (CHANGED_IN_MAINTENANCE.has(file)) continue; // exact successor bytes are checked by the maintenance manifest suite
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (manifest[file] !== current) {
       mismatches.push({ file, current, expected: manifest[file] ?? null });
@@ -266,6 +294,7 @@ test("postpublication and owner-acceptance bindings cover the exact current byte
   assert.ok(!Object.hasOwn(acceptance, ACCEPTANCE_MANIFEST_PATH), "acceptance binding must not list itself");
   const acceptanceMismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of ACCEPTANCE_CHANGED) {
+    if (CHANGED_IN_MAINTENANCE.has(file)) continue; // exact successor bytes are checked by the maintenance manifest suite
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");
     if (acceptance[file] !== current) {
       acceptanceMismatches.push({ file, current, expected: acceptance[file] ?? null });

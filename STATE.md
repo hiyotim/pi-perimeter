@@ -1,5 +1,28 @@
 # Project State
 
+## Authorized GitHub delivery (2026-10-02)
+
+The owner explicitly authorized the proposed independent review, commit/push, pull request, merge after CI, and separate patch release. The selected patch is `1.0.2`; npm and GitHub currently contain only `1.0.0` and `1.0.1`. This supersedes earlier “commit/push/release not authorized” records for this bounded maintenance and release work. Production behavior and accepted platform guarantees remain unchanged.
+
+### Continuation
+
+- Current: `20261002-publication-maintenance`; baseline `4f64eb7`; branch `codex/documentation-maintenance-20261002`; source snapshot independently reviewed on 2026-10-02.
+- Review: PASS; maintenance manifest `b30788b2…`; reviewer ran 52 manifest/identity tests and checked 94 links; runtime evidence was not rerun.
+- Limits: Hosted CI, release-specific staging/registry verification pending; physical approval UI and provider conversations unverified; no broader formal support acceptance.
+- Next: Commit and push the reviewed maintenance branch, open its PR, and require green CI before merge.
+
+## User documentation refresh (2026-10-02)
+
+The owner requested a clear user README and documentation cleanup as part of current maintenance. User onboarding now covers purpose, install/helper build, verification, separate-profile trials, troubleshooting, limitations, and removal. [Documentation index](docs/README.md) directs users to current guidance and identifies dated evidence. Security, configuration, compatibility, and contributor wording was aligned with the implemented boundary. Historical acceptances, runtime source, and published archives remain unchanged. Final documentation checks are recorded in [maintenance](docs/MAINTENANCE-2026-10-02.md); commit/push, independent review, and release remain pending.
+
+## Isolated local verification (2026-10-02)
+
+The owner authorized a disposable local test after confirming that no external Mac was available, provided the ordinary Pi installation/profile stayed untouched and test artifacts were removed. This supersedes the earlier external-only constraint below. On macOS `27.0.1` (`26A434`) arm64, Node `26.8.1`, the locked-peer source check passed 435/434/0/1; Pi `1.0.0` typechecking and all 433 applicable regressions passed 433/432/0/1, and the published `1.0.1` install/list/loading/helper/tool/shell/remove exercise passed. A test-only runtime stub was updated for two new API fields; production runtime bytes remain unchanged. The original Pi/Node hashes and sampled personal-profile metadata were unchanged. Full method and limitations: [PI-1.0.0-AUDIT-2026-10-02.md](docs/PI-1.0.0-AUDIT-2026-10-02.md). Final fixture cleanup and focused final-byte checks are recorded in the maintenance record. Fresh independent review, commit/push, hosted CI, release, and formal support acceptance remain pending.
+
+## Current maintenance (2026-10-02)
+
+Task `20261002-publication-maintenance` is authorized by the owner after the publication audit. Baseline: `4f64eb714bec9acd474b1328b933e05c67955206` on `main`; working tree was clean and matched GitHub. Source corrections address packaged documentation, obsolete metadata, agent instructions, and loading-verification wording. See [the maintenance record](docs/MAINTENANCE-2026-10-02.md). The published `1.0.1` and all historical acceptance manifests remain unchanged. Runtime checks on the owner's Mac are prohibited. External automated checks, current-Pi qualification on a capable external Mac, independent review, and publication are pending; Pi `1.0.0` remains UNVERIFIED. No new platform or security guarantee, commit, push, tag, or publication is claimed. This entry supersedes older continuation wording only for the bounded maintenance task.
+
 Updated: 2026-09-25
 Branch at planning update: `codex/operation-policy-contribution-contract`
 Current branch: `main`; the released result is `0fa75fd2fe32473edf012a410660666ba5da67ce` and the accepted tag is `v1.0.1`. Earlier branch snapshots below are historical.

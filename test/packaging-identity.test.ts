@@ -116,6 +116,7 @@ const RETAINED: Record<string, string> = {
   "THREAT_MODEL.md": "outside the rename surface (current document, stable anchors)",
   "docs/CONFIGURATION-AUTHORIZATION.md": "outside the rename surface (stable anchors)",
   "docs/MONOTONIC-POLICY-AUTHORITY.md": "outside the rename surface (stable anchors)",
+  "docs/pi-1.0.0-results-2026-10-02.json": "runtime-source identity evidence includes the retained native-helper filename",
   // Historical records: never rewritten.
   "STATE.md": "historical record",
   "docs/BRANCH-TRANSITION.md": "historical record",

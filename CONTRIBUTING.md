@@ -1,6 +1,6 @@
 # Contributing
 
-`pi-perimeter` (formerly `pi-warden`) is a security-sensitive pre-alpha project. Contributions should be small, explicit, and tied to a documented invariant or roadmap item.
+`pi-perimeter` (formerly `pi-warden`) is a security-sensitive Pi extension with a published macOS-only release. See [compatibility](docs/COMPATIBILITY.md) for tested versions and qualification limits. Contributions should be small, explicit, and tied to a documented invariant or roadmap item.
 
 ## Before making a change
 

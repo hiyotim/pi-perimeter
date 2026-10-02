@@ -4,7 +4,7 @@
 
 Build `pi-perimeter` (formerly `pi-warden`): a small, auditable Pi extension/package that is intended to provide workspace-first authorization, explicit user approvals, and OS-level containment for model-facing operations. The target experience is convenient for normal work inside a project while treating external paths, secrets, dangerous operations, and unknown network access conservatively.
 
-See [STATE.md](STATE.md) for the current acceptance checkpoint and implemented primitives. There is no functional enforcement. Do not represent planned protections as implemented.
+See [STATE.md](STATE.md) for the current acceptance checkpoint. File-tool authorization and macOS shell containment are implemented within the documented platform, Pi-version, operation, and threat-model limits. Do not represent planned protections or unverified compatibility as implemented guarantees.
 
 ## Continuity documents
 
