@@ -47,7 +47,7 @@
     "runtime": "PASS; independent pure platform tests 4/4",
     "release": "PASS after independent repair re-review; 51/51 manifest tests; primary final metadata checks 55/55"
   },
-  "publication": "pending",
+  "publication": "published-and-registry-verified; see release-results-1.0.3.json",
   "limits": [
     "No physical approval UI or provider conversation qualification",
     "Old macOS combinations not freshly rerun",

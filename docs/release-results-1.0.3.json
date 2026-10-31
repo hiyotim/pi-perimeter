@@ -1,0 +1,103 @@
+{
+  "candidateCommit": "8a5c2894f632d59678d7e0f2f523139a5e24e357",
+  "sourcePullRequest": 4,
+  "releasedCommit": "7b2d4b8451e89f2521b2d340863593d1c317488e",
+  "candidatePushCI": 41205510937,
+  "candidatePullRequestCI": 41205540708,
+  "releaseManifestSha256": "197a97059e3bc5fcba8504903ecb7950b425e28dbcf9ed4975d0968dd96375fa",
+  "stagingArchiveSha256": "741e25ad371c213b8bbe747227e4eaeb6be7e63034444ed12f2006a360bb73ec",
+  "mainCI": 41205616225,
+  "verifyOnlyWorkflow": 41205667571,
+  "verifyOnlyPublishStep": "skipped",
+  "tagObject": "44922b869ada0716a622df6c6fb852f0a59b5884",
+  "publishWorkflow": 41205815433,
+  "tagCI": 41205815426,
+  "version": "1.0.3",
+  "status": "published-and-registry-verified",
+  "githubRelease": "https://github.com/hiyotim/pi-perimeter/releases/tag/v1.0.3",
+  "npmLatest": "1.0.3",
+  "registry": {
+    "version": "1.0.3",
+    "fileCount": 133,
+    "integrity": "PASS",
+    "shasum": "7d7bad3534536c676caa0ba5ff9c8f0b61445034",
+    "sha256": "741e25ad371c213b8bbe747227e4eaeb6be7e63034444ed12f2006a360bb73ec",
+    "runtimeSourceFiles": 39,
+    "stagingCorrespondence": "PASS"
+  },
+  "distIntegrity": "sha512-EJqFSCSpWR+xza4FLulCURYIhgViVyzZSsjA72cV4nfyBV1oYDKyss7XYyZaPpUoFyoLU+cx2S9aRjzVWS0bPw==",
+  "provenance": {
+    "status": "PASS",
+    "method": "statement field correspondence, not independent signature cryptography",
+    "archiveSha512": "109a854824a9591fb1cdae052ee942511608860562572cd94ac8c0ef6715e277f2055d686032b2b2ced763265a3e9528172a0b53e731d92f5a463cd5592d1b3f",
+    "commit": "7b2d4b8451e89f2521b2d340863593d1c317488e",
+    "tag": "v1.0.3",
+    "workflowRun": 41205815433
+  },
+  "lifecycle": {
+    "peer": "1.4.0",
+    "package": "1.0.3",
+    "install": "PASS",
+    "list": "PASS",
+    "beforeHelper": {
+      "pass": 11,
+      "fail": 0
+    },
+    "helperBuild": "PASS",
+    "withHelper": {
+      "pass": 13,
+      "fail": 0
+    },
+    "remove": "PASS",
+    "packagesAfterRemove": [],
+    "installedDirectoryAfterRemove": false
+  },
+  "platform": {
+    "macOS": "27.2",
+    "build": "26B123",
+    "darwin": "27.2.0",
+    "arch": "arm64",
+    "node": "26.8.1",
+    "pi": "1.4.0"
+  },
+  "checks": {
+    "locked": {
+      "tests": 444,
+      "pass": 443,
+      "fail": 0,
+      "skipped": 1
+    },
+    "pi140": {
+      "tests": 442,
+      "pass": 441,
+      "fail": 0,
+      "skipped": 1
+    },
+    "hostedLinux": {
+      "tests": 444,
+      "pass": 388,
+      "fail": 0,
+      "skipped": 56
+    }
+  },
+  "limitations": [
+    "Physical approval UI and provider conversations unverified",
+    "Old macOS versions not rerun",
+    "Provenance fields checked; signature cryptography not independently verified"
+  ],
+  "logSha256": {
+    "registry-install.log": "b0c5165f727abd4953652eaf711d095e3e7e8aef8873e42660a57c36bb7a016d",
+    "registry-list.log": "11876fba2750c838d298ace8ff98b395ab696bdda037dfa98bbe793a326fc963",
+    "registry-before-helper.log": "85b8303532534f3a01c3a3d25b0434e3989cc638c7ff73dac67721708386eed0",
+    "registry-helper-build.log": "89df3b93569a635b948229e2e831628b664f84c1590d88cdd4fb3613b6d0d824",
+    "registry-with-helper.log": "b5fb4e3429dc3969c4c5d1dde30c83c3a5dd7020910ab9e403b509a6f76f46af",
+    "registry-remove.log": "f8e9dcb4ba96b07f83a070ac10f559e3740e2826755bd1dc177f48d9e17e7652",
+    "publish-workflow.log": "c6421cb9a03ac7896cf89d000181fd9a00eb87348ac74f3cbbd08f919aaf694e"
+  },
+  "cleanup": {
+    "disposableFixtureRemoved": true,
+    "generatedStagingRemoved": true,
+    "ordinaryPiProfileTouched": false,
+    "retainedEvidence": "local verification logs, metadata and public npm archive"
+  }
+}

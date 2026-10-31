@@ -2,7 +2,7 @@
 
 ## Selected maintenance: macOS 27.2 and Pi 1.4.0 (2026-10-31)
 
-The owner selected the bounded compatibility correction and 1.0.3 delivery. Qualify the new exact sandbox-exec identity with real native/network/export tests, preserve fail-closed behavior and historical evidence, obtain fresh independent review, then deliver through the existing CI and protected release workflow. See [qualification](docs/MACOS-27.2-QUALIFICATION.md) and [STATE](STATE.md). No unrelated Goal is selected.
+Completed the owner-selected bounded compatibility correction and 1.0.3 delivery. The exact new sandbox-exec identity passed real native/network/export qualification; independent reviews and CI passed. Published 1.0.3 and its actual npm package passed install/list/helper/tool/shell/remove verification. [Release result](docs/RELEASE-1.0.3-RESULT.md). Fail-closed behavior and historical evidence are preserved. See [qualification](docs/MACOS-27.2-QUALIFICATION.md) and [STATE](STATE.md). No unrelated Goal is selected.
 
 This roadmap uses release gates, not dates. A phase is complete only when its listed behavior is implemented, reviewed, tested, and documented without overstating guarantees.
 

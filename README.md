@@ -21,13 +21,13 @@ The extension loads into Pi and replaces the supported tool routes for that sess
 ## Requirements and tested versions
 
 - **Apple Silicon Mac.** Containment was exercised on macOS `27.2` (`26B123`), arm64. Earlier evidence covers `27.0` (`26A428`) and `27.0.1` (`26A434`). Other platforms carry no support claim; shell execution is blocked on Linux and Windows.
-- **Pi:** the `1.0.3` candidate was exercised with Pi `1.4.0`, including contained shell and user `!` / `!!` routes. Earlier releases have evidence for Pi `0.84.4` and `1.0.0`. Physical approval UI and provider conversations remain unverified.
+- **Pi:** published `pi-perimeter@1.0.3` was exercised with Pi `1.4.0`, including contained shell and user `!` / `!!` routes. Earlier releases have evidence for Pi `0.84.4` and `1.0.0`. Physical approval UI and provider conversations remain unverified.
 - **Node:** declared minimum `22.19.0`; the macOS runtime exercises used `26.8.1`.
 - **Apple command line build tools** for the native helper used by shell containment.
 
 The shell guard checks Darwin major `27`, arm64, and explicitly pinned `sandbox-exec` identities. It does not compare the exact macOS marketing version or build number. Passing that guard alone does not prove compatibility with an untested OS update or Pi version. See the [compatibility matrix](docs/COMPATIBILITY.md) for exact evidence and limits.
 
-**Version `pi-perimeter@1.0.3` restores shell containment on macOS 27.2.** It adds the newly qualified system binary identity while preserving the historical one and refusing unknown binaries. See [qualification and release status](docs/MACOS-27.2-QUALIFICATION.md). The older `1.0.0` fails to load before its protections activate. Package: [npm](https://www.npmjs.com/package/pi-perimeter).
+**Version `pi-perimeter@1.0.3` restores shell containment on macOS 27.2.** It adds the newly qualified system binary identity while preserving the historical one and refusing unknown binaries. See [verified release result](docs/RELEASE-1.0.3-RESULT.md). The older `1.0.0` fails to load before its protections activate. Package: [npm](https://www.npmjs.com/package/pi-perimeter).
 
 ## Install and use
 

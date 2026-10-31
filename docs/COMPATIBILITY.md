@@ -4,7 +4,7 @@
 
 | Package | Pi | macOS / architecture | Node | Evidence |
 | --- | --- | --- | --- | --- |
-| `1.0.3` candidate | `1.4.0` | `27.2` (`26B123`), arm64 | `26.8.1` | [Isolated source/package qualification](MACOS-27.2-QUALIFICATION.md); 11/11 pre-helper and 13/13 with-helper SDK probes. Registry publication and verification pending. |
+| Published `1.0.3` | `1.4.0` | `27.2` (`26B123`), arm64 | `26.8.1` | [Actual-registry qualification](RELEASE-1.0.3-RESULT.md); install/list/remove, 11/11 pre-helper and 13/13 with-helper SDK probes. |
 | Published `1.0.2` | `1.0.0` | `27.0.1` (`26A434`), arm64 | `26.8.1` | [Actual-registry install/load/helper/tool/shell/remove exercise](RELEASE-1.0.2-RESULT.md), 11/11 and 13/13 probes; physical UI/provider conversations unverified. |
 | Published `1.0.1` | `0.84.4` | `27.0` (`26A428`), arm64 | `26.8.1` | [Accepted published-package exercise](RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md). |
 | Published `1.0.1` | `1.0.0` | `27.0.1` (`26A434`), arm64 | `26.8.1` | [Isolated 2026-10-02 exercise](PI-1.0.0-AUDIT-2026-10-02.md); independent review and formal support acceptance pending. |
@@ -18,9 +18,9 @@
 - Linux and Windows have no supported containment claim. Their shell route is refused. Linux CI passing does not demonstrate Linux sandbox support.
 - The macOS shell guard checks Darwin major `27`, arm64, and explicitly pinned `/usr/bin/sandbox-exec` identities. It also verifies the built helper. It does not compare the exact marketing OS version or build number. An untested build passing these checks has not thereby been qualified.
 - Unknown tools, including MCP and `codemode`, stay blocked. Arbitrary extension code is outside containment.
-- Package `1.0.0` fails to load before its gates activate. The `1.0.3` candidate adds macOS 27.2 qualification; `1.0.2` remains the preceding published release until the recorded publication succeeds. Old archives remain immutable.
+- Package `1.0.0` fails to load before its gates activate. Published `1.0.3` adds macOS 27.2 qualification; `1.0.2` remains the preceding historical release. Old archives remain immutable.
 
-See [usage](USAGE.md), [security](../SECURITY.md), and the [newest structured results](release-results-1.0.2.json).
+See [usage](USAGE.md), [security](../SECURITY.md), and the [newest structured results](release-results-1.0.3.json).
 
 ## Historical matrix
 
