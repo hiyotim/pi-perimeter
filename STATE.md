@@ -4,7 +4,7 @@
 
 - Current: `20261031-macos-27-2-v103`; baseline `a82707b`; branch `codex/macos-27-2-compatibility`. The owner authorized the implementation plan, independent review, commit/push/PR/merge after green CI and publication of 1.0.3.
 - Change: preserve the historical sandbox-exec identity and add the exact macOS 27.2 binary after real qualification; unknown identities remain blocked.
-- Status: isolated macOS 27.2 qualification passed: locked Pi 0.84.4 full check 444/443/0/1; Pi 1.4.0 applicable check 442/441/0/1; package SDK probes 11/11 before helper and 13/13 with helper. Runtime and repaired release review PASS; final metadata checks 55/55; staging/CI/publication pending. No published 1.0.3 artifact is claimed yet.
+- Status: published and registry-verified `pi-perimeter@1.0.3`; source PR #4 merged as `7b2d4b8`; tag v1.0.3; all candidate/main/tag CI and verify-only/publish workflows passed. Locked check 444/443/0/1; Pi 1.4.0 check 442/441/0/1; actual registry install/list/helper/tool/shell/remove passed 11/11 and 13/13. Runtime/repaired release reviews PASS. [Exact release result](docs/RELEASE-1.0.3-RESULT.md).
 - Evidence and limits: [qualification](docs/MACOS-27.2-QUALIFICATION.md). Keep the ordinary Pi profile untouched.
 
 ## Verified 1.0.2 release (2026-10-02)

@@ -1,6 +1,6 @@
 # macOS 27.2 and Pi 1.4.0 qualification
 
-Task: `20261031-macos-27-2-v103`. Baseline: `a82707b6fa612ac21ea28292a149074908ba090b`. Candidate: `pi-perimeter@1.0.3`.
+Task: `20261031-macos-27-2-v103`. Baseline: `a82707b6fa612ac21ea28292a149074908ba090b`. Released: `pi-perimeter@1.0.3`.
 
 ## Boundary and change
 
@@ -24,7 +24,7 @@ The initial complete locked-peer run collected 443 tests: 441 passed, one failed
 
 Independent runtime review passed with no confirmed defects; the reviewer separately ran all four pure platform tests. Independent release review reproduced the exact binder outputs without writes, verified idempotence, the existing-tag refusal, current-only preservation and all 22 frozen historical manifests. It found one current-evidence test gap: a removed historical suite could avoid successor validation. The checker now discovers suites independently from the filesystem, requires their bindings, and includes a regression that removes the maintenance suite from a copy of the real binding. The focused regression passes. Independent bounded re-review passed after the repair, with 51/51 manifest tests and no blocking findings. Primary final metadata checks passed 55/55 after recording the full-run outcomes.
 
-Publication is pending. It requires exact staging verification, independent review and green hosted CI. This source record is not evidence of an available npm 1.0.3 archive.
+Publication and actual-registry verification passed. The downloaded archive matched all 133 staging files and registry integrity; real Pi install/list/helper/tool/shell/remove passed 11/11 and 13/13. [Release result](RELEASE-1.0.3-RESULT.md) records the immutable tag, workflow, archive and provenance correspondence.
 
 Physical approval dialogs and provider-backed conversations are unverified. Old macOS evidence remains historical. The ordinary user Pi profile is outside this task.
 
