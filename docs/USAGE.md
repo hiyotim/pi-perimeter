@@ -2,6 +2,8 @@
 
 Start with the [README](../README.md) for purpose, requirements, and installation in the default Pi profile. Use the steps below for a first trial, checks, and removal.
 
+For macOS 27.2, use version `1.0.3` and build its installed helper. A `SANDBOX_EXEC_UNTRUSTED` refusal after another OS update requires qualification of the new exact binary; do not disable the check or replace the pinned hash locally. See [qualification](MACOS-27.2-QUALIFICATION.md).
+
 ## Try with a separate Pi profile
 
 A separate agent directory has its own settings, authentication files, and installed packages. These commands use the existing Pi executable and register the extension only in the trial profile. They do not patch Pi or install it into your ordinary profile. The separate profile is a configuration boundary; the Pi host process still runs as your user.
@@ -12,7 +14,7 @@ First, choose a fresh, empty trial directory. If the example path already contai
 (
   set -e
   export PI_CODING_AGENT_DIR="$HOME/.pi/perimeter-trial"
-  pi install npm:pi-perimeter@1.0.2
+  pi install npm:pi-perimeter@1.0.3
   pi list
   npm --prefix "$PI_CODING_AGENT_DIR/npm/node_modules/pi-perimeter" run build:native
 )

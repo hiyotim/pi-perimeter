@@ -1,0 +1,63 @@
+{
+  "task": "20261031-macos-27-2-v103",
+  "baseline": "a82707b6fa612ac21ea28292a149074908ba090b",
+  "candidateVersion": "1.0.3",
+  "platform": {
+    "macOS": "27.2",
+    "build": "26B123",
+    "darwin": "27.2.0",
+    "arch": "arm64",
+    "node": "26.8.1",
+    "sandboxExecSha256": "10cf4a46a575e4747d2419cf343800db0d11ae6e6e9b8415998d3d8f336b2a92",
+    "appleSignature": "PASS outside runner sandbox"
+  },
+  "lockedPeer": {
+    "pi": "0.84.4",
+    "typecheck": "PASS",
+    "tests": 444,
+    "pass": 443,
+    "fail": 0,
+    "skipped": 1
+  },
+  "currentPeer": {
+    "pi": "1.4.0",
+    "typecheck": "PASS",
+    "tests": 442,
+    "pass": 441,
+    "fail": 0,
+    "skipped": 1,
+    "excludedPinnedSuites": [
+      "test/startup-readiness.test.ts",
+      "test/user-install-onboarding.test.ts"
+    ]
+  },
+  "candidateSdk": {
+    "peer": "1.4.0",
+    "packageVersion": "0.0.0 private source pack",
+    "beforeHelper": {
+      "pass": 11,
+      "fail": 0
+    },
+    "withHelper": {
+      "pass": 13,
+      "fail": 0
+    }
+  },
+  "review": {
+    "runtime": "PASS; independent pure platform tests 4/4",
+    "release": "PASS after independent repair re-review; 51/51 manifest tests; primary final metadata checks 55/55"
+  },
+  "publication": "pending",
+  "limits": [
+    "No physical approval UI or provider conversation qualification",
+    "Old macOS combinations not freshly rerun",
+    "No ordinary Pi profile changes"
+  ],
+  "logSha256": {
+    "locked-final.log": "6c6a25c0dc334d85c29477d261a32f178c8c4399b4dfa12e42005e73040e4e27",
+    "pi140-typecheck.log": "1bef66dafcc9346d6a3e4185d4226028742d4258096537877cd237bdb177be6a",
+    "pi140-final.log": "81a110e3f8b136c794b35b9435949d1fe8aaa2c5d04879716b1c7edc1b4d8ec0",
+    "pi140-before-helper.log": "85b8303532534f3a01c3a3d25b0434e3989cc638c7ff73dac67721708386eed0",
+    "pi140-with-helper.log": "b5fb4e3429dc3969c4c5d1dde30c83c3a5dd7020910ab9e403b509a6f76f46af"
+  }
+}

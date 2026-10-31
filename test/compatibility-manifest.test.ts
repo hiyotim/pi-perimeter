@@ -162,10 +162,20 @@ const CHANGED_IN_MAINTENANCE = new Set<string>([
   "test/compatibility-manifest.test.ts",
 ]);
 
+/** Successor bytes are bound by docs/macos-27.2-hashes.json. */
+const CHANGED_IN_1_0_3 = new Set<string>([
+  "README.md",
+  "docs/COMPATIBILITY.md",
+  "test/ci-manifest.test.ts",
+  "test/ci-test-budget.json",
+  "test/compatibility-manifest.test.ts"
+]);
+
 test("the compatibility-matrix artifact hash manifest matches the final working tree", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if (CHANGED_IN_1_0_3.has(file)) continue; // exact successor hashes are checked by release-1.0.3-manifest.test.ts
     if (CHANGED_IN_PACKAGING.has(file)) continue; // accepted matrix bytes; the packaging manifest binds the current ones
     if (CHANGED_IN_POST_TRANSFER.has(file)) continue; // moved canonical location; the post-transfer manifest binds the current bytes
     if (CHANGED_IN_RELEASE_REVIEW[file] === true) continue; // reviewed wording; the release-review manifest binds the current bytes

@@ -1,9 +1,10 @@
 # Compatibility matrix
 
-## Current tested combinations (2026-10-02)
+## Current tested combinations (2026-10-31)
 
 | Package | Pi | macOS / architecture | Node | Evidence |
 | --- | --- | --- | --- | --- |
+| `1.0.3` candidate | `1.4.0` | `27.2` (`26B123`), arm64 | `26.8.1` | [Isolated source/package qualification](MACOS-27.2-QUALIFICATION.md); 11/11 pre-helper and 13/13 with-helper SDK probes. Registry publication and verification pending. |
 | Published `1.0.2` | `1.0.0` | `27.0.1` (`26A434`), arm64 | `26.8.1` | [Actual-registry install/load/helper/tool/shell/remove exercise](RELEASE-1.0.2-RESULT.md), 11/11 and 13/13 probes; physical UI/provider conversations unverified. |
 | Published `1.0.1` | `0.84.4` | `27.0` (`26A428`), arm64 | `26.8.1` | [Accepted published-package exercise](RELEASE-AUDIT-1.0.1-POSTPUBLICATION.md). |
 | Published `1.0.1` | `1.0.0` | `27.0.1` (`26A434`), arm64 | `26.8.1` | [Isolated 2026-10-02 exercise](PI-1.0.0-AUDIT-2026-10-02.md); independent review and formal support acceptance pending. |
@@ -15,9 +16,9 @@
 - Tested rows describe exact versions and methods, not arbitrary peers or OS updates. The declared Pi peer range `*` is an installation range, not a compatibility guarantee.
 - The Node engine floor is `>=22.19.0`. Hosted Linux CI exercised `22.19.0` for platform-independent suites; macOS runtime exercises used `26.8.1`. Other Node versions lack recorded runtime evidence.
 - Linux and Windows have no supported containment claim. Their shell route is refused. Linux CI passing does not demonstrate Linux sandbox support.
-- The macOS shell guard checks Darwin major `27`, arm64, and the pinned `/usr/bin/sandbox-exec` identity. It also verifies the built helper. It does not compare the exact marketing OS version or build number. An untested build passing these checks has not thereby been qualified.
+- The macOS shell guard checks Darwin major `27`, arm64, and explicitly pinned `/usr/bin/sandbox-exec` identities. It also verifies the built helper. It does not compare the exact marketing OS version or build number. An untested build passing these checks has not thereby been qualified.
 - Unknown tools, including MCP and `codemode`, stay blocked. Arbitrary extension code is outside containment.
-- Package `1.0.0` fails to load before its gates activate; use `1.0.2`. Its documentation/packaging patch is published and verified; old archives remain immutable.
+- Package `1.0.0` fails to load before its gates activate. The `1.0.3` candidate adds macOS 27.2 qualification; `1.0.2` remains the preceding published release until the recorded publication succeeds. Old archives remain immutable.
 
 See [usage](USAGE.md), [security](../SECURITY.md), and the [newest structured results](release-results-1.0.2.json).
 

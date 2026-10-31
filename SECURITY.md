@@ -15,11 +15,13 @@ The implemented controls are:
 
 Policy decides whether an operation is allowed; approval records a narrow user decision; containment limits a running process. An approval alone is not a sandbox. The accepted promises and residual risks are in [V1-GUARANTEES.md](docs/V1-GUARANTEES.md), with the [file](docs/FILE-GATE.md), [shell](docs/SHELL-GATE.md), and [network](docs/NETWORK-GATE.md) contracts providing details.
 
+The macOS 27.2 identity is separately qualified for version 1.0.3. Unknown executable identities remain refused; neither project configuration nor environment variables can add trusted hashes. See [qualification](docs/MACOS-27.2-QUALIFICATION.md).
+
 ## Limitations
 
 - The Pi host process, provider requests, arbitrary extension code, and trusted direct SDK calls are outside shell containment. Only load extensions you trust. MCP and `codemode` tools are currently blocked as unintegrated.
 - Secret classification is path-based and does not scan contents. An ordinary path can contain a secret. An allowed endpoint can receive data the contained process can read.
-- Other platforms carry no containment support claim. The shell guard checks Darwin major `27`, arm64, and the pinned sandbox executable; it does not validate every macOS build or Pi release.
+- Other platforms carry no containment support claim. The shell guard checks Darwin major `27`, arm64, and explicitly pinned sandbox executable identities; it does not validate every macOS build or Pi release.
 - A private projection changes shell behavior. Host delete and rename effects are not exported; direct macOS file-tool creation is unavailable.
 - Protection against an independent same-user host writer and mount isolation remain unverified. No macOS Keychain isolation or general malware-containment guarantee is made.
 - A failed extension load leaves its protections inactive. Package registration in `pi list` does not prove loading or enforcement.
