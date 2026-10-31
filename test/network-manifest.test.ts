@@ -77,10 +77,18 @@ const CHANGED_IN_MAINTENANCE = new Set<string>([
   "test/shell-manifest.test.ts",
 ]);
 
+/** Successor bytes are bound by docs/macos-27.2-hashes.json. */
+const CHANGED_IN_1_0_3 = new Set<string>([
+  "src/sandbox/containment.ts",
+  "test/network-manifest.test.ts",
+  "test/shell-manifest.test.ts"
+]);
+
 test("the Goal 4 artifact hash manifest matches the final working tree", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if (CHANGED_IN_1_0_3.has(file)) continue; // exact successor hashes are checked by release-1.0.3-manifest.test.ts
     if (CHANGED_IN_PACKAGING.has(file)) continue; // renamed identity; the packaging manifest binds the current bytes
     if (CHANGED_IN_REGRESSION_EVIDENCE[file] === true) continue; // new P15 regression; the regression-evidence manifest binds the current bytes
     if (CHANGED_IN_STARTUP_READINESS.has(file)) continue; // current snapshot bound by the startup-readiness manifest

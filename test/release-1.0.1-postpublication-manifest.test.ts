@@ -265,6 +265,32 @@ const CHANGED_IN_MAINTENANCE = new Set<string>([
   "test/v1-guarantees-manifest.test.ts",
 ]);
 
+/** Successor bytes are bound by docs/macos-27.2-hashes.json. */
+const CHANGED_IN_1_0_3 = new Set<string>([
+  "README.md",
+  "ROADMAP.md",
+  "SECURITY.md",
+  "STATE.md",
+  "docs/COMPATIBILITY.md",
+  "test/ci-manifest.test.ts",
+  "test/ci-test-budget.json",
+  "test/compatibility-manifest.test.ts",
+  "test/independent-audit-manifest.test.ts",
+  "test/packaging-identity.test.ts",
+  "test/packaging-manifest.test.ts",
+  "test/post-transfer-manifest.test.ts",
+  "test/regression-evidence-manifest.test.ts",
+  "test/release-1.0.1-final-manifest.test.ts",
+  "test/release-1.0.1-manifest.test.ts",
+  "test/release-1.0.1-postpublication-manifest.test.ts",
+  "test/release-manifest.test.ts",
+  "test/release-review-manifest.test.ts",
+  "test/startup-readiness-manifest.test.ts",
+  "test/unknown-bounds-manifest.test.ts",
+  "test/user-install-onboarding-manifest.test.ts",
+  "test/v1-guarantees-manifest.test.ts"
+]);
+
 test("postpublication and owner-acceptance bindings cover the exact current bytes", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   assert.deepEqual(Object.keys(manifest).sort(), [...COVERED_FILES].sort());
@@ -274,6 +300,7 @@ test("postpublication and owner-acceptance bindings cover the exact current byte
   }
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if (CHANGED_IN_1_0_3.has(file)) continue; // exact successor hashes are checked by release-1.0.3-manifest.test.ts
     if ((ACCEPTANCE_CHANGED as readonly string[]).includes(file)) continue;
     if (CHANGED_IN_MAINTENANCE.has(file)) continue; // exact successor bytes are checked by the maintenance manifest suite
     const current = createHash("sha256").update(await readFile(path.resolve(file))).digest("hex");

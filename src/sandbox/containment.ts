@@ -17,6 +17,7 @@ import path from "node:path";
 import type { LoadedPolicySources } from "../policy/config-loader.ts";
 import type { ProtectedZone } from "../policy/control-plane.ts";
 import { ShellRefusal } from "./errors.ts";
+import { isTrustedSandboxExecHash, verifyPlatformTarget } from "./platform-target.ts";
 import { applyExportChanges, openBoundRoot, scanProjection, type AppliedEffect, type EffectAuthorization, type ExportRefusal } from "./export.ts";
 import { runHelperSelfTest, spawnContainedProcess, verifyHelper, type HelperIdentity, type HelperSelfTest } from "./helper.ts";
 import { importWorkspace, type ProjectionManifest } from "./projection.ts";
@@ -34,10 +35,8 @@ import {
   type PinnedDestination,
 } from "./network-broker.ts";
 
-/** Pinned identity of the containment mechanism for the declared target. */
+/** Fixed system path; approved hashes are owned by platform-target.ts. */
 const SANDBOX_EXEC_PATH = "/usr/bin/sandbox-exec";
-const SANDBOX_EXEC_SHA256 = "58839ef01b4eef8aac0d2aa8f9d1c074ae45aafe3533965b030672450064acc8";
-const SUPPORTED_DARWIN_MAJOR = 27;
 
 export const SHELL_LIMITS = Object.freeze({
   maxStreamedOutputBytes: 8 * 1024 * 1024,
@@ -103,20 +102,11 @@ async function sha256File(target: string): Promise<string> {
  * to another OS version, architecture, or `sandbox-exec` build.
  */
 export async function verifyPlatform(helperPath: string, buildManifestPath: string): Promise<PlatformIdentity> {
-  if (process.platform !== "darwin") {
-    throw new ShellRefusal("PLATFORM_UNSUPPORTED", `platform ${process.platform} is not supported`);
-  }
-  if (process.arch !== "arm64") {
-    throw new ShellRefusal("PLATFORM_UNSUPPORTED", `architecture ${process.arch} is not supported`);
-  }
-  const kernelRelease = osRelease();
-  const darwinMajor = Number(kernelRelease.split(".")[0] ?? "0");
-  if (!Number.isInteger(darwinMajor) || darwinMajor !== SUPPORTED_DARWIN_MAJOR) {
-    throw new ShellRefusal(
-      "PLATFORM_UNSUPPORTED",
-      `Darwin ${kernelRelease} is outside the declared target (major ${SUPPORTED_DARWIN_MAJOR})`,
-    );
-  }
+  const darwinMajor = verifyPlatformTarget({
+    platform: process.platform,
+    arch: process.arch,
+    kernelRelease: osRelease(),
+  });
 
   let metadata;
   try {
@@ -131,7 +121,7 @@ export async function verifyPlatform(helperPath: string, buildManifestPath: stri
     throw new ShellRefusal("SANDBOX_EXEC_UNTRUSTED", `${SANDBOX_EXEC_PATH} ownership or mode is unexpected`);
   }
   const sandboxExecSha256 = await sha256File(SANDBOX_EXEC_PATH);
-  if (sandboxExecSha256 !== SANDBOX_EXEC_SHA256) {
+  if (!isTrustedSandboxExecHash(sandboxExecSha256)) {
     throw new ShellRefusal(
       "SANDBOX_EXEC_UNTRUSTED",
       `${SANDBOX_EXEC_PATH} identity does not match the recorded target build; the shell route stays blocked until it is re-verified`,

@@ -285,10 +285,26 @@ const CHANGED_IN_MAINTENANCE = new Set<string>([
   "test/v1-guarantees-manifest.test.ts",
 ]);
 
+/** Successor bytes are bound by docs/macos-27.2-hashes.json. */
+const CHANGED_IN_1_0_3 = new Set<string>([
+  "test/ci-manifest.test.ts",
+  "test/ci-test-budget.json",
+  "test/compatibility-manifest.test.ts",
+  "test/packaging-identity.test.ts",
+  "test/packaging-manifest.test.ts",
+  "test/post-transfer-manifest.test.ts",
+  "test/regression-evidence-manifest.test.ts",
+  "test/release-review-manifest.test.ts",
+  "test/shell-manifest.test.ts",
+  "test/unknown-bounds-manifest.test.ts",
+  "test/v1-guarantees-manifest.test.ts"
+]);
+
 test("the unknown-bounds artifact hash manifest matches the final working tree", async () => {
   const manifest = JSON.parse(await readFile(MANIFEST_PATH, "utf8")) as Record<string, string>;
   const mismatches: { file: string; current: string; expected: string | null }[] = [];
   for (const file of COVERED_FILES) {
+    if (CHANGED_IN_1_0_3.has(file)) continue; // exact successor hashes are checked by release-1.0.3-manifest.test.ts
     if (CHANGED_IN_INDEPENDENT_AUDIT[file] === true) continue; // independent audit; the independent-audit manifest binds the current bytes
     if (CHANGED_IN_STARTUP_READINESS.has(file)) continue; // current snapshot bound by the startup-readiness manifest
     if (CHANGED_IN_1_0_1.has(file)) continue; // 1.0.1 staging preparation; docs/release-hashes-1.0.1.json binds the current bytes
